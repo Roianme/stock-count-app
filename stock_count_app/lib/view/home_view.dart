@@ -10,33 +10,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Item> items = [
-    Item(
-      id: 1,
-      name: 'Item 1',
-      category: Category.bbqGrill,
-      status: ItemStatus.ok,
-    ),
-    Item(
-      id: 2,
-      name: 'Item 2',
-      category: Category.essentials,
-      status: ItemStatus.low,
-    ),
-    Item(
-      id: 3,
-      name: 'Item 3',
-      category: Category.drinks,
-      status: ItemStatus.urgent,
-    ),
-    Item(
-      id: 4,
-      name: 'Item 4',
-      category: Category.rawItems,
-      status: ItemStatus.zero,
-    ),
-  ];
-
   // Function to update item status
   void updateItemStatus(int itemId, ItemStatus newStatus) {
     setState(() {
@@ -82,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Category: ${item.category.toString().split('.').last}',
+                          _getCategoryDisplayText(item.category),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -91,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ],
                     ),
                   ),
-                  // Simple Status Dropdown
+                  // Status Dropdown
                   Container(
                     width: 120,
                     decoration: BoxDecoration(
@@ -143,6 +116,34 @@ class _MyHomePageState extends State<MyHomePage> {
         return 'OK';
       case ItemStatus.urgent:
         return 'Urgent';
+    }
+  }
+
+  // Helper function to get display text for status
+  String _getCategoryDisplayText(Category category) {
+    switch (category) {
+      case Category.bbqGrill:
+        return 'BBQ Grill';
+      case Category.essentials:
+        return 'Essentials';
+      case Category.drinks:
+        return 'Drinks';
+      case Category.rawItems:
+        return 'Raw Items';
+      case Category.spices:
+        return 'Spices';
+      case Category.warehouse:
+        return 'Warehouse';
+      case Category.misc:
+        return 'Misc';
+      case Category.supplier:
+        return 'Supplier';
+      case Category.produce:
+        return 'Produce';
+      case Category.filipinoSupplier:
+        return 'Filipino Supplier';
+      case Category.colesWoolies:
+        return 'Coles/Woolies';
     }
   }
 }
