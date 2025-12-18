@@ -1,9 +1,23 @@
 enum ItemStatus { zero, low, ok, urgent }
 
+enum Category {
+  bbqGrill,
+  warehouse,
+  essentials,
+  spices,
+  rawItems,
+  drinks,
+  misc,
+  supplier,
+  produce,
+  filipinoSupplier,
+  colesWoolies,
+}
+
 class Item {
   final int id;
   final String name;
-  final String category;
+  final Category category;
   final ItemStatus status;
 
   Item({
