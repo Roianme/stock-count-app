@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
+import 'category_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -177,12 +178,11 @@ class _HomePageState extends State<HomePage> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Handle category tap
-            // On tap, category.name is passed to a method from category_view.dart
-            // The contents or items displayed will be based on the selected category
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${category.displayName} selected')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CategoryView(category: category),
+              ),
             );
           },
           borderRadius: BorderRadius.circular(16),
@@ -250,12 +250,11 @@ class _HomePageState extends State<HomePage> {
           color: Colors.grey[400],
         ),
         onTap: () {
-          // Handle category tap
-          // On tap, category.name is passed to a method from category_view.dart
-          // The contents or items displayed will be based on the selected category
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${category.displayName} selected')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CategoryView(category: category),
+            ),
           );
         },
       ),

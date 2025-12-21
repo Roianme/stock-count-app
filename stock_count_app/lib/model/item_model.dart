@@ -78,7 +78,7 @@ extension CategoryExtension on Category {
       case Category.supplier:
         return Icons.local_shipping;
       case Category.produce:
-        return Icons.agriculture;
+        return Icons.eco;
       case Category.filipinoSupplier:
         return Icons.store;
       case Category.colesWoolies:
