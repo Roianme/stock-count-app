@@ -1,150 +1,270 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
-import '../data/item_data.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+void main() {
+  runApp(const MyApp());
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  // Function to update item status
-  void updateItemStatus(int itemId, ItemStatus newStatus) {
-    setState(() {
-      // Find and update the item in the list
-      final index = items.indexWhere((item) => item.id == itemId);
-      if (index != -1) {
-        // Create a new item with updated status
-        final updatedItem = Item(
-          id: items[index].id,
-          name: items[index].name,
-          category: items[index].category,
-          status: newStatus,
-        );
-        items[index] = updatedItem;
-      }
-    });
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Homepage',
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      home: const HomePage(),
+      debugShowCheckedModeBanner: false,
+    );
   }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool isListView = false;
+  final TextEditingController _searchController = TextEditingController();
+  final List<Category> categories = Category.values;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Homepage',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black87),
+          onPressed: () {},
+        ),
       ),
-      body: ListView(
-        children: items.map((item) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          _getCategoryDisplayText(item.category),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Status Dropdown
-                  Container(
-                    width: 120,
+      body: Column(
+        children: [
+          // Search Bar and View Toggle
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Search Bar
+                Expanded(
+                  child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<ItemStatus>(
-                        value: item.status,
-                        icon: Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.black54,
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search for keyword',
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Colors.grey,
                         ),
-                        isExpanded: true,
-                        items: ItemStatus.values.map((ItemStatus status) {
-                          return DropdownMenuItem<ItemStatus>(
-                            value: status,
-                            child: Text(
-                              _getStatusDisplayText(status),
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (ItemStatus? newValue) {
-                          if (newValue != null) {
-                            updateItemStatus(item.id, newValue);
-                          }
-                        },
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                // View Toggle Button
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      isListView ? Icons.grid_view : Icons.view_list,
+                      color: Colors.black87,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isListView = !isListView;
+                      });
+                    },
+                    tooltip: isListView
+                        ? 'Switch to grid view'
+                        : 'Switch to list view',
+                  ),
+                ),
+              ],
             ),
-          );
-        }).toList(),
+          ),
+
+          // Categories Label
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Text(
+                  'Categories',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content Area
+          Expanded(child: isListView ? _buildListView() : _buildGridView()),
+        ],
       ),
     );
   }
 
-  // Helper function to get display text for status
-  String _getStatusDisplayText(ItemStatus status) {
-    switch (status) {
-      case ItemStatus.zero:
-        return 'Zero';
-      case ItemStatus.low:
-        return 'Low';
-      case ItemStatus.ok:
-        return 'OK';
-      case ItemStatus.urgent:
-        return 'Urgent';
-    }
+  Widget _buildGridView() {
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildCategoryCard(category);
+      },
+    );
   }
 
-  // Helper function to get display text for status
-  String _getCategoryDisplayText(Category category) {
-    switch (category) {
-      case Category.bbqGrill:
-        return 'BBQ Grill';
-      case Category.essentials:
-        return 'Essentials';
-      case Category.drinks:
-        return 'Drinks';
-      case Category.rawItems:
-        return 'Raw Items';
-      case Category.spices:
-        return 'Spices';
-      case Category.warehouse:
-        return 'Warehouse';
-      case Category.misc:
-        return 'Misc';
-      case Category.supplier:
-        return 'Supplier';
-      case Category.produce:
-        return 'Produce';
-      case Category.filipinoSupplier:
-        return 'Filipino Supplier';
-      case Category.colesWoolies:
-        return 'Coles/Woolies';
-    }
+  Widget _buildListView() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildCategoryListItem(category),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryCard(Category category) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // Handle category tap
+            // On tap, category.name is passed to a method from category_view.dart
+            // The contents or items displayed will be based on the selected category
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${category.displayName} selected')),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: category.color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(category.icon, size: 40, color: category.color),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                category.displayName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryListItem(Category category) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: category.color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(category.icon, color: category.color, size: 28),
+        ),
+        title: Text(
+          category.displayName,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey[400],
+        ),
+        onTap: () {
+          // Handle category tap
+          // On tap, category.name is passed to a method from category_view.dart
+          // The contents or items displayed will be based on the selected category
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${category.displayName} selected')),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
