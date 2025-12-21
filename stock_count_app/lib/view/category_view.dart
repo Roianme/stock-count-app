@@ -162,6 +162,8 @@ class _CategoryViewState extends State<CategoryView> {
         return 'Filipino Supplier';
       case Category.colesWoolies:
         return 'Coles/Woolies';
+      case Category.chemicals:
+        return 'Chemicals';
     }
   }
 }

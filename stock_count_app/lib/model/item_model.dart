@@ -14,6 +14,7 @@ enum Category {
   produce,
   filipinoSupplier,
   colesWoolies,
+  chemicals,
 }
 
 class Item {
@@ -56,6 +57,8 @@ extension CategoryExtension on Category {
         return 'Filipino Supplier';
       case Category.colesWoolies:
         return 'Coles/Woolies';
+      case Category.chemicals:
+        return 'Chemicals';
     }
   }
 
@@ -83,6 +86,8 @@ extension CategoryExtension on Category {
         return Icons.store;
       case Category.colesWoolies:
         return Icons.shopping_cart;
+      case Category.chemicals:
+        return Icons.sanitizer;
     }
   }
 
@@ -110,6 +115,8 @@ extension CategoryExtension on Category {
         return Colors.red;
       case Category.colesWoolies:
         return Colors.orange;
+      case Category.chemicals:
+        return Colors.teal;
     }
   }
 }

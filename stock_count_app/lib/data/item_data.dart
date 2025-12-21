@@ -647,4 +647,59 @@ final List<Item> items = [
     category: Category.filipinoSupplier,
     status: ItemStatus.ok,
   ),
+
+  Item(
+    id: 111,
+    name: 'toilet paper',
+    category: Category.misc,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 112,
+    name: 'dorothy',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 113,
+    name: 'harry',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 114,
+    name: 'barry',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 115,
+    name: 'louie',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 116,
+    name: 'ada',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 117,
+    name: 'samantha',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 118,
+    name: 'kent (ken)',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
+  Item(
+    id: 119,
+    name: 'hannah',
+    category: Category.chemicals,
+    status: ItemStatus.ok,
+  ),
 ];
