@@ -74,17 +74,25 @@ class _CategoryViewState extends State<CategoryView> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    item.status.displayName,
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
                                 ],
                               ),
                             ),
                             Container(
-                              width: 140,
+                              width: 120,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    spreadRadius: 1,
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<ItemStatus>(
