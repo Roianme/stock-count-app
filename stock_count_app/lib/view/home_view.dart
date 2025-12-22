@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/item_model.dart';
-import '../data/item_data.dart';
 import 'category_view.dart';
-import '../viewmodel/category_view_model.dart';
 import '../viewmodel/home_view_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,7 +13,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
-  late final CategoryViewModel categoryViewModel;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -163,10 +160,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildListView(List<Category> categories) {
-    final Map<Category, List<Item>> itemsByCategory = {
-      for (final c in categories)
-        c: items.where((item) => item.category == c).toList(),
-    };
+    final itemsByCategory = viewModel.groupedItems(categories);
 
     final listChildren = <Widget>[];
 
@@ -242,7 +236,7 @@ class _HomePageState extends State<HomePage> {
                           }).toList(),
                           onChanged: (newStatus) {
                             if (newStatus != null) {
-                              _updateItemStatus(item.id, newStatus);
+                              viewModel.updateItemStatus(item.id, newStatus);
                             }
                           },
                         ),
@@ -276,7 +270,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               onChanged: (value) {
                                 final parsed = int.tryParse(value) ?? 0;
-                                _setItemPieces(item.id, parsed);
+                                viewModel.setItemPieces(item.id, parsed);
                               },
                             ),
                           ),
@@ -286,7 +280,10 @@ class _HomePageState extends State<HomePage> {
                               Icons.arrow_drop_down_circle_outlined,
                             ),
                             onPressed: () {
-                              _updateItemStatus(item.id, ItemStatus.ok);
+                              viewModel.updateItemStatus(
+                                item.id,
+                                ItemStatus.ok,
+                              );
                             },
                           ),
                         ],
@@ -345,7 +342,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Text(
-                _getCategoryProgress(category),
+                viewModel.categoryProgress(category),
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.blue,
@@ -394,7 +391,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _getCategoryProgress(category),
+              viewModel.categoryProgress(category),
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.blue,
@@ -416,31 +413,6 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (context) => CategoryView(category: category)),
     );
     viewModel.notifyListeners();
-  }
-
-  void _updateItemStatus(int itemId, ItemStatus newStatus) {
-    final mainIndex = items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      items[mainIndex] = items[mainIndex].copyWith(status: newStatus);
-    }
-    viewModel.notifyListeners();
-  }
-
-  void _setItemPieces(int itemId, int pieces) {
-    final mainIndex = items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      items[mainIndex] = items[mainIndex].copyWith(pieces: pieces);
-    }
-    viewModel.notifyListeners();
-  }
-
-  String _getCategoryProgress(Category category) {
-    final categoryItems = items
-        .where((item) => item.category == category)
-        .toList();
-    final checkedCount = categoryItems.where((item) => item.isChecked).length;
-    final totalCount = categoryItems.length;
-    return '$checkedCount/$totalCount checked';
   }
 
   Widget _buildSearchResults(List<Item> itemsList) {

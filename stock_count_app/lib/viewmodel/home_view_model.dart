@@ -76,4 +76,48 @@ class HomeViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  List<model.Item> itemsForCategory(model.Category category) {
+    return data.items.where((i) => i.category == category).toList();
+  }
+
+  Map<model.Category, List<model.Item>> groupedItems(
+    List<model.Category> categories,
+  ) {
+    return {for (final c in categories) c: itemsForCategory(c)};
+  }
+
+  String categoryProgress(model.Category category) {
+    final list = itemsForCategory(category);
+    final checked = list.where((i) => i.isChecked).length;
+    final total = list.length;
+    return '$checked/$total checked';
+  }
+
+  void updateItemStatus(int itemId, model.ItemStatus newStatus) {
+    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+    if (mainIndex != -1) {
+      data.items[mainIndex] = data.items[mainIndex].copyWith(status: newStatus);
+    }
+
+    // keep matchedItems in sync when searching
+    final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+    if (matchIndex != -1) {
+      matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+    }
+    notifyListeners();
+  }
+
+  void setItemPieces(int itemId, int pieces) {
+    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+    if (mainIndex != -1) {
+      data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
+    }
+
+    final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+    if (matchIndex != -1) {
+      matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+    }
+    notifyListeners();
+  }
 }
