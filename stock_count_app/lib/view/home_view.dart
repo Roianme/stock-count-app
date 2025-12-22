@@ -1,136 +1,137 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
 import 'category_view.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Homepage',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: const HomePage(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
+import '../viewmodel/home_view_model.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  bool isListView = false;
+  late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
-  final List<Category> categories = Category.values;
+
+  @override
+  void initState() {
+    super.initState();
+    viewModel = HomeViewModel(allCategories: Category.values);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    viewModel.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Homepage',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black87),
-          onPressed: () {},
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search Bar and View Toggle
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Search Bar
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search for keyword',
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Colors.grey,
+    return AnimatedBuilder(
+      animation: viewModel,
+      builder: (context, _) {
+        final categories = viewModel.visibleCategories;
+        return Scaffold(
+          backgroundColor: Colors.grey[100],
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            title: const Text(
+              'Homepage',
+              style: TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black87),
+              onPressed: () {
+                // Menu for location toggle
+                // City, Cafe, HP, etc.
+                // Different view navigation per location
+              },
+            ),
+          ),
+          body: Column(
+            children: [
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: viewModel.setQuery,
+                          decoration: InputDecoration(
+                            hintText: 'Search for keyword',
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          viewModel.isGrid ? Icons.view_list : Icons.grid_view,
+                          color: Colors.black87,
+                        ),
+                        onPressed: viewModel.toggleViewMode,
+                        tooltip: viewModel.isGrid
+                            ? 'Switch to list view'
+                            : 'Switch to grid view',
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                // View Toggle Button
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      isListView ? Icons.grid_view : Icons.view_list,
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        isListView = !isListView;
-                      });
-                    },
-                    tooltip: isListView
-                        ? 'Switch to grid view'
-                        : 'Switch to list view',
                   ),
                 ),
-              ],
-            ),
+              ),
+              Expanded(
+                child: viewModel.isGrid
+                    ? _buildGridView(categories)
+                    : _buildListView(categories),
+              ),
+            ],
           ),
-
-          // Categories Label
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text(
-                  'Categories',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Content Area
-          Expanded(child: isListView ? _buildListView() : _buildGridView()),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildGridView() {
+  Widget _buildGridView(List<Category> categories) {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -147,7 +148,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildListView() {
+  Widget _buildListView(List<Category> categories) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: categories.length,
@@ -177,14 +178,7 @@ class _HomePageState extends State<HomePage> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CategoryView(category: category),
-              ),
-            );
-          },
+          onTap: () => _navigateToCategory(category),
           borderRadius: BorderRadius.circular(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -249,21 +243,15 @@ class _HomePageState extends State<HomePage> {
           size: 16,
           color: Colors.grey[400],
         ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CategoryView(category: category),
-            ),
-          );
-        },
+        onTap: () => _navigateToCategory(category),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void _navigateToCategory(Category category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CategoryView(category: category)),
+    );
   }
 }
