@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../data/item_data.dart';
 import 'category_view.dart';
@@ -162,16 +163,146 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildListView(List<Category> categories) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildCategoryListItem(category),
+    final Map<Category, List<Item>> itemsByCategory = {
+      for (final c in categories)
+        c: items.where((item) => item.category == c).toList(),
+    };
+
+    final listChildren = <Widget>[];
+
+    for (final category in categories) {
+      final categoryItems = itemsByCategory[category] ?? [];
+      if (categoryItems.isEmpty) continue;
+
+      listChildren.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            category.displayName,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+
+      for (final item in categoryItems) {
+        listChildren.add(
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Transform.scale(
+                    scale: 1.3,
+                    child: Checkbox(
+                      value: item.isChecked,
+                      onChanged: (_) {
+                        viewModel.setItemChecked(item.id, !item.isChecked);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  CircleAvatar(
+                    backgroundColor: item.category.color.withOpacity(0.12),
+                    child: Icon(item.category.icon, color: item.category.color),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                    ),
+                  ),
+                  if (item.status != ItemStatus.pieces)
+                    Container(
+                      width: 120,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<ItemStatus>(
+                          value: item.status,
+                          isExpanded: true,
+                          items: ItemStatus.values.map((status) {
+                            return DropdownMenuItem<ItemStatus>(
+                              value: status,
+                              child: Text(status.displayName),
+                            );
+                          }).toList(),
+                          onChanged: (newStatus) {
+                            if (newStatus != null) {
+                              _updateItemStatus(item.id, newStatus);
+                            }
+                          },
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 120,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              key: ValueKey('pieces_${item.id}'),
+                              initialValue: item.pieces == 0
+                                  ? ''
+                                  : item.pieces.toString(),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                hintText: 'Pieces',
+                              ),
+                              onChanged: (value) {
+                                final parsed = int.tryParse(value) ?? 0;
+                                _setItemPieces(item.id, parsed);
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Back to status',
+                            icon: const Icon(
+                              Icons.arrow_drop_down_circle_outlined,
+                            ),
+                            onPressed: () {
+                              _updateItemStatus(item.id, ItemStatus.ok);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         );
-      },
+      }
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      children: listChildren,
     );
   }
 
@@ -284,6 +415,22 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(builder: (context) => CategoryView(category: category)),
     );
+    viewModel.notifyListeners();
+  }
+
+  void _updateItemStatus(int itemId, ItemStatus newStatus) {
+    final mainIndex = items.indexWhere((i) => i.id == itemId);
+    if (mainIndex != -1) {
+      items[mainIndex] = items[mainIndex].copyWith(status: newStatus);
+    }
+    viewModel.notifyListeners();
+  }
+
+  void _setItemPieces(int itemId, int pieces) {
+    final mainIndex = items.indexWhere((i) => i.id == itemId);
+    if (mainIndex != -1) {
+      items[mainIndex] = items[mainIndex].copyWith(pieces: pieces);
+    }
     viewModel.notifyListeners();
   }
 
