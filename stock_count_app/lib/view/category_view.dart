@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
-import '../data/item_data.dart';
+import '../viewmodel/category_view_model.dart';
 
 class CategoryView extends StatefulWidget {
   const CategoryView({super.key, required this.category});
@@ -11,147 +11,129 @@ class CategoryView extends StatefulWidget {
 }
 
 class _CategoryViewState extends State<CategoryView> {
-  late List<Item> categoryItems;
+  late final CategoryViewModel viewModel;
 
   @override
   void initState() {
     super.initState();
-    // Filter items by the selected category
-    categoryItems = items
-        .where((item) => item.category == widget.category)
-        .toList();
+    viewModel = CategoryViewModel(widget.category);
   }
 
-  // Function to update item status
-  void updateItemStatus(int itemId, ItemStatus newStatus) {
-    setState(() {
-      // Find and update the item in the list
-      final index = categoryItems.indexWhere((item) => item.id == itemId);
-      if (index != -1) {
-        // Update in the main items list as well
-        final mainIndex = items.indexWhere((item) => item.id == itemId);
-        if (mainIndex != -1) {
-          final updatedItem = Item(
-            id: items[mainIndex].id,
-            name: items[mainIndex].name,
-            category: items[mainIndex].category,
-            status: newStatus,
-          );
-          items[mainIndex] = updatedItem;
-          categoryItems[index] = updatedItem;
-        }
-      }
-    });
+  @override
+  void dispose() {
+    viewModel.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(_getCategoryDisplayText(widget.category)),
-      ),
-      body: categoryItems.isEmpty
-          ? Center(child: Text('No items in this category'))
-          : ListView(
-              children: categoryItems.map((item) {
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+    return AnimatedBuilder(
+      animation: viewModel,
+      builder: (context, _) {
+        final categoryItems = viewModel.itemsInCategory;
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            title: Text(widget.category.displayName),
+          ),
+          body: categoryItems.isEmpty
+              ? const Center(child: Text('No items in this category'))
+              : ListView.builder(
+                  itemCount: categoryItems.length,
+                  itemBuilder: (context, index) {
+                    final item = categoryItems[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            //can be a picture of the item in future versions
+                            CircleAvatar(
+                              backgroundColor: item.category.color.withOpacity(
+                                0.12,
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                _getStatusDisplayText(item.status),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
+                              child: Icon(
+                                item.category.icon,
+                                color: item.category.color,
                               ),
-                            ],
-                          ),
-                        ),
-                        // Status Dropdown
-                        Container(
-                          width: 120,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<ItemStatus>(
-                              value: item.status,
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.black54,
-                              ),
-                              isExpanded: true,
-                              items: ItemStatus.values.map((ItemStatus status) {
-                                return DropdownMenuItem<ItemStatus>(
-                                  value: status,
-                                  child: Text(
-                                    _getStatusDisplayText(status),
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (ItemStatus? newValue) {
-                                if (newValue != null) {
-                                  updateItemStatus(item.id, newValue);
-                                }
-                              },
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item.status.displayName,
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 140,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<ItemStatus>(
+                                  value: item.status,
+                                  isExpanded: true,
+                                  items: ItemStatus.values.map((status) {
+                                    return DropdownMenuItem<ItemStatus>(
+                                      value: status,
+                                      child: Text(status.displayName),
+                                    );
+                                  }).toList(),
+                                  onChanged: (newStatus) {
+                                    if (newStatus != null) {
+                                      viewModel.updateItemStatus(
+                                        item.id,
+                                        newStatus,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+                      ),
+                    );
+                  },
+                ),
+        );
+      },
     );
   }
+}
 
-  // Helper function to get display text for status
-  String _getStatusDisplayText(ItemStatus status) {
-    switch (status) {
-      case ItemStatus.zero:
-        return 'Zero';
-      case ItemStatus.low:
-        return 'Low';
-      case ItemStatus.ok:
-        return 'OK';
-      case ItemStatus.urgent:
-        return 'Urgent';
-    }
-  }
-
-  // Helper function to get display text for category
-  String _getCategoryDisplayText(Category category) {
-    switch (category) {
+extension CategoryUI on Category {
+  String get displayName {
+    switch (this) {
       case Category.bbqGrill:
         return 'BBQ Grill';
-      case Category.essentials:
-        return 'Essentials';
-      case Category.drinks:
-        return 'Drinks';
-      case Category.rawItems:
-        return 'Raw Items';
-      case Category.spices:
-        return 'Spices';
       case Category.warehouse:
         return 'Warehouse';
+      case Category.essentials:
+        return 'Essentials';
+      case Category.spices:
+        return 'Spices';
+      case Category.rawItems:
+        return 'Raw Items';
+      case Category.drinks:
+        return 'Drinks';
       case Category.misc:
         return 'Misc';
       case Category.supplier:
@@ -164,6 +146,79 @@ class _CategoryViewState extends State<CategoryView> {
         return 'Coles/Woolies';
       case Category.chemicals:
         return 'Chemicals';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case Category.bbqGrill:
+        return Icons.outdoor_grill;
+      case Category.warehouse:
+        return Icons.warehouse;
+      case Category.essentials:
+        return Icons.shopping_basket;
+      case Category.spices:
+        return Icons.spa;
+      case Category.rawItems:
+        return Icons.inventory_2;
+      case Category.drinks:
+        return Icons.local_drink;
+      case Category.misc:
+        return Icons.category;
+      case Category.supplier:
+        return Icons.local_shipping;
+      case Category.produce:
+        return Icons.eco;
+      case Category.filipinoSupplier:
+        return Icons.store;
+      case Category.colesWoolies:
+        return Icons.shopping_cart;
+      case Category.chemicals:
+        return Icons.science;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case Category.bbqGrill:
+        return Colors.deepOrange;
+      case Category.warehouse:
+        return Colors.blueGrey;
+      case Category.essentials:
+        return Colors.blue;
+      case Category.spices:
+        return Colors.brown;
+      case Category.rawItems:
+        return Colors.grey;
+      case Category.drinks:
+        return Colors.cyan;
+      case Category.misc:
+        return Colors.purple;
+      case Category.supplier:
+        return Colors.green;
+      case Category.produce:
+        return Colors.lightGreen;
+      case Category.filipinoSupplier:
+        return Colors.red;
+      case Category.colesWoolies:
+        return Colors.orange;
+      case Category.chemicals:
+        return Colors.teal;
+    }
+  }
+}
+
+extension ItemStatusUI on ItemStatus {
+  String get displayName {
+    switch (this) {
+      case ItemStatus.zero:
+        return 'Zero';
+      case ItemStatus.low:
+        return 'Low';
+      case ItemStatus.ok:
+        return 'OK';
+      case ItemStatus.urgent:
+        return 'Urgent';
     }
   }
 }

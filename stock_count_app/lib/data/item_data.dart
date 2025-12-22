@@ -702,4 +702,10 @@ final List<Item> items = [
     category: Category.chemicals,
     status: ItemStatus.ok,
   ),
+  Item(
+    id: 120,
+    name: 'ice',
+    category: Category.colesWoolies,
+    status: ItemStatus.ok,
+  ),
 ];
