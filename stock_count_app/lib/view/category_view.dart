@@ -31,11 +31,24 @@ class _CategoryViewState extends State<CategoryView> {
       animation: viewModel,
       builder: (context, _) {
         final categoryItems = viewModel.itemsInCategory;
+        final allChecked =
+            viewModel.totalItemsCount > 0 &&
+            viewModel.checkedItemsCount == viewModel.totalItemsCount;
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             title: Text(widget.category.displayName),
             elevation: 0,
+            actions: [
+              Text("Check All (Sure ka?)"),
+              IconButton(
+                icon: Icon(
+                  allChecked ? Icons.check_box : Icons.check_box_outline_blank,
+                ),
+                tooltip: allChecked ? 'Unselect all' : 'Select all',
+                onPressed: () => viewModel.setAllChecked(!allChecked),
+              ),
+            ],
           ),
           body: categoryItems.isEmpty
               ? const Center(child: Text('No items in this category'))

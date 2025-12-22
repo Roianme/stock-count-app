@@ -48,6 +48,16 @@ class CategoryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setAllChecked(bool value) {
+    for (var i = 0; i < data.items.length; i++) {
+      if (data.items[i].category == category) {
+        data.items[i] = data.items[i].copyWith(isChecked: value);
+      }
+    }
+    itemsInCategory = data.items.where((i) => i.category == category).toList();
+    notifyListeners();
+  }
+
   int get checkedItemsCount {
     return itemsInCategory.where((i) => i.isChecked).length;
   }

@@ -272,7 +272,6 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(builder: (context) => CategoryView(category: category)),
     );
-    // Refresh home view after returning (triggers AnimatedBuilder rebuild)
     viewModel.notifyListeners();
   }
 
