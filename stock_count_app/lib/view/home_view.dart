@@ -55,77 +55,81 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          body: Column(
-            children: [
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: viewModel.setQuery,
-                          decoration: InputDecoration(
-                            hintText: 'Search for keyword',
-                            prefixIcon: const Icon(
-                              Icons.search,
-                              color: Colors.grey,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: viewModel.setQuery,
+                            decoration: InputDecoration(
+                              hintText: 'Search for keyword',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.grey,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          viewModel.isGrid ? Icons.view_list : Icons.grid_view,
-                          color: Colors.black87,
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        onPressed: viewModel.toggleViewMode,
-                        tooltip: viewModel.isGrid
-                            ? 'Switch to list view'
-                            : 'Switch to grid view',
+                        child: IconButton(
+                          icon: Icon(
+                            viewModel.isGrid
+                                ? Icons.view_list
+                                : Icons.grid_view,
+                            color: Colors.black87,
+                          ),
+                          onPressed: viewModel.toggleViewMode,
+                          tooltip: viewModel.isGrid
+                              ? 'Switch to list view'
+                              : 'Switch to grid view',
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Categories',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: viewModel.isGrid
-                    ? _buildGridView(categories)
-                    : _buildListView(categories),
-              ),
-            ],
+                Expanded(
+                  child: viewModel.isGrid
+                      ? _buildGridView(categories)
+                      : _buildListView(categories),
+                ),
+              ],
+            ),
           ),
         );
       },

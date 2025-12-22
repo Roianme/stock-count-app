@@ -40,7 +40,7 @@ class _CategoryViewState extends State<CategoryView> {
             title: Text(widget.category.displayName),
             elevation: 0,
             actions: [
-              Text("Check All (Sure ka?)"),
+              const Text("Check All (Sure ka?)"),
               IconButton(
                 icon: Icon(
                   allChecked ? Icons.check_box : Icons.check_box_outline_blank,
@@ -50,109 +50,113 @@ class _CategoryViewState extends State<CategoryView> {
               ),
             ],
           ),
-          body: categoryItems.isEmpty
-              ? const Center(child: Text('No items in this category'))
-              : Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    // Items list
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: categoryItems.length,
-                        itemBuilder: (context, index) {
-                          final item = categoryItems[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                children: [
-                                  // Checkbox for verification
-                                  Transform.scale(
-                                    scale: 1.3,
-                                    child: Checkbox(
-                                      value: item.isChecked,
-                                      onChanged: (_) {
-                                        viewModel.toggleItemChecked(item.id);
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Icon
-                                  CircleAvatar(
-                                    backgroundColor: item.category.color
-                                        .withOpacity(0.12),
-                                    child: Icon(
-                                      item.category.icon,
-                                      color: item.category.color,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.name,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          item.status.displayName,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 120,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<ItemStatus>(
-                                        value: item.status,
-                                        isExpanded: true,
-                                        items: ItemStatus.values.map((status) {
-                                          return DropdownMenuItem<ItemStatus>(
-                                            value: status,
-                                            child: Text(status.displayName),
-                                          );
-                                        }).toList(),
-                                        onChanged: (newStatus) {
-                                          if (newStatus != null) {
-                                            viewModel.updateItemStatus(
-                                              item.id,
-                                              newStatus,
-                                            );
-                                          }
+          body: SafeArea(
+            child: categoryItems.isEmpty
+                ? const Center(child: Text('No items in this category'))
+                : Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      // Items list
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: categoryItems.length,
+                          itemBuilder: (context, index) {
+                            final item = categoryItems[index];
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Row(
+                                  children: [
+                                    // Checkbox for verification
+                                    Transform.scale(
+                                      scale: 1.3,
+                                      child: Checkbox(
+                                        value: item.isChecked,
+                                        onChanged: (_) {
+                                          viewModel.toggleItemChecked(item.id);
                                         },
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 12),
+                                    // Icon
+                                    CircleAvatar(
+                                      backgroundColor: item.category.color
+                                          .withOpacity(0.12),
+                                      child: Icon(
+                                        item.category.icon,
+                                        color: item.category.color,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.name,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            item.status.displayName,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 120,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<ItemStatus>(
+                                          value: item.status,
+                                          isExpanded: true,
+                                          items: ItemStatus.values.map((
+                                            status,
+                                          ) {
+                                            return DropdownMenuItem<ItemStatus>(
+                                              value: status,
+                                              child: Text(status.displayName),
+                                            );
+                                          }).toList(),
+                                          onChanged: (newStatus) {
+                                            if (newStatus != null) {
+                                              viewModel.updateItemStatus(
+                                                item.id,
+                                                newStatus,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+          ),
         );
       },
     );
