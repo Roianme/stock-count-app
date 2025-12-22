@@ -1,4 +1,4 @@
-enum ItemStatus { zero, low, ok, urgent }
+enum ItemStatus { zero, low, ok, urgent, pieces }
 
 enum Category {
   bbqGrill,
@@ -23,6 +23,7 @@ class Item {
   final Category category;
   final ItemStatus status;
   final bool isChecked;
+  final int pieces;
 
   Item({
     int? id,
@@ -30,6 +31,7 @@ class Item {
     Category? category,
     ItemStatus? status,
     this.isChecked = false,
+    this.pieces = 0,
   }) : id = id ?? _nextId++,
        name = name ?? 'Unnamed Item',
        category = category ?? Category.misc,
@@ -43,6 +45,7 @@ class Item {
     Category? category,
     ItemStatus? status,
     bool? isChecked,
+    int? pieces,
   }) {
     return Item(
       id: id ?? this.id,
@@ -50,6 +53,7 @@ class Item {
       category: category ?? this.category,
       status: status ?? this.status,
       isChecked: isChecked ?? this.isChecked,
+      pieces: pieces ?? this.pieces,
     );
   }
 }

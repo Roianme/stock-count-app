@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
 
@@ -105,40 +106,108 @@ class _CategoryViewState extends State<CategoryView> {
                                         ],
                                       ),
                                     ),
-                                    Container(
-                                      width: 100,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.grey.shade300,
+                                    if (item.status != ItemStatus.pieces)
+                                      Container(
+                                        width: 120,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<ItemStatus>(
-                                          value: item.status,
-                                          isExpanded: true,
-                                          items: ItemStatus.values.map((
-                                            status,
-                                          ) {
-                                            return DropdownMenuItem<ItemStatus>(
-                                              value: status,
-                                              child: Text(status.displayName),
-                                            );
-                                          }).toList(),
-                                          onChanged: (newStatus) {
-                                            if (newStatus != null) {
-                                              viewModel.updateItemStatus(
-                                                item.id,
-                                                newStatus,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton<ItemStatus>(
+                                            value: item.status,
+                                            isExpanded: true,
+                                            items: ItemStatus.values.map((
+                                              status,
+                                            ) {
+                                              return DropdownMenuItem<
+                                                ItemStatus
+                                              >(
+                                                value: status,
+                                                child: Text(status.displayName),
                                               );
-                                            }
-                                          },
+                                            }).toList(),
+                                            onChanged: (newStatus) {
+                                              if (newStatus != null) {
+                                                viewModel.updateItemStatus(
+                                                  item.id,
+                                                  newStatus,
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        width: 120,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: TextFormField(
+                                                key: ValueKey(
+                                                  'pieces_${item.id}',
+                                                ),
+                                                initialValue: item.pieces == 0
+                                                    ? ''
+                                                    : item.pieces.toString(),
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly,
+                                                ],
+                                                textAlign: TextAlign.center,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      isDense: true,
+                                                      border: InputBorder.none,
+                                                      hintText: 'Pieces',
+                                                    ),
+                                                onChanged: (value) {
+                                                  final parsed =
+                                                      int.tryParse(value) ?? 0;
+                                                  viewModel.setItemPieces(
+                                                    item.id,
+                                                    parsed,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            IconButton(
+                                              tooltip: 'Back to status',
+                                              icon: const Icon(
+                                                Icons
+                                                    .arrow_drop_down_circle_outlined,
+                                              ),
+                                              onPressed: () {
+                                                viewModel.updateItemStatus(
+                                                  item.id,
+                                                  ItemStatus.ok,
+                                                );
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -255,6 +324,8 @@ extension ItemStatusUI on ItemStatus {
         return 'OK';
       case ItemStatus.urgent:
         return 'Urgent';
+      case ItemStatus.pieces:
+        return 'Pieces';
     }
   }
 }
