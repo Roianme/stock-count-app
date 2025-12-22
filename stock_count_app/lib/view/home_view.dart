@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
+import '../data/item_data.dart';
 import 'category_view.dart';
 import '../viewmodel/home_view_model.dart';
 
@@ -200,6 +201,14 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.black87,
                 ),
               ),
+              Text(
+                _getCategoryProgress(category),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),
@@ -238,20 +247,41 @@ class _HomePageState extends State<HomePage> {
             color: Colors.black87,
           ),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey[400],
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _getCategoryProgress(category),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.blue,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+          ],
         ),
         onTap: () => _navigateToCategory(category),
       ),
     );
   }
 
-  void _navigateToCategory(Category category) {
-    Navigator.push(
+  void _navigateToCategory(Category category) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => CategoryView(category: category)),
     );
+    // Refresh home view after returning (triggers AnimatedBuilder rebuild)
+    viewModel.notifyListeners();
+  }
+
+  String _getCategoryProgress(Category category) {
+    final categoryItems = items
+        .where((item) => item.category == category)
+        .toList();
+    final checkedCount = categoryItems.where((item) => item.isChecked).length;
+    final totalCount = categoryItems.length;
+    return '$checkedCount/$totalCount checked';
   }
 }
