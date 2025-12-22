@@ -69,7 +69,6 @@ class _CategoryViewState extends State<CategoryView> {
                                 padding: const EdgeInsets.all(12.0),
                                 child: Row(
                                   children: [
-                                    // Checkbox for verification
                                     Transform.scale(
                                       scale: 1.3,
                                       child: Checkbox(
@@ -103,18 +102,11 @@ class _CategoryViewState extends State<CategoryView> {
                                             ),
                                           ),
                                           const SizedBox(height: 4),
-                                          Text(
-                                            item.status.displayName,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
                                         ],
                                       ),
                                     ),
                                     Container(
-                                      width: 120,
+                                      width: 100,
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
                                       ),

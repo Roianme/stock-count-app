@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/item_model.dart';
 import '../data/item_data.dart';
 import 'category_view.dart';
+import '../viewmodel/category_view_model.dart';
 import '../viewmodel/home_view_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,6 +14,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
+  late final CategoryViewModel categoryViewModel;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -109,13 +111,17 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(16),
+                Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Categories',
-                      style: TextStyle(
+                      viewModel.isGrid && !viewModel.isSearching
+                          ? 'Categories'
+                          : (viewModel.isSearching
+                                ? 'Search results'
+                                : 'All Items'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -124,9 +130,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Expanded(
-                  child: viewModel.isGrid
-                      ? _buildGridView(categories)
-                      : _buildListView(categories),
+                  child: viewModel.isSearching
+                      ? _buildSearchResults(viewModel.matchedItems)
+                      : (viewModel.isGrid
+                            ? _buildGridView(categories)
+                            : _buildListView(categories)),
                 ),
               ],
             ),
@@ -286,5 +294,82 @@ class _HomePageState extends State<HomePage> {
     final checkedCount = categoryItems.where((item) => item.isChecked).length;
     final totalCount = categoryItems.length;
     return '$checkedCount/$totalCount checked';
+  }
+
+  Widget _buildSearchResults(List<Item> itemsList) {
+    if (itemsList.isEmpty) {
+      return const Center(child: Text('No matching items'));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: itemsList.length,
+      itemBuilder: (context, index) {
+        final item = itemsList[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: item.category.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  item.category.icon,
+                  color: item.category.color,
+                  size: 28,
+                ),
+              ),
+              title: Text(
+                item.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              subtitle: Text(
+                item.category.displayName,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Checkbox(
+                    value: item.isChecked,
+                    onChanged: (checked) {
+                      viewModel.setItemChecked(item.id, checked ?? false);
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey[400],
+                  ),
+                ],
+              ),
+              onTap: () => _navigateToCategory(item.category),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
