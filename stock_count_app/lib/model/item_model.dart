@@ -1,28 +1,69 @@
-enum ItemStatus { zero, low, ok, urgent, pieces }
+import 'package:hive/hive.dart';
 
+part 'item_model.g.dart';
+
+@HiveType(typeId: 0)
+enum ItemStatus {
+  @HiveField(0)
+  zero,
+  @HiveField(1)
+  low,
+  @HiveField(2)
+  ok,
+  @HiveField(3)
+  urgent,
+  @HiveField(4)
+  pieces,
+}
+
+@HiveType(typeId: 1)
 enum Category {
+  @HiveField(0)
   bbqGrill,
+  @HiveField(1)
   warehouse,
+  @HiveField(2)
   essentials,
+  @HiveField(3)
   spices,
+  @HiveField(4)
   rawItems,
+  @HiveField(5)
   drinks,
+  @HiveField(6)
   misc,
+  @HiveField(7)
   supplier,
+  @HiveField(8)
   produce,
+  @HiveField(9)
   filipinoSupplier,
+  @HiveField(10)
   colesWoolies,
+  @HiveField(11)
   chemicals,
 }
 
+@HiveType(typeId: 2)
 class Item {
   static int _nextId = 1;
 
+  @HiveField(0)
   final int id;
+
+  @HiveField(1)
   final String name;
+
+  @HiveField(2)
   final Category category;
+
+  @HiveField(3)
   final ItemStatus status;
+
+  @HiveField(4)
   final bool isChecked;
+
+  @HiveField(5)
   final int pieces;
 
   Item({

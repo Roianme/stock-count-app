@@ -3,22 +3,31 @@ import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import 'category_view.dart';
 import '../viewmodel/home_view_model.dart';
+import '../data/item_repository.dart';
+import '../data/item_data.dart' as item_data;
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.repository});
+  final ItemRepository repository;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState(repository);
 }
 
 class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
+  final ItemRepository repository;
+
+  _HomePageState(this.repository);
 
   @override
   void initState() {
     super.initState();
-    viewModel = HomeViewModel(allCategories: Category.values);
+    viewModel = HomeViewModel(
+      allCategories: Category.values,
+      repository: repository,
+    );
   }
 
   @override
@@ -52,8 +61,19 @@ class _HomePageState extends State<HomePage> {
                 // Menu for location toggle
                 // City, Cafe, HP, etc.
                 // Different view navigation per location
+                // Add sidebar
+                // Also include version info at bottom
               },
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.black87),
+                tooltip: 'Export checked items',
+                onPressed: viewModel.hasCheckedItems
+                    ? () => _showExportDialog(context)
+                    : null,
+              ),
+            ],
           ),
           body: SafeArea(
             child: Column(
@@ -356,63 +376,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCategoryListItem(Category category) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: category.color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(category.icon, color: category.color, size: 28),
-        ),
-        title: Text(
-          category.displayName,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              viewModel.categoryProgress(category),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.blue,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-          ],
-        ),
-        onTap: () => _navigateToCategory(category),
-      ),
-    );
-  }
-
   void _navigateToCategory(Category category) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CategoryView(category: category)),
+      MaterialPageRoute(
+        builder: (context) =>
+            CategoryView(category: category, repository: repository),
+      ),
     );
-    viewModel.notifyListeners();
+    setState(() {});
   }
 
   Widget _buildSearchResults(List<Item> itemsList) {
@@ -490,5 +462,145 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  void _showExportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final locationController = TextEditingController();
+        final nameController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Export Report'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Export ${item_data.items.where((i) => i.isChecked).length} checked items?',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              // Can be modified soon if Location is set
+              TextField(
+                controller: locationController,
+                decoration: InputDecoration(
+                  hintText: 'Location (optional)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  hintText: 'Your Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                _performSaveToDevice(
+                  context,
+                  locationController.text,
+                  nameController.text,
+                );
+              },
+              child: const Text('Save to Device'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                _performExport(
+                  context,
+                  locationController.text,
+                  nameController.text,
+                );
+              },
+              child: const Text('Share'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _performExport(
+    BuildContext context,
+    String location,
+    String name,
+  ) async {
+    final success = await viewModel.exportAndClear(
+      context,
+      location: location.isEmpty ? null : location,
+      name: name.isEmpty ? null : name,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Report shared and checks cleared!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No checked items to export'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _performSaveToDevice(
+    BuildContext context,
+    String location,
+    String name,
+  ) async {
+    final filePath = await viewModel.saveToDeviceAndClear(
+      context,
+      location: location.isEmpty ? null : location,
+      name: name.isEmpty ? null : name,
+    );
+
+    if (!mounted) return;
+
+    if (filePath != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Report saved to:\n$filePath'),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(label: 'OK', onPressed: () {}),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save report'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }
