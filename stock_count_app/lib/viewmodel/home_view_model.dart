@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../model/item_model.dart' as model;
 import '../data/item_data.dart' as data;
 import '../data/item_repository.dart';
+import '../services/export_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final List<model.Category> allCategories;
@@ -125,5 +127,30 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e) {
       print('Error saving items in HomeViewModel: $e');
     }
+  }
+
+  Future<bool> exportAndClear(BuildContext context, {String? location}) async {
+    final checkedItems = data.items.where((i) => i.isChecked).toList();
+    if (checkedItems.isEmpty) {
+      return false;
+    }
+
+    final success = await ExportService.exportAndShare(
+      context,
+      checkedItems,
+      title: 'Stock Count Report',
+      location: location,
+    );
+
+    if (success) {
+      // Clear all checked items after successful export
+      for (int i = 0; i < data.items.length; i++) {
+        data.items[i] = data.items[i].copyWith(isChecked: false);
+      }
+      await _saveItems();
+      notifyListeners();
+    }
+
+    return success;
   }
 }
