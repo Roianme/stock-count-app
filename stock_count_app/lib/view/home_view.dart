@@ -3,22 +3,30 @@ import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import 'category_view.dart';
 import '../viewmodel/home_view_model.dart';
+import '../data/item_repository.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.repository});
+  final ItemRepository repository;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState(repository);
 }
 
 class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
+  final ItemRepository repository;
+
+  _HomePageState(this.repository);
 
   @override
   void initState() {
     super.initState();
-    viewModel = HomeViewModel(allCategories: Category.values);
+    viewModel = HomeViewModel(
+      allCategories: Category.values,
+      repository: repository,
+    );
   }
 
   @override
@@ -52,6 +60,8 @@ class _HomePageState extends State<HomePage> {
                 // Menu for location toggle
                 // City, Cafe, HP, etc.
                 // Different view navigation per location
+                // Add sidebar
+                // Also include version info at bottom
               },
             ),
           ),
@@ -410,7 +420,10 @@ class _HomePageState extends State<HomePage> {
   void _navigateToCategory(Category category) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CategoryView(category: category)),
+      MaterialPageRoute(
+        builder: (context) =>
+            CategoryView(category: category, repository: repository),
+      ),
     );
     viewModel.notifyListeners();
   }

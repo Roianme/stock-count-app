@@ -1,16 +1,18 @@
 import 'package:flutter/foundation.dart';
 import '../model/item_model.dart' as model;
 import '../data/item_data.dart' as data;
+import '../data/item_repository.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final List<model.Category> allCategories;
+  final ItemRepository repository;
   List<model.Category> visibleCategories;
   bool isGrid = true;
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
 
-  HomeViewModel({required this.allCategories})
+  HomeViewModel({required this.allCategories, required this.repository})
     : visibleCategories = List.from(allCategories);
 
   void toggleViewMode() {
@@ -67,6 +69,7 @@ class HomeViewModel extends ChangeNotifier {
     if (matchIndex != -1) {
       matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
     }
+    _saveItems();
     notifyListeners();
   }
 
@@ -96,6 +99,7 @@ class HomeViewModel extends ChangeNotifier {
     if (matchIndex != -1) {
       matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
     }
+    _saveItems();
     notifyListeners();
   }
 
@@ -109,6 +113,17 @@ class HomeViewModel extends ChangeNotifier {
     if (matchIndex != -1) {
       matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
     }
+    _saveItems();
     notifyListeners();
+  }
+
+  bool get hasCheckedItems => data.items.any((i) => i.isChecked);
+
+  Future<void> _saveItems() async {
+    try {
+      await repository.saveItems(data.items);
+    } catch (e) {
+      print('Error saving items in HomeViewModel: $e');
+    }
   }
 }

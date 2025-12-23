@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
+import '../data/item_repository.dart';
 
 class CategoryView extends StatefulWidget {
-  const CategoryView({super.key, required this.category});
+  const CategoryView({
+    super.key,
+    required this.category,
+    required this.repository,
+  });
   final Category category;
+  final ItemRepository repository;
 
   @override
   State<CategoryView> createState() => _CategoryViewState();
@@ -17,7 +23,10 @@ class _CategoryViewState extends State<CategoryView> {
   @override
   void initState() {
     super.initState();
-    viewModel = CategoryViewModel(widget.category);
+    viewModel = CategoryViewModel(
+      widget.category,
+      repository: widget.repository,
+    );
   }
 
   @override
