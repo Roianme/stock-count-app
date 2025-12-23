@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:gal/gal.dart';
 import '../model/item_model.dart';
 import '../view/report_widget.dart';
 
@@ -44,6 +45,52 @@ class ExportService {
     } catch (e) {
       print('Export error: $e');
       return false;
+    }
+  }
+
+  /// Save report directly to device storage
+  static Future<String?> saveToDevice(
+    BuildContext context,
+    List<Item> checkedItems, {
+    String title = 'Stock Count Report',
+    String? location,
+    String? name,
+  }) async {
+    try {
+      print('Starting save to device...');
+
+      // Render widget to image using overlay
+      final image = await _captureReportWidget(
+        context,
+        checkedItems,
+        title: title,
+        location: location,
+        name: name,
+      );
+
+      if (image == null) {
+        print('Failed to capture image');
+        return null;
+      }
+
+      print('Image captured, size: ${image.length} bytes');
+
+      // Save directly to gallery using Gal
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'stock_report_$timestamp.png';
+
+      await Gal.putImageBytes(
+        image,
+        album: 'Stock Count Reports',
+        name: fileName,
+      );
+
+      print('Successfully saved to gallery: Stock Count Reports/$fileName');
+      return 'Saved to Gallery: Stock Count Reports';
+    } catch (e, stackTrace) {
+      print('Save error: $e');
+      print('Stack trace: $stackTrace');
+      return null;
     }
   }
 

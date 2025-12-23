@@ -518,13 +518,24 @@ class _HomePageState extends State<HomePage> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context);
+                _performSaveToDevice(
+                  context,
+                  locationController.text,
+                  nameController.text,
+                );
+              },
+              child: const Text('Save to Device'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
                 _performExport(
                   context,
                   locationController.text,
                   nameController.text,
                 );
               },
-              child: const Text('Export & Share'),
+              child: const Text('Share'),
             ),
           ],
         );
@@ -548,7 +559,7 @@ class _HomePageState extends State<HomePage> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Report exported and checks cleared!'),
+          content: Text('Report shared and checks cleared!'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -556,6 +567,37 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No checked items to export'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _performSaveToDevice(
+    BuildContext context,
+    String location,
+    String name,
+  ) async {
+    final filePath = await viewModel.saveToDeviceAndClear(
+      context,
+      location: location.isEmpty ? null : location,
+      name: name.isEmpty ? null : name,
+    );
+
+    if (!mounted) return;
+
+    if (filePath != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Report saved to:\n$filePath'),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(label: 'OK', onPressed: () {}),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save report'),
           duration: Duration(seconds: 2),
         ),
       );

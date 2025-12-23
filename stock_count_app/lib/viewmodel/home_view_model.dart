@@ -158,4 +158,34 @@ class HomeViewModel extends ChangeNotifier {
 
     return success;
   }
+
+  Future<String?> saveToDeviceAndClear(
+    BuildContext context, {
+    String? location,
+    String? name,
+  }) async {
+    final checkedItems = data.items.where((i) => i.isChecked).toList();
+    if (checkedItems.isEmpty) {
+      return null;
+    }
+
+    final filePath = await ExportService.saveToDevice(
+      context,
+      checkedItems,
+      title: 'Stock Count Report',
+      location: location,
+      name: name,
+    );
+
+    if (filePath != null) {
+      // Clear all checked items after successful save
+      for (int i = 0; i < data.items.length; i++) {
+        data.items[i] = data.items[i].copyWith(isChecked: false);
+      }
+      await _saveItems();
+      notifyListeners();
+    }
+
+    return filePath;
+  }
 }
