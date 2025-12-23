@@ -129,7 +129,11 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> exportAndClear(BuildContext context, {String? location}) async {
+  Future<bool> exportAndClear(
+    BuildContext context, {
+    String? location,
+    String? name,
+  }) async {
     final checkedItems = data.items.where((i) => i.isChecked).toList();
     if (checkedItems.isEmpty) {
       return false;
@@ -140,6 +144,7 @@ class HomeViewModel extends ChangeNotifier {
       checkedItems,
       title: 'Stock Count Report',
       location: location,
+      name: name,
     );
 
     if (success) {

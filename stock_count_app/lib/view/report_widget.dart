@@ -7,12 +7,14 @@ class ReportWidget extends StatelessWidget {
   final List<Item> checkedItems;
   final String title;
   final String? location;
+  final String? name;
 
   const ReportWidget({
     super.key,
     required this.checkedItems,
     this.title = 'Stock Count Report',
     this.location,
+    this.name,
   });
 
   @override
@@ -25,10 +27,8 @@ class ReportWidget extends StatelessWidget {
     for (final item in checkedItems) {
       groupedItems.putIfAbsent(item.category, () => []).add(item);
     }
-
-    // Split categories into columns (3 columns)
     final categories = groupedItems.keys.toList();
-    final columnCount = 3;
+    final columnCount = 4;
     final columns = <List<Category>>[];
 
     for (int i = 0; i < columnCount; i++) {
@@ -42,7 +42,7 @@ class ReportWidget extends StatelessWidget {
     return Material(
       color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -68,9 +68,6 @@ class ReportWidget extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -85,7 +82,7 @@ class ReportWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'COUNT BY: ______________',
+                    'COUNT BY: $name',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -112,7 +109,7 @@ class ReportWidget extends StatelessWidget {
 
   Widget _buildCategoryColumn(Category category, List<Item> items) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8, bottom: 16),
+      padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -126,7 +123,7 @@ class ReportWidget extends StatelessWidget {
             child: Text(
               category.displayName.toUpperCase(),
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
@@ -136,21 +133,21 @@ class ReportWidget extends StatelessWidget {
 
           // Items list
           ...items.map((item) {
-            String statusMarker = '';
-            Color markerColor = Colors.black;
+            String statusMarker = 'OK';
+            Color markerColor = Colors.greenAccent;
 
             if (item.status == ItemStatus.low) {
               statusMarker = 'LOW';
-              markerColor = Colors.red;
+              markerColor = Colors.orangeAccent;
             } else if (item.status == ItemStatus.zero) {
               statusMarker = 'O';
-              markerColor = Colors.red;
+              markerColor = Colors.black;
             } else if (item.status == ItemStatus.urgent) {
-              statusMarker = '!';
-              markerColor = Colors.red;
+              statusMarker = 'URGENT';
+              markerColor = Colors.redAccent;
             } else if (item.status == ItemStatus.pieces) {
               statusMarker = item.pieces.toString();
-              markerColor = Colors.red;
+              markerColor = Colors.blueAccent;
             }
 
             return Padding(
@@ -160,18 +157,18 @@ class ReportWidget extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item.name,
-                      style: const TextStyle(fontSize: 12, color: Colors.black),
+                      style: const TextStyle(fontSize: 20, color: Colors.black),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   // Status indicator or checkbox
                   if (statusMarker.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
+                        horizontal: 8,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
                         color: markerColor.withOpacity(0.2),
@@ -180,14 +177,14 @@ class ReportWidget extends StatelessWidget {
                       child: Text(
                         statusMarker,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: markerColor,
                         ),
                       ),
                     )
                   else
-                    const Icon(Icons.circle, size: 12, color: Colors.black),
+                    const Icon(Icons.circle, size: 20, color: Colors.black),
                 ],
               ),
             );

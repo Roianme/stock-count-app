@@ -469,6 +469,7 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) {
         final locationController = TextEditingController();
+        final nameController = TextEditingController();
         return AlertDialog(
           title: const Text('Export Report'),
           content: Column(
@@ -479,10 +480,25 @@ class _HomePageState extends State<HomePage> {
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 16),
+              // Can be modified soon if Location is set
               TextField(
                 controller: locationController,
                 decoration: InputDecoration(
                   hintText: 'Location (optional)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  hintText: 'Your Name',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -502,7 +518,11 @@ class _HomePageState extends State<HomePage> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context);
-                _performExport(context, locationController.text);
+                _performExport(
+                  context,
+                  locationController.text,
+                  nameController.text,
+                );
               },
               child: const Text('Export & Share'),
             ),
@@ -512,10 +532,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _performExport(BuildContext context, String location) async {
+  Future<void> _performExport(
+    BuildContext context,
+    String location,
+    String name,
+  ) async {
     final success = await viewModel.exportAndClear(
       context,
       location: location.isEmpty ? null : location,
+      name: name.isEmpty ? null : name,
     );
 
     if (!mounted) return;

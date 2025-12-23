@@ -15,6 +15,7 @@ class ExportService {
     List<Item> checkedItems, {
     String title = 'Stock Count Report',
     String? location,
+    String? name,
   }) async {
     try {
       // Render widget to image using overlay
@@ -23,6 +24,7 @@ class ExportService {
         checkedItems,
         title: title,
         location: location,
+        name: name,
       );
 
       if (image == null) {
@@ -51,6 +53,7 @@ class ExportService {
     List<Item> checkedItems, {
     String title = 'Stock Count Report',
     String? location,
+    String? name,
   }) async {
     try {
       final boundary = GlobalKey();
@@ -63,7 +66,7 @@ class ExportService {
           child: Material(
             child: Container(
               width: 1200,
-              height: 1600,
+              height: 1800,
               color: Colors.white,
               child: RepaintBoundary(
                 key: boundary,
@@ -71,6 +74,7 @@ class ExportService {
                   checkedItems: checkedItems,
                   title: title,
                   location: location,
+                  name: name,
                 ),
               ),
             ),
