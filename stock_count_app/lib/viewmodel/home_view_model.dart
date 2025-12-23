@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../model/item_model.dart' as model;
 import '../data/item_data.dart' as data;
 import '../data/item_repository.dart';
@@ -187,5 +188,21 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     return filePath;
+  }
+
+  /// Generate preview image of the report without clearing items
+  Future<Uint8List?> generatePreviewImage(BuildContext context) async {
+    final checkedItems = data.items.where((i) => i.isChecked).toList();
+    if (checkedItems.isEmpty) {
+      return null;
+    }
+
+    final image = await ExportService.generateReportImage(
+      context,
+      checkedItems,
+      title: 'Stock Count Report',
+    );
+
+    return image;
   }
 }

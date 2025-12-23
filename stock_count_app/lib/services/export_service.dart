@@ -94,6 +94,23 @@ class ExportService {
     }
   }
 
+  /// Generate report image without saving or sharing
+  static Future<Uint8List?> generateReportImage(
+    BuildContext context,
+    List<Item> checkedItems, {
+    String title = 'Stock Count Report',
+    String? location,
+    String? name,
+  }) async {
+    return _captureReportWidget(
+      context,
+      checkedItems,
+      title: title,
+      location: location,
+      name: name,
+    );
+  }
+
   /// Capture report widget as image using overlay
   static Future<Uint8List?> _captureReportWidget(
     BuildContext context,

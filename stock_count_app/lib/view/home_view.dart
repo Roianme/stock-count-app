@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:typed_data';
 import '../model/item_model.dart';
 import 'category_view.dart';
 import '../viewmodel/home_view_model.dart';
@@ -66,6 +67,13 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             actions: [
+              IconButton(
+                onPressed: viewModel.hasCheckedItems
+                    ? () => _showPreviewDialog(context)
+                    : null,
+                icon: const Icon(Icons.preview, color: Colors.black87),
+                tooltip: 'Preview checked items',
+              ),
               IconButton(
                 icon: const Icon(Icons.share, color: Colors.black87),
                 tooltip: 'Export checked items',
@@ -476,7 +484,7 @@ class _HomePageState extends State<HomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Export ${item_data.items.where((i) => i.isChecked).length} checked items?',
+                'Export ${item_data.items.where((i) => i.isChecked).length} / ${item_data.items.length} items?',
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 16),
@@ -540,6 +548,70 @@ class _HomePageState extends State<HomePage> {
           ],
         );
       },
+    );
+  }
+
+  void _showPreviewDialog(BuildContext context) async {
+    _performPreview(context);
+  }
+
+  Future<void> _performPreview(BuildContext context) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final image = await viewModel.generatePreviewImage(context);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    if (image != null) {
+      _showImagePreviewDialog(image);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to generate preview'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _showImagePreviewDialog(Uint8List imageBytes) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(
+                imageBytes,
+                fit: BoxFit.contain,
+                height: MediaQuery.of(context).size.height * 0.7,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
