@@ -65,9 +65,12 @@ class ReportWidget extends StatelessWidget {
             ),
 
             // Footer section
-            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -108,88 +111,100 @@ class ReportWidget extends StatelessWidget {
   }
 
   Widget _buildCategoryColumn(Category category, List<Item> items) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Category header with yellow background
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.yellow[700],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              category.displayName.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+    return Container(
+      margin: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(8),
+      color: Colors.grey[100],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Category header with yellow background
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.yellow[700],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                category.displayName.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 4),
+            const SizedBox(height: 4),
 
-          // Items list
-          ...items.map((item) {
-            String statusMarker = 'OK';
-            Color markerColor = Colors.greenAccent;
+            // Items list
+            ...items.map((item) {
+              String statusMarker = 'OK';
+              Color markerColor = Colors.greenAccent;
 
-            if (item.status == ItemStatus.low) {
-              statusMarker = 'LOW';
-              markerColor = Colors.orangeAccent;
-            } else if (item.status == ItemStatus.zero) {
-              statusMarker = 'O';
-              markerColor = Colors.black;
-            } else if (item.status == ItemStatus.urgent) {
-              statusMarker = 'URGENT';
-              markerColor = Colors.redAccent;
-            } else if (item.status == ItemStatus.pieces) {
-              statusMarker = item.pieces.toString();
-              markerColor = Colors.blueAccent;
-            }
+              if (item.status == ItemStatus.low) {
+                statusMarker = 'LOW';
+                markerColor = Colors.orangeAccent;
+              } else if (item.status == ItemStatus.zero) {
+                statusMarker = 'O';
+                markerColor = Colors.black;
+              } else if (item.status == ItemStatus.urgent) {
+                statusMarker = 'URGENT';
+                markerColor = Colors.redAccent;
+              } else if (item.status == ItemStatus.pieces) {
+                statusMarker = item.pieces.toString();
+                markerColor = Colors.blueAccent;
+              }
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.name,
-                      style: const TextStyle(fontSize: 20, color: Colors.black),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Status indicator or checkbox
-                  if (statusMarker.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: markerColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        statusMarker,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: markerColor,
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    )
-                  else
-                    const Icon(Icons.circle, size: 20, color: Colors.black),
-                ],
-              ),
-            );
-          }),
-        ],
+                    ),
+                    const SizedBox(width: 8),
+                    // Status indicator or checkbox
+                    if (statusMarker.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: markerColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          statusMarker,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: markerColor,
+                          ),
+                        ),
+                      )
+                    else
+                      const Icon(Icons.circle, size: 20, color: Colors.black),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
