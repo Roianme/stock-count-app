@@ -91,14 +91,12 @@ class _ExportDialogState extends State<ExportDialog> {
         ),
         ElevatedButton(
           onPressed: () async {
-            Navigator.pop(context);
             await _performSaveToDevice();
           },
           child: const Text('Save to Device'),
         ),
         ElevatedButton(
           onPressed: () async {
-            Navigator.pop(context);
             await _performExport();
           },
           child: const Text('Share'),
@@ -118,6 +116,8 @@ class _ExportDialogState extends State<ExportDialog> {
 
     if (!mounted) return;
 
+    Navigator.pop(context);
+
     if (success) {
       widget.onExportSuccess();
     } else {
@@ -135,6 +135,8 @@ class _ExportDialogState extends State<ExportDialog> {
     );
 
     if (!mounted) return;
+
+    Navigator.pop(context);
 
     if (filePath != null) {
       widget.onSaveSuccess(filePath);

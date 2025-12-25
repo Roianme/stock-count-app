@@ -84,7 +84,7 @@ class ReportWidget extends StatelessWidget {
                   Text(
                     'COUNT BY: $name',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                       fontStyle: FontStyle.italic,
                     ),
@@ -93,7 +93,7 @@ class ReportWidget extends StatelessWidget {
                   Text(
                     'DATE: $dateStr',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                       fontStyle: FontStyle.italic,
                     ),
