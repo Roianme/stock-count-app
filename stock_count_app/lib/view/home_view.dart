@@ -6,6 +6,10 @@ import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
+import 'widgets/app_drawer.dart';
+import 'hp_view.dart';
+import 'cafe_view.dart';
+import 'warehouse_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.repository});
@@ -19,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
   final ItemRepository repository;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _HomePageState(this.repository);
 
@@ -68,10 +73,74 @@ class _HomePageState extends State<HomePage> {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, _) {
+        // Render different views based on location
+        if (viewModel.currentLocation == Location.hp) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: Scaffold(
+              key: _scaffoldKey,
+              drawer: AppDrawer(
+                currentLocation: viewModel.currentLocation,
+                onLocationChanged: viewModel.setLocation,
+              ),
+              body: HpView(
+                repository: repository,
+                onDrawerToggle: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+          );
+        }
+
+        if (viewModel.currentLocation == Location.cafe) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: Scaffold(
+              key: _scaffoldKey,
+              drawer: AppDrawer(
+                currentLocation: viewModel.currentLocation,
+                onLocationChanged: viewModel.setLocation,
+              ),
+              body: CafeView(
+                repository: repository,
+                onDrawerToggle: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+          );
+        }
+
+        if (viewModel.currentLocation == Location.warehouse) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: Scaffold(
+              key: _scaffoldKey,
+              drawer: AppDrawer(
+                currentLocation: viewModel.currentLocation,
+                onLocationChanged: viewModel.setLocation,
+              ),
+              body: WarehouseView(
+                repository: repository,
+                onDrawerToggle: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+          );
+        }
+
+        // City location (default view)
         final categories = viewModel.visibleCategories;
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: Colors.grey[100],
           appBar: _buildAppBar(),
+          drawer: AppDrawer(
+            currentLocation: viewModel.currentLocation,
+            onLocationChanged: viewModel.setLocation,
+          ),
           body: SafeArea(
             child: Column(
               children: [
@@ -96,18 +165,17 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      title: const Text(
-        'Homepage',
-        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+      title: Text(
+        '${viewModel.currentLocation.displayName} - Stock Count',
+        style: const TextStyle(
+          color: Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       leading: IconButton(
         icon: const Icon(Icons.menu, color: Colors.black87),
         onPressed: () {
-          // Menu for location toggle
-          // City, Cafe, HP, etc.
-          // Different view navigation per location
-          // Add sidebar
-          // Also include version info at bottom
+          _scaffoldKey.currentState?.openDrawer();
         },
       ),
       actions: [
