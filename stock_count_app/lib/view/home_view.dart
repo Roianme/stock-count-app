@@ -4,7 +4,12 @@ import '../model/item_model.dart';
 import 'category_view.dart';
 import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
-import '../data/item_data.dart' as item_data;
+import 'widgets/export_dialog.dart';
+import 'widgets/preview_image_dialog.dart';
+import 'widgets/app_drawer.dart';
+import 'hp_view.dart';
+import 'cafe_view.dart';
+import 'warehouse_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.repository});
@@ -18,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
   final ItemRepository repository;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _HomePageState(this.repository);
 
@@ -28,13 +34,38 @@ class _HomePageState extends State<HomePage> {
       allCategories: Category.values,
       repository: repository,
     );
+    viewModel.addListener(_handleViewModelChanges);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    viewModel.removeListener(_handleViewModelChanges);
     viewModel.dispose();
     super.dispose();
+  }
+
+  void _handleViewModelChanges() {
+    // Handle any notifications from ViewModel
+    if (viewModel.showMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.showMessage!),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      viewModel.clearMessage();
+    }
+
+    if (viewModel.previewImage != null) {
+      _showImagePreviewDialog(viewModel.previewImage!);
+      viewModel.clearPreviewImage();
+    }
+
+    if (viewModel.shouldShowExportDialog) {
+      _showExportDialog();
+      viewModel.clearExportDialogFlag();
+    }
   }
 
   @override
@@ -42,111 +73,79 @@ class _HomePageState extends State<HomePage> {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, _) {
+        // Render different views based on location
+        if (viewModel.currentLocation == Location.hp) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: Scaffold(
+              key: _scaffoldKey,
+              drawer: AppDrawer(
+                currentLocation: viewModel.currentLocation,
+                onLocationChanged: viewModel.setLocation,
+              ),
+              body: HpView(
+                repository: repository,
+                onDrawerToggle: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+          );
+        }
+
+        if (viewModel.currentLocation == Location.cafe) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: Scaffold(
+              key: _scaffoldKey,
+              drawer: AppDrawer(
+                currentLocation: viewModel.currentLocation,
+                onLocationChanged: viewModel.setLocation,
+              ),
+              body: CafeView(
+                repository: repository,
+                onDrawerToggle: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+          );
+        }
+
+        if (viewModel.currentLocation == Location.warehouse) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: Scaffold(
+              key: _scaffoldKey,
+              drawer: AppDrawer(
+                currentLocation: viewModel.currentLocation,
+                onLocationChanged: viewModel.setLocation,
+              ),
+              body: WarehouseView(
+                repository: repository,
+                onDrawerToggle: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+          );
+        }
+
+        // City location (default view)
         final categories = viewModel.visibleCategories;
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: Colors.grey[100],
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            title: const Text(
-              'Homepage',
-              style: TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            leading: IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black87),
-              onPressed: () {
-                // Menu for location toggle
-                // City, Cafe, HP, etc.
-                // Different view navigation per location
-                // Add sidebar
-                // Also include version info at bottom
-              },
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.black87),
-                tooltip: 'Export checked items',
-                onPressed: viewModel.hasCheckedItems
-                    ? () => _showExportDialog(context)
-                    : null,
-              ),
-            ],
+          appBar: _buildAppBar(),
+          drawer: AppDrawer(
+            currentLocation: viewModel.currentLocation,
+            onLocationChanged: viewModel.setLocation,
           ),
           body: SafeArea(
             child: Column(
               children: [
-                Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: viewModel.setQuery,
-                            decoration: InputDecoration(
-                              hintText: 'Search for keyword',
-                              prefixIcon: const Icon(
-                                Icons.search,
-                                color: Colors.grey,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            viewModel.isGrid
-                                ? Icons.view_list
-                                : Icons.grid_view,
-                            color: Colors.black87,
-                          ),
-                          onPressed: viewModel.toggleViewMode,
-                          tooltip: viewModel.isGrid
-                              ? 'Switch to list view'
-                              : 'Switch to grid view',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      viewModel.isGrid && !viewModel.isSearching
-                          ? 'Categories'
-                          : (viewModel.isSearching
-                                ? 'Search results'
-                                : 'All Items'),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+                _buildSearchBar(),
+                _buildSectionTitle(),
                 Expanded(
                   child: viewModel.isSearching
                       ? _buildSearchResults(viewModel.matchedItems)
@@ -160,6 +159,120 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      title: Text(
+        '${viewModel.currentLocation.displayName} - Stock Count',
+        style: const TextStyle(
+          color: Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.menu, color: Colors.black87),
+        onPressed: () {
+          _scaffoldKey.currentState?.openDrawer();
+        },
+      ),
+      actions: [
+        IconButton(
+          onPressed: _handlePreviewAction,
+          icon: const Icon(Icons.preview, color: Colors.black87),
+          tooltip: 'Preview checked items',
+        ),
+        IconButton(
+          icon: const Icon(Icons.share, color: Colors.black87),
+          tooltip: 'Export checked items',
+          onPressed: _handleExportAction,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: viewModel.setQuery,
+                decoration: InputDecoration(
+                  hintText: 'Search for keyword',
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: Icon(
+                viewModel.isGrid ? Icons.view_list : Icons.grid_view,
+                color: Colors.black87,
+              ),
+              onPressed: viewModel.toggleViewMode,
+              tooltip: viewModel.isGrid
+                  ? 'Switch to list view'
+                  : 'Switch to grid view',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          viewModel.getSectionTitle(),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handlePreviewAction() {
+    if (!viewModel.hasCheckedItems) {
+      viewModel.setMessage('Please check items first');
+      return;
+    }
+    viewModel.requestPreviewImage(context);
+  }
+
+  void _handleExportAction() {
+    if (!viewModel.hasCheckedItems) {
+      viewModel.setMessage('Please check items first');
+      return;
+    }
+    viewModel.requestExportDialog();
   }
 
   Widget _buildGridView(List<Category> categories) {
@@ -181,7 +294,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildListView(List<Category> categories) {
     final itemsByCategory = viewModel.groupedItems(categories);
-
     final listChildren = <Widget>[];
 
     for (final category in categories) {
@@ -199,121 +311,7 @@ class _HomePageState extends State<HomePage> {
       );
 
       for (final item in categoryItems) {
-        listChildren.add(
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Transform.scale(
-                    scale: 1.3,
-                    child: Checkbox(
-                      value: item.isChecked,
-                      onChanged: (_) {
-                        viewModel.setItemChecked(item.id, !item.isChecked);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  CircleAvatar(
-                    backgroundColor: item.category.color.withOpacity(0.12),
-                    child: Icon(item.category.icon, color: item.category.color),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                    ),
-                  ),
-                  if (item.status != ItemStatus.pieces)
-                    Container(
-                      width: 120,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<ItemStatus>(
-                          value: item.status,
-                          isExpanded: true,
-                          items: ItemStatus.values.map((status) {
-                            return DropdownMenuItem<ItemStatus>(
-                              value: status,
-                              child: Text(status.displayName),
-                            );
-                          }).toList(),
-                          onChanged: (newStatus) {
-                            if (newStatus != null) {
-                              viewModel.updateItemStatus(item.id, newStatus);
-                            }
-                          },
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 120,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              key: ValueKey('pieces_${item.id}'),
-                              initialValue: item.pieces == 0
-                                  ? ''
-                                  : item.pieces.toString(),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                hintText: 'Pieces',
-                              ),
-                              onChanged: (value) {
-                                final parsed = int.tryParse(value) ?? 0;
-                                viewModel.setItemPieces(item.id, parsed);
-                              },
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Back to status',
-                            icon: const Icon(
-                              Icons.arrow_drop_down_circle_outlined,
-                            ),
-                            onPressed: () {
-                              viewModel.updateItemStatus(
-                                item.id,
-                                ItemStatus.ok,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
+        listChildren.add(_buildItemCard(item));
       }
     }
 
@@ -321,6 +319,118 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: listChildren,
     );
+  }
+
+  Widget _buildItemCard(Item item) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            Transform.scale(
+              scale: 1.3,
+              child: Checkbox(
+                value: item.isChecked,
+                onChanged: (_) {
+                  viewModel.setItemChecked(item.id, !item.isChecked);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            CircleAvatar(
+              backgroundColor: item.category.color.withOpacity(0.12),
+              child: Icon(item.category.icon, color: item.category.color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ),
+            _buildStatusOrPiecesWidget(item),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusOrPiecesWidget(Item item) {
+    if (item.status != ItemStatus.pieces) {
+      return Container(
+        width: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<ItemStatus>(
+            value: item.status,
+            isExpanded: true,
+            items: ItemStatus.values.map((status) {
+              return DropdownMenuItem<ItemStatus>(
+                value: status,
+                child: Text(status.displayName),
+              );
+            }).toList(),
+            onChanged: (newStatus) {
+              if (newStatus != null) {
+                viewModel.updateItemStatus(item.id, newStatus);
+              }
+            },
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        width: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                key: ValueKey('pieces_${item.id}'),
+                initialValue: item.pieces == 0 ? '' : item.pieces.toString(),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: 'Pieces',
+                ),
+                onChanged: (value) {
+                  final parsed = int.tryParse(value) ?? 0;
+                  viewModel.setItemPieces(item.id, parsed);
+                },
+              ),
+            ),
+            IconButton(
+              tooltip: 'Back to status',
+              icon: const Icon(Icons.arrow_drop_down_circle_outlined),
+              onPressed: () {
+                viewModel.updateItemStatus(item.id, ItemStatus.ok);
+              },
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildCategoryCard(Category category) {
@@ -464,143 +574,47 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showExportDialog(BuildContext context) {
+  void _showExportDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        final locationController = TextEditingController();
-        final nameController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Export Report'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Export ${item_data.items.where((i) => i.isChecked).length} checked items?',
-                style: const TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              // Can be modified soon if Location is set
-              TextField(
-                controller: locationController,
-                decoration: InputDecoration(
-                  hintText: 'Location (optional)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  hintText: 'Your Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                _performSaveToDevice(
-                  context,
-                  locationController.text,
-                  nameController.text,
-                );
-              },
-              child: const Text('Save to Device'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                _performExport(
-                  context,
-                  locationController.text,
-                  nameController.text,
-                );
-              },
-              child: const Text('Share'),
-            ),
-          ],
-        );
-      },
+      builder: (context) => ExportDialog(
+        viewModel: viewModel,
+        onExportSuccess: _showExportSuccess,
+        onSaveSuccess: _showSaveSuccess,
+        onError: _showError,
+      ),
     );
   }
 
-  Future<void> _performExport(
-    BuildContext context,
-    String location,
-    String name,
-  ) async {
-    final success = await viewModel.exportAndClear(
-      context,
-      location: location.isEmpty ? null : location,
-      name: name.isEmpty ? null : name,
+  void _showImagePreviewDialog(Uint8List imageBytes) {
+    showDialog(
+      context: context,
+      builder: (context) => PreviewImageDialog(imageBytes: imageBytes),
     );
-
-    if (!mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Report shared and checks cleared!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No checked items to export'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
-  Future<void> _performSaveToDevice(
-    BuildContext context,
-    String location,
-    String name,
-  ) async {
-    final filePath = await viewModel.saveToDeviceAndClear(
-      context,
-      location: location.isEmpty ? null : location,
-      name: name.isEmpty ? null : name,
+  void _showExportSuccess() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Report shared and checks cleared!'),
+        duration: Duration(seconds: 2),
+      ),
     );
+  }
 
-    if (!mounted) return;
+  void _showSaveSuccess(String filePath) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Report saved to:\n$filePath'),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(label: 'OK', onPressed: () {}),
+      ),
+    );
+  }
 
-    if (filePath != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Report saved to:\n$filePath'),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(label: 'OK', onPressed: () {}),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save report'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
   }
 }

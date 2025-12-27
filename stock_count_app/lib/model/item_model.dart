@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:flutter/material.dart';
 
 part 'item_model.g.dart';
 
@@ -42,6 +43,36 @@ enum Category {
   colesWoolies,
   @HiveField(11)
   chemicals,
+}
+
+enum Location { city, cafe, hp, warehouse }
+
+extension LocationExtension on Location {
+  String get displayName {
+    switch (this) {
+      case Location.city:
+        return 'City';
+      case Location.cafe:
+        return 'Cafe';
+      case Location.hp:
+        return 'HP';
+      case Location.warehouse:
+        return 'Warehouse';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case Location.city:
+        return Icons.location_city;
+      case Location.cafe:
+        return Icons.local_cafe;
+      case Location.hp:
+        return Icons.business;
+      case Location.warehouse:
+        return Icons.warehouse;
+    }
+  }
 }
 
 @HiveType(typeId: 2)

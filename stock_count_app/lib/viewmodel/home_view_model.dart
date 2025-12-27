@@ -13,6 +13,12 @@ class HomeViewModel extends ChangeNotifier {
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
+  model.Location currentLocation = model.Location.city;
+
+  // UI state for dialogs and messages
+  String? showMessage;
+  Uint8List? previewImage;
+  bool shouldShowExportDialog = false;
 
   HomeViewModel({required this.allCategories, required this.repository})
     : visibleCategories = List.from(allCategories);
@@ -47,6 +53,11 @@ class HomeViewModel extends ChangeNotifier {
 
   void clearSearch() {
     setQuery('');
+  }
+
+  void setLocation(model.Location location) {
+    currentLocation = location;
+    notifyListeners();
   }
 
   // void _applyFilter() {
@@ -92,6 +103,16 @@ class HomeViewModel extends ChangeNotifier {
     return '$checked/$total checked';
   }
 
+  String getSectionTitle() {
+    if (isGrid && !isSearching) {
+      return 'Categories';
+    } else if (isSearching) {
+      return 'Search results';
+    } else {
+      return 'All Items';
+    }
+  }
+
   void updateItemStatus(int itemId, model.ItemStatus newStatus) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
@@ -120,6 +141,34 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   bool get hasCheckedItems => data.items.any((i) => i.isChecked);
+
+  // UI Message handling
+  void setMessage(String message) {
+    showMessage = message;
+    notifyListeners();
+  }
+
+  void clearMessage() {
+    showMessage = null;
+  }
+
+  void setPreviewImage(Uint8List image) {
+    previewImage = image;
+    notifyListeners();
+  }
+
+  void clearPreviewImage() {
+    previewImage = null;
+  }
+
+  void requestExportDialog() {
+    shouldShowExportDialog = true;
+    notifyListeners();
+  }
+
+  void clearExportDialogFlag() {
+    shouldShowExportDialog = false;
+  }
 
   Future<void> _saveItems() async {
     try {
@@ -187,5 +236,44 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     return filePath;
+  }
+
+  /// Generate preview image of the report without clearing items
+  Future<Uint8List?> generatePreviewImage(BuildContext context) async {
+    final checkedItems = data.items.where((i) => i.isChecked).toList();
+    if (checkedItems.isEmpty) {
+      return null;
+    }
+
+    final image = await ExportService.generateReportImage(
+      context,
+      checkedItems,
+      title: 'Stock Count Report',
+    );
+
+    return image;
+  }
+
+  Future<void> requestPreviewImage(BuildContext context) async {
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final image = await generatePreviewImage(context);
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+
+    if (image != null) {
+      setPreviewImage(image);
+    } else {
+      setMessage('Failed to generate preview');
+    }
   }
 }
