@@ -87,9 +87,6 @@ class MobileExportService extends ExportServiceBase {
         album: 'Stock Count Reports',
         name: fileName,
       );
-
-      print('Successfully saved to gallery: Stock Count Reports/$fileName');
-      return 'Saved to Gallery: Stock Count Reports';
     } catch (e, stackTrace) {
       print('Save error: $e');
       print('Stack trace: $stackTrace');
