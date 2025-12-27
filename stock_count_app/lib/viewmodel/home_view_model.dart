@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../model/item_model.dart' as model;
 import '../data/item_data.dart' as data;
 import '../data/item_repository.dart';
-import '../services/export_service.dart';
+import '../services/export_service_factory.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final List<model.Category> allCategories;

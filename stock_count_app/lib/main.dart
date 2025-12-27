@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'view/home_view.dart';
-import 'data/hive_item_repository.dart';
+import 'data/platform_item_repository.dart';
 import 'data/item_data.dart';
+import 'data/item_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize repository and load items
-  final repository = HiveItemRepository();
+  // Initialize platform-aware repository (uses Hive on mobile, SharedPreferences on web)
+  final repository = PlatformItemRepository();
   await repository.initialize();
 
   // Load persisted items into memory
@@ -20,7 +21,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final HiveItemRepository repository;
+  final ItemRepository repository;
 
   const MyApp({super.key, required this.repository});
 
