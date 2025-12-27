@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'view/home_view.dart';
 import 'data/platform_item_repository.dart';
 import 'data/item_data.dart';
@@ -6,6 +8,9 @@ import 'data/item_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize platform-aware repository (uses Hive on mobile, SharedPreferences on web)
   final repository = PlatformItemRepository();
