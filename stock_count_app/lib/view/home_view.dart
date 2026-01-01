@@ -581,22 +581,10 @@ class _HomePageState extends State<HomePage> {
                 item.category.displayName,
                 style: context.theme.subtitle,
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: item.isChecked,
-                    onChanged: (checked) {
-                      viewModel.setItemChecked(item.id, checked ?? false);
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: context.theme.textSecondary,
-                  ),
-                ],
+              trailing: Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: context.theme.textSecondary,
               ),
               onTap: () => _navigateToCategory(item.category),
             ),

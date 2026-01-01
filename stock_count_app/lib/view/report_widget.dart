@@ -31,7 +31,7 @@ class ReportWidget extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columnCount = _columnCountForWidth(constraints.maxWidth);
+        final columnCount = 4;
         final columns = <List<Category>>[];
 
         for (int i = 0; i < columnCount; i++) {
@@ -112,13 +112,13 @@ class ReportWidget extends StatelessWidget {
     );
   }
 
-  int _columnCountForWidth(double width) {
-    // Use responsive helper breakpoints for consistency
-    if (width >= 1400) return 4;
-    if (width >= 1024) return 3;
-    if (width >= 700) return 2;
-    return 1;
-  }
+  // int _columnCountForWidth(double width) {
+  //   // Use responsive helper breakpoints for consistency
+  //   if (width >= 1400) return 4;
+  //   if (width >= 1024) return 3;
+  //   if (width >= 700) return 2;
+  //   return 1;
+  // }
 
   Widget _buildCategoryColumn(Category category, List<Item> items) {
     return Container(

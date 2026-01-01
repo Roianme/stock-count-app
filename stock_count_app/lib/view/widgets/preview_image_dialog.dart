@@ -19,7 +19,7 @@ class PreviewImageDialog extends StatelessWidget {
             child: Image.memory(
               imageBytes,
               fit: BoxFit.contain,
-              height: MediaQuery.of(context).size.height * 0.7,
+              height: MediaQuery.of(context).size.height * 0.85,
             ),
           ),
           const SizedBox(height: 16),
