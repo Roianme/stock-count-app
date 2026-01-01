@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_count_app/model/item_model.dart';
 import '../../data/item_data.dart' as item_data;
 import '../../viewmodel/home_view_model.dart';
 
@@ -53,20 +54,6 @@ class _ExportDialogState extends State<ExportDialog> {
               'Export $checkedCount / $totalCount items?',
               style: const TextStyle(fontSize: 14),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: locationController,
-              decoration: InputDecoration(
-                hintText: 'Location (optional)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
-            ),
             const SizedBox(height: 12),
             TextField(
               controller: nameController,
@@ -108,9 +95,7 @@ class _ExportDialogState extends State<ExportDialog> {
   Future<void> _performExport() async {
     final success = await widget.viewModel.exportAndClear(
       context,
-      location: locationController.text.isEmpty
-          ? null
-          : locationController.text,
+      location: widget.viewModel.currentLocation.displayName,
       name: nameController.text.isEmpty ? null : nameController.text,
     );
 
@@ -128,9 +113,7 @@ class _ExportDialogState extends State<ExportDialog> {
   Future<void> _performSaveToDevice() async {
     final filePath = await widget.viewModel.saveToDeviceAndClear(
       context,
-      location: locationController.text.isEmpty
-          ? null
-          : locationController.text,
+      location: widget.viewModel.currentLocation.displayName,
       name: nameController.text.isEmpty ? null : nameController.text,
     );
 

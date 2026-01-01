@@ -249,6 +249,8 @@ class HomeViewModel extends ChangeNotifier {
       context,
       checkedItems,
       title: 'Stock Count Report',
+      location: currentLocation.displayName,
+      name: '',
     );
 
     return image;
