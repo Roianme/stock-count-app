@@ -174,7 +174,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       await repository.saveItems(data.items);
     } catch (e) {
-      print('Error saving items in HomeViewModel: $e');
+      debugPrint('Error saving items in HomeViewModel: $e');
     }
   }
 

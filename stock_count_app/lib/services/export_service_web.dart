@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:universal_html/html.dart' as html;
@@ -47,7 +47,7 @@ class WebExportService extends ExportServiceBase {
         });
         return true;
       } catch (e) {
-        print('Web Share failed, falling back to download: $e');
+        debugPrint('Web Share failed, falling back to download: $e');
         // Fall through to download
       }
 
@@ -55,7 +55,7 @@ class WebExportService extends ExportServiceBase {
       _downloadImage(image, 'stock_report.png');
       return true;
     } catch (e) {
-      print('Export error: $e');
+      debugPrint('Export error: $e');
       return false;
     }
   }
@@ -86,7 +86,7 @@ class WebExportService extends ExportServiceBase {
 
       return 'Report downloaded successfully';
     } catch (e) {
-      print('Save error: $e');
+      debugPrint('Save error: $e');
       return null;
     }
   }
@@ -160,7 +160,7 @@ class WebExportService extends ExportServiceBase {
       overlayEntry.remove();
       return byteData?.buffer.asUint8List();
     } catch (e) {
-      print('Capture error: $e');
+      debugPrint('Capture error: $e');
       return null;
     }
   }

@@ -28,86 +28,96 @@ class ReportWidget extends StatelessWidget {
       groupedItems.putIfAbsent(item.category, () => []).add(item);
     }
     final categories = groupedItems.keys.toList();
-    final columnCount = 4;
-    final columns = <List<Category>>[];
 
-    for (int i = 0; i < columnCount; i++) {
-      columns.add([]);
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columnCount = _columnCountForWidth(constraints.maxWidth);
+        final columns = <List<Category>>[];
 
-    for (int i = 0; i < categories.length; i++) {
-      columns[i % columnCount].add(categories[i]);
-    }
+        for (int i = 0; i < columnCount; i++) {
+          columns.add([]);
+        }
 
-    return Material(
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Multi-column category layout
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: columns.map((columnCategories) {
-                  return Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: columnCategories.map((category) {
-                        final items = groupedItems[category] ?? [];
-                        return _buildCategoryColumn(category, items);
-                      }).toList(),
-                    ),
-                  );
-                }).toList(),
-              ),
+        for (int i = 0; i < categories.length; i++) {
+          columns[i % columnCount].add(categories[i]);
+        }
+
+        return Material(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: columns.map((columnCategories) {
+                      return Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: columnCategories.map((category) {
+                            final items = groupedItems[category] ?? [];
+                            return _buildCategoryColumn(category, items);
+                          }).toList(),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        location?.toUpperCase() ?? title.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'COUNT BY: $name',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'DATE: $dateStr',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-
-            // Footer section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    location?.toUpperCase() ?? title.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'COUNT BY: $name',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'DATE: $dateStr',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
+  }
+
+  int _columnCountForWidth(double width) {
+    // Use responsive helper breakpoints for consistency
+    if (width >= 1400) return 4;
+    if (width >= 1024) return 3;
+    if (width >= 700) return 2;
+    return 1;
   }
 
   Widget _buildCategoryColumn(Category category, List<Item> items) {
@@ -120,7 +130,6 @@ class ReportWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category header with yellow background
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -137,8 +146,6 @@ class ReportWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-
-            // Items list
             ...items.map((item) {
               String statusMarker = 'OK';
               Color markerColor = Colors.greenAccent;
@@ -177,7 +184,6 @@ class ReportWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Status indicator or checkbox
                     if (statusMarker.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -185,7 +191,7 @@ class ReportWidget extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: markerColor.withOpacity(0.2),
+                          color: markerColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(

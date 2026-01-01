@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/item_model.dart';
@@ -10,29 +12,27 @@ import 'widgets/app_drawer.dart';
 import 'hp_view.dart';
 import 'cafe_view.dart';
 import 'warehouse_view.dart';
+import '../utils/index.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.repository});
   final ItemRepository repository;
 
   @override
-  State<HomePage> createState() => _HomePageState(repository);
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
-  final ItemRepository repository;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  _HomePageState(this.repository);
 
   @override
   void initState() {
     super.initState();
     viewModel = HomeViewModel(
       allCategories: Category.values,
-      repository: repository,
+      repository: widget.repository,
     );
     viewModel.addListener(_handleViewModelChanges);
   }
@@ -75,8 +75,8 @@ class _HomePageState extends State<HomePage> {
       builder: (context, _) {
         // Render different views based on location
         if (viewModel.currentLocation == Location.hp) {
-          return WillPopScope(
-            onWillPop: () async => true,
+          return PopScope(
+            canPop: true,
             child: Scaffold(
               key: _scaffoldKey,
               drawer: AppDrawer(
@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
                 onLocationChanged: viewModel.setLocation,
               ),
               body: HpView(
-                repository: repository,
+                repository: widget.repository,
                 onDrawerToggle: () {
                   _scaffoldKey.currentState?.openDrawer();
                 },
@@ -94,8 +94,8 @@ class _HomePageState extends State<HomePage> {
         }
 
         if (viewModel.currentLocation == Location.cafe) {
-          return WillPopScope(
-            onWillPop: () async => true,
+          return PopScope(
+            canPop: true,
             child: Scaffold(
               key: _scaffoldKey,
               drawer: AppDrawer(
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
                 onLocationChanged: viewModel.setLocation,
               ),
               body: CafeView(
-                repository: repository,
+                repository: widget.repository,
                 onDrawerToggle: () {
                   _scaffoldKey.currentState?.openDrawer();
                 },
@@ -113,8 +113,8 @@ class _HomePageState extends State<HomePage> {
         }
 
         if (viewModel.currentLocation == Location.warehouse) {
-          return WillPopScope(
-            onWillPop: () async => true,
+          return PopScope(
+            canPop: true,
             child: Scaffold(
               key: _scaffoldKey,
               drawer: AppDrawer(
@@ -122,7 +122,7 @@ class _HomePageState extends State<HomePage> {
                 onLocationChanged: viewModel.setLocation,
               ),
               body: WarehouseView(
-                repository: repository,
+                repository: widget.repository,
                 onDrawerToggle: () {
                   _scaffoldKey.currentState?.openDrawer();
                 },
@@ -135,25 +135,44 @@ class _HomePageState extends State<HomePage> {
         final categories = viewModel.visibleCategories;
         return Scaffold(
           key: _scaffoldKey,
-          backgroundColor: Colors.grey[100],
+          backgroundColor: context.theme.background,
           appBar: _buildAppBar(),
           drawer: AppDrawer(
             currentLocation: viewModel.currentLocation,
             onLocationChanged: viewModel.setLocation,
           ),
           body: SafeArea(
-            child: Column(
-              children: [
-                _buildSearchBar(),
-                _buildSectionTitle(),
-                Expanded(
-                  child: viewModel.isSearching
-                      ? _buildSearchResults(viewModel.matchedItems)
-                      : (viewModel.isGrid
-                            ? _buildGridView(categories)
-                            : _buildListView(categories)),
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxContentWidth = math.min(constraints.maxWidth, 1100.0);
+                final isWide = constraints.maxWidth >= 900;
+                final statusControlWidth = isWide ? 170.0 : 130.0;
+
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxContentWidth),
+                    child: Column(
+                      children: [
+                        _buildSearchBar(isWide: isWide),
+                        _buildSectionTitle(),
+                        Expanded(
+                          child: viewModel.isSearching
+                              ? _buildSearchResults(viewModel.matchedItems)
+                              : (viewModel.isGrid
+                                    ? _buildGridView(
+                                        categories,
+                                        maxContentWidth,
+                                      )
+                                    : _buildListView(
+                                        categories,
+                                        statusControlWidth,
+                                      )),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -163,17 +182,14 @@ class _HomePageState extends State<HomePage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: context.theme.surface,
       elevation: 0,
       title: Text(
         '${viewModel.currentLocation.displayName} - Stock Count',
-        style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
-        ),
+        style: context.theme.appBarTitle,
       ),
       leading: IconButton(
-        icon: const Icon(Icons.menu, color: Colors.black87),
+        icon: Icon(Icons.menu, color: context.theme.textPrimary),
         onPressed: () {
           _scaffoldKey.currentState?.openDrawer();
         },
@@ -181,11 +197,11 @@ class _HomePageState extends State<HomePage> {
       actions: [
         IconButton(
           onPressed: _handlePreviewAction,
-          icon: const Icon(Icons.preview, color: Colors.black87),
+          icon: Icon(Icons.preview, color: context.theme.textPrimary),
           tooltip: 'Preview checked items',
         ),
         IconButton(
-          icon: const Icon(Icons.share, color: Colors.black87),
+          icon: Icon(Icons.share, color: context.theme.textPrimary),
           tooltip: 'Export checked items',
           onPressed: _handleExportAction,
         ),
@@ -193,28 +209,35 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar({required bool isWide}) {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(16),
+      color: context.theme.background,
+      padding: EdgeInsets.symmetric(
+        horizontal: context.responsive.horizontalPadding(),
+        vertical: context.responsive.verticalPadding(),
+      ),
       child: Row(
         children: [
           Expanded(
             child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
+              decoration: context.theme.searchBarDecoration.copyWith(
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _searchController,
                 onChanged: viewModel.setQuery,
+                style: TextStyle(fontSize: context.responsive.fontSize(16)),
                 decoration: InputDecoration(
                   hintText: 'Search for keyword',
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                  hintStyle: AppTheme.searchHint,
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: context.theme.textSecondary,
+                  ),
+                  fillColor: context.theme.surface,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: context.isLandscape ? 12 : 14,
                   ),
                 ),
               ),
@@ -222,14 +245,11 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(width: 12),
           Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: context.theme.searchBarDecoration,
             child: IconButton(
               icon: Icon(
                 viewModel.isGrid ? Icons.view_list : Icons.grid_view,
-                color: Colors.black87,
+                color: context.theme.textPrimary,
               ),
               onPressed: viewModel.toggleViewMode,
               tooltip: viewModel.isGrid
@@ -244,15 +264,16 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSectionTitle() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveSizes.spacingLarge,
+        vertical: context.responsive.verticalPadding(),
+      ),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
           viewModel.getSectionTitle(),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+          style: context.theme.sectionTitle.copyWith(
+            fontSize: context.responsive.fontSize(20),
           ),
         ),
       ),
@@ -275,14 +296,17 @@ class _HomePageState extends State<HomePage> {
     viewModel.requestExportDialog();
   }
 
-  Widget _buildGridView(List<Category> categories) {
+  Widget _buildGridView(List<Category> categories, double maxWidth) {
+    final crossAxisCount = _gridCrossAxisCount(maxWidth);
+    final aspectRatio = _gridChildAspectRatio(maxWidth, crossAxisCount);
+
     return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.2,
+        childAspectRatio: aspectRatio,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {
@@ -292,7 +316,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildListView(List<Category> categories) {
+  int _gridCrossAxisCount(double maxWidth) {
+    return context.gridColumns;
+  }
+
+  double _gridChildAspectRatio(double maxWidth, int crossAxisCount) {
+    return context.responsive.calculateAspectRatio(
+      columns: crossAxisCount,
+      targetHeight: 210.0,
+    );
+  }
+
+  Widget _buildListView(List<Category> categories, double statusControlWidth) {
     final itemsByCategory = viewModel.groupedItems(categories);
     final listChildren = <Widget>[];
 
@@ -311,7 +346,7 @@ class _HomePageState extends State<HomePage> {
       );
 
       for (final item in categoryItems) {
-        listChildren.add(_buildItemCard(item));
+        listChildren.add(_buildItemCard(item, statusControlWidth));
       }
     }
 
@@ -321,11 +356,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildItemCard(Item item) {
+  Widget _buildItemCard(Item item, double statusControlWidth) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: context.isLandscape ? 4 : 8,
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(
+          context.responsive.verticalPadding(
+            portraitValue: 12,
+            landscapeValue: 8,
+          ),
+        ),
         child: Row(
           children: [
             Transform.scale(
@@ -339,7 +382,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(width: 12),
             CircleAvatar(
-              backgroundColor: item.category.color.withOpacity(0.12),
+              backgroundColor: item.category.color.withValues(alpha: 0.12),
               child: Icon(item.category.icon, color: item.category.color),
             ),
             const SizedBox(width: 12),
@@ -349,8 +392,8 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(
                     item.name,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: context.responsive.fontSize(16, 14),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -358,17 +401,17 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            _buildStatusOrPiecesWidget(item),
+            _buildStatusOrPiecesWidget(item, statusControlWidth),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusOrPiecesWidget(Item item) {
+  Widget _buildStatusOrPiecesWidget(Item item, double statusControlWidth) {
     if (item.status != ItemStatus.pieces) {
       return Container(
-        width: 120,
+        width: statusControlWidth,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
@@ -394,7 +437,7 @@ class _HomePageState extends State<HomePage> {
       );
     } else {
       return Container(
-        width: 120,
+        width: statusControlWidth,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
@@ -435,47 +478,43 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCategoryCard(Category category) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: context.theme.cardDecoration.copyWith(
+        borderRadius: BorderRadius.circular(ResponsiveSizes.borderRadiusXLarge),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _navigateToCategory(category),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+            ResponsiveSizes.borderRadiusXLarge,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: category.color.withOpacity(0.1),
+                  color: category.color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(category.icon, size: 40, color: category.color),
+                child: Icon(
+                  category.icon,
+                  size: context.responsive.iconSize(40),
+                  color: category.color,
+                ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: context.isLandscape ? 8 : 12),
               Text(
                 category.displayName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                style: context.theme.cardTitle.copyWith(
+                  fontSize: context.responsive.fontSize(16, 14),
                 ),
               ),
               Text(
                 viewModel.categoryProgress(category),
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.blue,
+                  fontSize: context.responsive.fontSize(12, 10),
+                  color: context.theme.primary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -491,7 +530,7 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            CategoryView(category: category, repository: repository),
+            CategoryView(category: category, repository: widget.repository),
       ),
     );
     setState(() {});
@@ -514,7 +553,7 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: AppTheme.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -528,7 +567,7 @@ class _HomePageState extends State<HomePage> {
               leading: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: item.category.color.withOpacity(0.1),
+                  color: item.category.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -537,17 +576,10 @@ class _HomePageState extends State<HomePage> {
                   size: 28,
                 ),
               ),
-              title: Text(
-                item.name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
+              title: Text(item.name, style: context.theme.itemName),
               subtitle: Text(
                 item.category.displayName,
-                style: TextStyle(color: Colors.grey[600]),
+                style: context.theme.subtitle,
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -562,7 +594,7 @@ class _HomePageState extends State<HomePage> {
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
-                    color: Colors.grey[400],
+                    color: context.theme.textSecondary,
                   ),
                 ],
               ),

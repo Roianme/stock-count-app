@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
+import '../utils/index.dart';
 
 class CategoryView extends StatefulWidget {
   const CategoryView({
@@ -40,7 +41,6 @@ class _CategoryViewState extends State<CategoryView> {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, _) {
-        final categoryItems = viewModel.itemsInCategory;
         final allChecked =
             viewModel.totalItemsCount > 0 &&
             viewModel.checkedItemsCount == viewModel.totalItemsCount;
@@ -61,174 +61,166 @@ class _CategoryViewState extends State<CategoryView> {
             ],
           ),
           body: SafeArea(
-            child: categoryItems.isEmpty
-                ? const Center(child: Text('No items in this category'))
-                : Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      // Items list
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          itemCount: categoryItems.length,
-                          itemBuilder: (context, index) {
-                            final item = categoryItems[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    Transform.scale(
-                                      scale: 1.3,
-                                      child: Checkbox(
-                                        value: item.isChecked,
-                                        onChanged: (_) {
-                                          viewModel.toggleItemChecked(item.id);
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    // Icon
-                                    CircleAvatar(
-                                      backgroundColor: item.category.color
-                                          .withOpacity(0.12),
-                                      child: Icon(
-                                        item.category.icon,
-                                        color: item.category.color,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.name,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                        ],
-                                      ),
-                                    ),
-                                    if (item.status != ItemStatus.pieces)
-                                      Container(
-                                        width: 120,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<ItemStatus>(
-                                            value: item.status,
-                                            isExpanded: true,
-                                            items: ItemStatus.values.map((
-                                              status,
-                                            ) {
-                                              return DropdownMenuItem<
-                                                ItemStatus
-                                              >(
-                                                value: status,
-                                                child: Text(status.displayName),
-                                              );
-                                            }).toList(),
-                                            onChanged: (newStatus) {
-                                              if (newStatus != null) {
-                                                viewModel.updateItemStatus(
-                                                  item.id,
-                                                  newStatus,
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        width: 120,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextFormField(
-                                                key: ValueKey(
-                                                  'pieces_${item.id}',
-                                                ),
-                                                initialValue: item.pieces == 0
-                                                    ? ''
-                                                    : item.pieces.toString(),
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter
-                                                      .digitsOnly,
-                                                ],
-                                                textAlign: TextAlign.center,
-                                                decoration:
-                                                    const InputDecoration(
-                                                      isDense: true,
-                                                      border: InputBorder.none,
-                                                      hintText: 'Pieces',
-                                                    ),
-                                                onChanged: (value) {
-                                                  final parsed =
-                                                      int.tryParse(value) ?? 0;
-                                                  viewModel.setItemPieces(
-                                                    item.id,
-                                                    parsed,
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            IconButton(
-                                              tooltip: 'Back to status',
-                                              icon: const Icon(
-                                                Icons
-                                                    .arrow_drop_down_circle_outlined,
-                                              ),
-                                              onPressed: () {
-                                                viewModel.updateItemStatus(
-                                                  item.id,
-                                                  ItemStatus.ok,
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.responsive.maxContentWidth(),
+                    ),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: context.responsive.verticalPadding(
+                            portraitValue: 16,
+                            landscapeValue: 8,
+                          ),
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: viewModel.itemsInCategory.isEmpty
+                              ? const Center(
+                                  child: Text('No items in this category'),
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  itemCount: viewModel.itemsInCategory.length,
+                                  itemBuilder: (context, index) {
+                                    final item =
+                                        viewModel.itemsInCategory[index];
+                                    return _buildCategoryItemCard(
+                                      item,
+                                      context.statusControlWidth,
+                                      context.isLandscape,
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
+                );
+              },
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCategoryItemCard(
+    Item item,
+    double statusControlWidth,
+    bool isLandscape,
+  ) {
+    return Card(
+      margin: EdgeInsets.symmetric(
+        vertical: context.responsive.verticalPadding(
+          portraitValue: 8,
+          landscapeValue: 4,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(
+          context.responsive.spacing(portraitValue: 12, landscapeValue: 8),
+        ),
+        child: Row(
+          children: [
+            Transform.scale(
+              scale: 1.3,
+              child: Checkbox(
+                value: item.isChecked,
+                onChanged: (_) {
+                  viewModel.toggleItemChecked(item.id);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            CircleAvatar(
+              backgroundColor: item.category.color.withValues(alpha: 0.12),
+              child: Icon(item.category.icon, color: item.category.color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: context.theme.itemName.copyWith(
+                      fontSize: context.responsive.fontSize(16, 14),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ),
+            if (item.status != ItemStatus.pieces)
+              Container(
+                width: context.statusControlWidth,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: context.theme.statusControlDecoration,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<ItemStatus>(
+                    value: item.status,
+                    isExpanded: true,
+                    items: ItemStatus.values.map((status) {
+                      return DropdownMenuItem<ItemStatus>(
+                        value: status,
+                        child: Text(status.displayName),
+                      );
+                    }).toList(),
+                    onChanged: (newStatus) {
+                      if (newStatus != null) {
+                        viewModel.updateItemStatus(item.id, newStatus);
+                      }
+                    },
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: context.statusControlWidth,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: context.theme.statusControlDecoration,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        key: ValueKey('pieces_${item.id}'),
+                        initialValue: item.pieces == 0
+                            ? ''
+                            : item.pieces.toString(),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: 'Pieces',
+                        ),
+                        onChanged: (value) {
+                          final parsed = int.tryParse(value) ?? 0;
+                          viewModel.setItemPieces(item.id, parsed);
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Back to status',
+                      icon: const Icon(Icons.arrow_drop_down_circle_outlined),
+                      onPressed: () {
+                        viewModel.updateItemStatus(item.id, ItemStatus.ok);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

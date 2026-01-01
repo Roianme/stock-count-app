@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import '../model/item_model.dart';
 import 'export_service_base.dart';
 import 'export_service_mobile.dart';
 import 'export_service_web.dart';
@@ -19,8 +21,8 @@ class ExportService {
 
   /// Convenience static methods that delegate to the platform-specific instance
   static Future<bool> exportAndShare(
-    context,
-    checkedItems, {
+    BuildContext context,
+    List<Item> checkedItems, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -35,8 +37,8 @@ class ExportService {
   }
 
   static Future<String?> saveToDevice(
-    context,
-    checkedItems, {
+    BuildContext context,
+    List<Item> checkedItems, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -51,8 +53,8 @@ class ExportService {
   }
 
   static Future<dynamic> generateReportImage(
-    context,
-    checkedItems, {
+    BuildContext context,
+    List<Item> checkedItems, {
     String title = 'Stock Count Report',
     String? location,
     String? name,

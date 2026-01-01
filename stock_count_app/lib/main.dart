@@ -5,6 +5,7 @@ import 'view/home_view.dart';
 import 'data/platform_item_repository.dart';
 import 'data/item_data.dart';
 import 'data/item_repository.dart';
+import 'utils/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Stock Count',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: AppTheme.lightTheme,
       home: HomePage(repository: repository),
       debugShowCheckedModeBanner: false,
     );

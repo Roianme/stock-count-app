@@ -82,7 +82,7 @@ class PlatformItemRepository implements ItemRepository {
           .map((json) => _itemFromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error loading items from SharedPreferences: $e');
+      debugPrint('Error loading items from SharedPreferences: $e');
       // Fallback to seed data
       final seedItems = List<Item>.from(items);
       await saveItems(seedItems);
@@ -99,7 +99,7 @@ class PlatformItemRepository implements ItemRepository {
         await _saveItemsMobile(itemsToSave);
       }
     } catch (e) {
-      print('Error saving items: $e');
+      debugPrint('Error saving items: $e');
       rethrow;
     }
   }
@@ -131,7 +131,7 @@ class PlatformItemRepository implements ItemRepository {
       }).toList();
       await saveItems(updated);
     } catch (e) {
-      print('Error clearing checked items: $e');
+      debugPrint('Error clearing checked items: $e');
       rethrow;
     }
   }
@@ -154,7 +154,7 @@ class PlatformItemRepository implements ItemRepository {
         await _hiveBox.clear();
       }
     } catch (e) {
-      print('Error deleting all items: $e');
+      debugPrint('Error deleting all items: $e');
       rethrow;
     }
   }

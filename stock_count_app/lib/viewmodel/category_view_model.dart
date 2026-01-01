@@ -88,7 +88,7 @@ class CategoryViewModel extends ChangeNotifier {
     try {
       await repository.saveItems(data.items);
     } catch (e) {
-      print('Error saving items in CategoryViewModel: $e');
+      debugPrint('Error saving items in CategoryViewModel: $e');
     }
   }
 }

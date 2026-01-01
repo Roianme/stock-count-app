@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
@@ -46,7 +46,7 @@ class MobileExportService extends ExportServiceBase {
 
       return true;
     } catch (e) {
-      print('Export error: $e');
+      debugPrint('Export error: $e');
       return false;
     }
   }
@@ -60,8 +60,6 @@ class MobileExportService extends ExportServiceBase {
     String? name,
   }) async {
     try {
-      print('Starting save to device...');
-
       // Render widget to image using overlay
       final image = await _captureReportWidget(
         context,
@@ -72,11 +70,8 @@ class MobileExportService extends ExportServiceBase {
       );
 
       if (image == null) {
-        print('Failed to capture image');
         return null;
       }
-
-      print('Image captured, size: ${image.length} bytes');
 
       // Save directly to gallery using Gal
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -87,9 +82,10 @@ class MobileExportService extends ExportServiceBase {
         album: 'Stock Count Reports',
         name: fileName,
       );
+      return 'Saved to gallery as $fileName';
     } catch (e, stackTrace) {
-      print('Save error: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('Save error: $e');
+      debugPrint('Stack trace: $stackTrace');
       return null;
     }
   }
@@ -163,7 +159,7 @@ class MobileExportService extends ExportServiceBase {
       overlayEntry.remove();
       return byteData?.buffer.asUint8List();
     } catch (e) {
-      print('Capture error: $e');
+      debugPrint('Capture error: $e');
       return null;
     }
   }

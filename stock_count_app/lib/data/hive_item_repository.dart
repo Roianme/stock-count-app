@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import '../model/item_model.dart';
@@ -46,7 +47,7 @@ class HiveItemRepository implements ItemRepository {
         await _box.put(item.id, item);
       }
     } catch (e) {
-      print('Error saving items: $e');
+      debugPrint('Error saving items: $e');
       rethrow;
     }
   }
@@ -64,7 +65,7 @@ class HiveItemRepository implements ItemRepository {
       }).toList();
       await saveItems(updated);
     } catch (e) {
-      print('Error clearing checked items: $e');
+      debugPrint('Error clearing checked items: $e');
       rethrow;
     }
   }
@@ -79,7 +80,7 @@ class HiveItemRepository implements ItemRepository {
     try {
       await _box.clear();
     } catch (e) {
-      print('Error deleting all items: $e');
+      debugPrint('Error deleting all items: $e');
       rethrow;
     }
   }
