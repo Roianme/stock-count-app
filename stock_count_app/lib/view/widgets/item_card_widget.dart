@@ -89,6 +89,12 @@ class ItemCardWidget extends StatelessWidget {
 
   Widget _buildStatusOrPiecesWidget(BuildContext context) {
     if (item.status == ItemStatus.pieces) {
+      // If pieces is blank, auto-uncheck the item
+      if (item.pieces == 0 && item.isChecked) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          onCheckChanged();
+        });
+      }
       return Container(
         width: statusControlWidth,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -108,11 +114,20 @@ class ItemCardWidget extends StatelessWidget {
                   hintText: 'Pieces',
                 ),
                 onChanged: (value) {
-                  final parsed = int.tryParse(value) ?? 0;
-                  onPiecesChanged(parsed);
-                  // If pieces is 0 or blank, set status to zero
-                  if (parsed == 0) {
+                  if (value.isEmpty) {
+                    // Blank input - don't auto-check
+                    onPiecesChanged(0);
                     onStatusChanged(ItemStatus.zero);
+                  } else {
+                    final parsed = int.tryParse(value) ?? 0;
+                    onPiecesChanged(parsed);
+                    if (parsed == 0) {
+                      onStatusChanged(ItemStatus.zero);
+                    }
+                    // Auto-check item when a value is explicitly entered (including 0)
+                    if (!item.isChecked) {
+                      onCheckChanged();
+                    }
                   }
                 },
               ),
@@ -120,7 +135,13 @@ class ItemCardWidget extends StatelessWidget {
             PopupMenuButton<ItemStatus>(
               icon: const Icon(Icons.more_vert, size: 20),
               tooltip: 'Change status',
-              onSelected: onStatusChanged,
+              onSelected: (newStatus) {
+                onStatusChanged(newStatus);
+                // Auto-check item when status is updated
+                if (!item.isChecked) {
+                  onCheckChanged();
+                }
+              },
               itemBuilder: (BuildContext context) =>
                   ItemStatus.values.map((status) {
                     return PopupMenuItem<ItemStatus>(
@@ -150,7 +171,13 @@ class ItemCardWidget extends StatelessWidget {
             PopupMenuButton<ItemStatus>(
               icon: const Icon(Icons.more_vert, size: 20),
               tooltip: 'Change status',
-              onSelected: onStatusChanged,
+              onSelected: (newStatus) {
+                onStatusChanged(newStatus);
+                // Auto-check item when status is updated
+                if (!item.isChecked) {
+                  onCheckChanged();
+                }
+              },
               itemBuilder: (BuildContext context) =>
                   ItemStatus.values.map((status) {
                     return PopupMenuItem<ItemStatus>(
