@@ -30,11 +30,16 @@ class ResponsiveHelper {
   /// Get responsive font size based on context
   double fontSize(double portraitSize, [double? landscapeSize]) {
     if (isLandscape && landscapeSize != null) {
+      // Scale font based on screen width in landscape
+      if (screenWidth >= 1200) return landscapeSize * 1.2;
+      if (screenWidth >= 900) return landscapeSize * 1.1;
       return landscapeSize;
     }
-    // Scale font based on screen width
-    if (screenWidth >= 1200) return portraitSize * 1.2;
-    if (screenWidth >= 900) return portraitSize * 1.1;
+    // Scale font based on screen width in portrait - with smaller sizes for small screens
+    if (screenWidth < 400) return portraitSize * 0.85; // Very small phones
+    if (screenWidth < 600) return portraitSize * 0.9; // Small phones
+    if (screenWidth >= 1200) return portraitSize * 1.2; // Large tablets
+    if (screenWidth >= 900) return portraitSize * 1.1; // Medium tablets
     return portraitSize;
   }
 

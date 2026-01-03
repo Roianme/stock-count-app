@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
+import 'widgets/item_card_widget.dart';
 import '../utils/index.dart';
 
 class CategoryView extends StatefulWidget {
@@ -114,113 +114,19 @@ class _CategoryViewState extends State<CategoryView> {
     double statusControlWidth,
     bool isLandscape,
   ) {
-    return Card(
-      margin: EdgeInsets.symmetric(
-        vertical: context.responsive.verticalPadding(
-          portraitValue: 8,
-          landscapeValue: 4,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(
-          context.responsive.spacing(portraitValue: 12, landscapeValue: 8),
-        ),
-        child: Row(
-          children: [
-            Transform.scale(
-              scale: 1.3,
-              child: Checkbox(
-                value: item.isChecked,
-                onChanged: (_) {
-                  viewModel.toggleItemChecked(item.id);
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            CircleAvatar(
-              backgroundColor: item.category.color.withValues(alpha: 0.12),
-              child: Icon(item.category.icon, color: item.category.color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: context.theme.itemName.copyWith(
-                      fontSize: context.responsive.fontSize(16, 14),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                ],
-              ),
-            ),
-            if (item.status != ItemStatus.pieces)
-              Container(
-                width: context.statusControlWidth,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: context.theme.statusControlDecoration,
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<ItemStatus>(
-                    value: item.status,
-                    isExpanded: true,
-                    items: ItemStatus.values.map((status) {
-                      return DropdownMenuItem<ItemStatus>(
-                        value: status,
-                        child: Text(status.displayName),
-                      );
-                    }).toList(),
-                    onChanged: (newStatus) {
-                      if (newStatus != null) {
-                        viewModel.updateItemStatus(item.id, newStatus);
-                      }
-                    },
-                  ),
-                ),
-              )
-            else
-              Container(
-                width: context.statusControlWidth,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: context.theme.statusControlDecoration,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        key: ValueKey('pieces_${item.id}'),
-                        initialValue: item.pieces == 0
-                            ? ''
-                            : item.pieces.toString(),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        textAlign: TextAlign.center,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          border: InputBorder.none,
-                          hintText: 'Pieces',
-                        ),
-                        onChanged: (value) {
-                          final parsed = int.tryParse(value) ?? 0;
-                          viewModel.setItemPieces(item.id, parsed);
-                        },
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Back to status',
-                      icon: const Icon(Icons.arrow_drop_down_circle_outlined),
-                      onPressed: () {
-                        viewModel.updateItemStatus(item.id, ItemStatus.ok);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
+    return ItemCardWidget(
+      item: item,
+      statusControlWidth: statusControlWidth,
+      onCheckChanged: () {
+        viewModel.toggleItemChecked(item.id);
+      },
+      onPiecesChanged: (pieces) {
+        viewModel.setItemPieces(item.id, pieces);
+      },
+      onStatusChanged: (newStatus) {
+        viewModel.updateItemStatus(item.id, newStatus);
+      },
+      showItemNameInColumn: false,
     );
   }
 }

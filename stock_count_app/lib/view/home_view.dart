@@ -9,6 +9,7 @@ import '../data/item_repository.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
+import 'widgets/item_card_widget.dart';
 import 'hp_view.dart';
 import 'cafe_view.dart';
 import 'warehouse_view.dart';
@@ -357,123 +358,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildItemCard(Item item, double statusControlWidth) {
-    return Card(
-      margin: EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: context.isLandscape ? 4 : 8,
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(
-          context.responsive.verticalPadding(
-            portraitValue: 12,
-            landscapeValue: 8,
-          ),
-        ),
-        child: Row(
-          children: [
-            Transform.scale(
-              scale: 1.3,
-              child: Checkbox(
-                value: item.isChecked,
-                onChanged: (_) {
-                  viewModel.setItemChecked(item.id, !item.isChecked);
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            CircleAvatar(
-              backgroundColor: item.category.color.withValues(alpha: 0.12),
-              child: Icon(item.category.icon, color: item.category.color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: TextStyle(
-                      fontSize: context.responsive.fontSize(16, 14),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                ],
-              ),
-            ),
-            _buildStatusOrPiecesWidget(item, statusControlWidth),
-          ],
-        ),
-      ),
+    return ItemCardWidget(
+      item: item,
+      statusControlWidth: statusControlWidth,
+      onCheckChanged: () {
+        viewModel.setItemChecked(item.id, !item.isChecked);
+      },
+      onPiecesChanged: (pieces) {
+        viewModel.setItemPieces(item.id, pieces);
+      },
+      onStatusChanged: (newStatus) {
+        viewModel.updateItemStatus(item.id, newStatus);
+      },
+      showItemNameInColumn: true,
     );
-  }
-
-  Widget _buildStatusOrPiecesWidget(Item item, double statusControlWidth) {
-    if (item.status != ItemStatus.pieces) {
-      return Container(
-        width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<ItemStatus>(
-            value: item.status,
-            isExpanded: true,
-            items: ItemStatus.values.map((status) {
-              return DropdownMenuItem<ItemStatus>(
-                value: status,
-                child: Text(status.displayName),
-              );
-            }).toList(),
-            onChanged: (newStatus) {
-              if (newStatus != null) {
-                viewModel.updateItemStatus(item.id, newStatus);
-              }
-            },
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                key: ValueKey('pieces_${item.id}'),
-                initialValue: item.pieces == 0 ? '' : item.pieces.toString(),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                textAlign: TextAlign.center,
-                decoration: const InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
-                  hintText: 'Pieces',
-                ),
-                onChanged: (value) {
-                  final parsed = int.tryParse(value) ?? 0;
-                  viewModel.setItemPieces(item.id, parsed);
-                },
-              ),
-            ),
-            IconButton(
-              tooltip: 'Back to status',
-              icon: const Icon(Icons.arrow_drop_down_circle_outlined),
-              onPressed: () {
-                viewModel.updateItemStatus(item.id, ItemStatus.ok);
-              },
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   Widget _buildCategoryCard(Category category) {
