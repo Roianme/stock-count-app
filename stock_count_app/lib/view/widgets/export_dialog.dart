@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stock_count_app/model/item_model.dart';
 import '../../data/item_data.dart' as item_data;
 import '../../viewmodel/home_view_model.dart';
+import '../../utils/index.dart';
 
 class ExportDialog extends StatefulWidget {
   final HomeViewModel viewModel;
@@ -44,51 +45,208 @@ class _ExportDialogState extends State<ExportDialog> {
     final checkedCount = item_data.items.where((i) => i.isChecked).length;
     final totalCount = item_data.items.length;
 
-    return AlertDialog(
-      title: const Text('Export Report'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Export $checkedCount / $totalCount items?',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                hintText: 'Your Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 500, maxHeight: 550),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title
+                Text(
+                  'Export Report',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: context.theme.textPrimary,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                const SizedBox(height: 16),
+
+                // Items count display with better styling
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.theme.accent.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: context.theme.accent.withValues(alpha: 0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Items to Export',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.theme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '$checkedCount',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: context.theme.accent,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' / $totalCount',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: context.theme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 24),
+
+                // Name input field
+                TextField(
+                  controller: nameController,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: context.theme.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Your Name',
+                    hintStyle: TextStyle(
+                      color: context.theme.textSecondary,
+                      fontSize: 16,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.theme.accent.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.theme.accent.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.theme.accent,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    filled: true,
+                    fillColor: context.theme.surface.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Action buttons
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: context.theme.accent.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: context.theme.accent,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              await _performSaveToDevice();
+                            },
+                            icon: const Icon(Icons.download, size: 24),
+                            label: const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              backgroundColor: context.theme.accent.withValues(
+                                alpha: 0.7,
+                              ),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          await _performExport();
+                        },
+                        icon: const Icon(Icons.share, size: 24),
+                        label: const Text(
+                          'Share',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          backgroundColor: context.theme.accent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            await _performSaveToDevice();
-          },
-          child: const Text('Save to Device'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            await _performExport();
-          },
-          child: const Text('Share'),
-        ),
-      ],
     );
   }
 

@@ -20,6 +20,8 @@ class CategoryView extends StatefulWidget {
 
 class _CategoryViewState extends State<CategoryView> {
   late final CategoryViewModel viewModel;
+  final Set<int> _selectedItemIds = {};
+  bool _isMultiSelectMode = false;
 
   @override
   void initState() {
@@ -44,8 +46,24 @@ class _CategoryViewState extends State<CategoryView> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: Text(widget.category.displayName),
+            title: _isMultiSelectMode
+                ? Text(
+                    '${_selectedItemIds.length} item${_selectedItemIds.length == 1 ? '' : 's'} selected',
+                    style: TextStyle(color: context.theme.accent),
+                  )
+                : Text(widget.category.displayName),
             elevation: 0,
+            leading: _isMultiSelectMode
+                ? IconButton(
+                    icon: Icon(Icons.close, color: context.theme.accent),
+                    onPressed: () {
+                      setState(() {
+                        _isMultiSelectMode = false;
+                        _selectedItemIds.clear();
+                      });
+                    },
+                  )
+                : null,
           ),
           body: SafeArea(
             child: LayoutBuilder(
@@ -105,15 +123,69 @@ class _CategoryViewState extends State<CategoryView> {
       item: item,
       statusControlWidth: statusControlWidth,
       onCheckChanged: () {
+        if (_isMultiSelectMode) {
+          return;
+        }
         viewModel.toggleItemChecked(item.id);
       },
       onPiecesChanged: (pieces) {
-        viewModel.setItemPieces(item.id, pieces);
+        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
+          // Batch apply pieces to all selected items
+          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
+          // Then check all selected items if pieces > 0
+          if (pieces > 0) {
+            viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
+          }
+          // Exit multi-select mode
+          setState(() {
+            _isMultiSelectMode = false;
+            _selectedItemIds.clear();
+          });
+        } else {
+          viewModel.setItemPieces(item.id, pieces);
+        }
       },
       onStatusChanged: (newStatus) {
-        viewModel.updateItemStatus(item.id, newStatus);
+        if (_isMultiSelectMode && !_selectedItemIds.contains(item.id)) {
+          setState(() {
+            _selectedItemIds.add(item.id);
+          });
+        }
+        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
+          // Batch apply status to all selected items
+          viewModel.batchUpdateItemStatus(_selectedItemIds.toList(), newStatus);
+          // Then check all selected items
+          viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
+          // Exit multi-select mode
+          setState(() {
+            _isMultiSelectMode = false;
+            _selectedItemIds.clear();
+          });
+        } else {
+          viewModel.updateItemStatus(item.id, newStatus);
+        }
       },
       showItemNameInColumn: false,
+      isMultiSelectMode: _isMultiSelectMode,
+      isSelected: _selectedItemIds.contains(item.id),
+      onLongPress: () {
+        setState(() {
+          _isMultiSelectMode = true;
+          _selectedItemIds.add(item.id);
+        });
+      },
+      onTap: () {
+        setState(() {
+          if (_selectedItemIds.contains(item.id)) {
+            _selectedItemIds.remove(item.id);
+            if (_selectedItemIds.isEmpty) {
+              _isMultiSelectMode = false;
+            }
+          } else {
+            _selectedItemIds.add(item.id);
+          }
+        });
+      },
     );
   }
 }

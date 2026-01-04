@@ -86,6 +86,24 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Batch update for multi-select operations
+  void batchSetItemsChecked(List<int> itemIds, bool value) {
+    for (final itemId in itemIds) {
+      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+      if (mainIndex != -1) {
+        data.items[mainIndex] = data.items[mainIndex].copyWith(
+          isChecked: value,
+        );
+      }
+      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+      if (matchIndex != -1) {
+        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+      }
+    }
+    _saveItems();
+    notifyListeners();
+  }
+
   List<model.Item> itemsForCategory(model.Category category) {
     return data.items.where((i) => i.category == category).toList();
   }
@@ -126,6 +144,24 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Batch status update for multi-select operations (no intermediate notifies)
+  void batchUpdateItemStatus(List<int> itemIds, model.ItemStatus newStatus) {
+    for (final itemId in itemIds) {
+      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+      if (mainIndex != -1) {
+        data.items[mainIndex] = data.items[mainIndex].copyWith(
+          status: newStatus,
+        );
+      }
+      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+      if (matchIndex != -1) {
+        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+      }
+    }
+    _saveItems();
+    notifyListeners();
+  }
+
   void setItemPieces(int itemId, int pieces) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
@@ -135,6 +171,22 @@ class HomeViewModel extends ChangeNotifier {
     final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
     if (matchIndex != -1) {
       matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+    }
+    _saveItems();
+    notifyListeners();
+  }
+
+  // Batch pieces update for multi-select operations (no intermediate notifies)
+  void batchSetItemPieces(List<int> itemIds, int pieces) {
+    for (final itemId in itemIds) {
+      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+      if (mainIndex != -1) {
+        data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
+      }
+      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+      if (matchIndex != -1) {
+        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+      }
     }
     _saveItems();
     notifyListeners();

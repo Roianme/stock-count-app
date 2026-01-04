@@ -27,6 +27,8 @@ class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final Set<int> _selectedItemIds = {};
+  bool _isMultiSelectMode = false;
 
   @override
   void initState() {
@@ -185,28 +187,83 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       backgroundColor: context.theme.surface,
       elevation: 0,
-      title: Text(
-        '${viewModel.currentLocation.displayName} - Stock Count',
-        style: context.theme.appBarTitle,
-      ),
-      leading: IconButton(
-        icon: Icon(Icons.menu, color: context.theme.textPrimary),
-        onPressed: () {
-          _scaffoldKey.currentState?.openDrawer();
-        },
-      ),
-      actions: [
-        IconButton(
-          onPressed: _handlePreviewAction,
-          icon: Icon(Icons.preview, color: context.theme.textPrimary),
-          tooltip: 'Preview checked items',
-        ),
-        IconButton(
-          icon: Icon(Icons.share, color: context.theme.textPrimary),
-          tooltip: 'Export checked items',
-          onPressed: _handleExportAction,
-        ),
-      ],
+      title: _isMultiSelectMode
+          ? Text(
+              '${_selectedItemIds.length} item${_selectedItemIds.length == 1 ? '' : 's'} selected',
+              style: context.theme.appBarTitle.copyWith(
+                color: context.theme.accent,
+              ),
+            )
+          : Text(
+              '${viewModel.currentLocation.displayName} - Stock Count',
+              style: context.theme.appBarTitle,
+            ),
+      leading: _isMultiSelectMode
+          ? IconButton(
+              icon: Icon(Icons.close, color: context.theme.accent),
+              onPressed: () {
+                setState(() {
+                  _isMultiSelectMode = false;
+                  _selectedItemIds.clear();
+                });
+              },
+            )
+          : IconButton(
+              icon: Icon(Icons.menu, color: context.theme.textPrimary),
+              onPressed: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+            ),
+      actions: _isMultiSelectMode
+          ? []
+          : [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Tooltip(
+                  message: 'Preview checked items',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.theme.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextButton(
+                      onPressed: _handlePreviewAction,
+                      child: Text(
+                        'Preview',
+                        style: TextStyle(
+                          color: context.theme.accent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Tooltip(
+                  message: 'Export/Share checked items',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.theme.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextButton(
+                      onPressed: _handleExportAction,
+                      child: Text(
+                        'Export',
+                        style: TextStyle(
+                          color: context.theme.accent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
     );
   }
 
@@ -362,15 +419,69 @@ class _HomePageState extends State<HomePage> {
       item: item,
       statusControlWidth: statusControlWidth,
       onCheckChanged: () {
+        if (_isMultiSelectMode) {
+          return;
+        }
         viewModel.setItemChecked(item.id, !item.isChecked);
       },
       onPiecesChanged: (pieces) {
-        viewModel.setItemPieces(item.id, pieces);
+        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
+          // Batch apply pieces to all selected items
+          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
+          // Then check all selected items if pieces > 0
+          if (pieces > 0) {
+            viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
+          }
+          // Exit multi-select mode
+          setState(() {
+            _isMultiSelectMode = false;
+            _selectedItemIds.clear();
+          });
+        } else {
+          viewModel.setItemPieces(item.id, pieces);
+        }
       },
       onStatusChanged: (newStatus) {
-        viewModel.updateItemStatus(item.id, newStatus);
+        if (_isMultiSelectMode && !_selectedItemIds.contains(item.id)) {
+          setState(() {
+            _selectedItemIds.add(item.id);
+          });
+        }
+        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
+          // Batch apply status to all selected items
+          viewModel.batchUpdateItemStatus(_selectedItemIds.toList(), newStatus);
+          // Then check all selected items
+          viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
+          // Exit multi-select mode
+          setState(() {
+            _isMultiSelectMode = false;
+            _selectedItemIds.clear();
+          });
+        } else {
+          viewModel.updateItemStatus(item.id, newStatus);
+        }
       },
       showItemNameInColumn: true,
+      isMultiSelectMode: _isMultiSelectMode,
+      isSelected: _selectedItemIds.contains(item.id),
+      onLongPress: () {
+        setState(() {
+          _isMultiSelectMode = true;
+          _selectedItemIds.add(item.id);
+        });
+      },
+      onTap: () {
+        setState(() {
+          if (_selectedItemIds.contains(item.id)) {
+            _selectedItemIds.remove(item.id);
+            if (_selectedItemIds.isEmpty) {
+              _isMultiSelectMode = false;
+            }
+          } else {
+            _selectedItemIds.add(item.id);
+          }
+        });
+      },
     );
   }
 
