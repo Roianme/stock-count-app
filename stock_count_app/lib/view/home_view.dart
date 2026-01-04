@@ -442,16 +442,12 @@ class _HomePageState extends State<HomePage> {
         }
       },
       onStatusChanged: (newStatus) {
-        if (_isMultiSelectMode && !_selectedItemIds.contains(item.id)) {
-          setState(() {
-            _selectedItemIds.add(item.id);
-          });
-        }
-        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
-          // Batch apply status to all selected items
-          viewModel.batchUpdateItemStatus(_selectedItemIds.toList(), newStatus);
-          // Then check all selected items
-          viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
+        if (_isMultiSelectMode) {
+          final idsToUpdate = {..._selectedItemIds, item.id}.toList();
+          // Batch apply status to all selected items (plus the menu-target item)
+          viewModel.batchUpdateItemStatus(idsToUpdate, newStatus);
+          // Then check all affected items
+          viewModel.batchSetItemsChecked(idsToUpdate, true);
           // Exit multi-select mode
           setState(() {
             _isMultiSelectMode = false;
@@ -459,6 +455,7 @@ class _HomePageState extends State<HomePage> {
           });
         } else {
           viewModel.updateItemStatus(item.id, newStatus);
+          viewModel.setItemChecked(item.id, true);
         }
       },
       showItemNameInColumn: true,
