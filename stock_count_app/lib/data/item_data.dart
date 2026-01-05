@@ -715,3 +715,23 @@ final List<Item> items = [
     status: ItemStatus.pieces,
   ),
 ];
+
+// Mutable map that will hold the seed data - populated once before persistence loads
+Map<int, Item> seedItemsById = {};
+
+// Initialize the seed data with the original values (before any persistence loading)
+// This should be called from main.dart BEFORE items are loaded from storage
+void initializeSeedData() {
+  if (seedItemsById.isNotEmpty) return; // Only initialize once
+
+  for (final item in items) {
+    seedItemsById[item.id] = Item(
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      status: item.status, // Capture the ORIGINAL status from the defined seed
+      isChecked: false, // Always reset to unchecked
+      pieces: item.pieces, // Capture the ORIGINAL pieces from the defined seed
+    );
+  }
+}

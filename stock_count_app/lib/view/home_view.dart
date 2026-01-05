@@ -321,21 +321,70 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSectionTitle() {
+    final titleText = viewModel.getSectionTitle();
+    final showResetButton = !viewModel.isSearching;
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: ResponsiveSizes.spacingLarge,
         vertical: context.responsive.verticalPadding(),
       ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          viewModel.getSectionTitle(),
-          style: context.theme.sectionTitle.copyWith(
-            fontSize: context.responsive.fontSize(20),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              titleText,
+              style: context.theme.sectionTitle.copyWith(
+                fontSize: context.responsive.fontSize(20),
+              ),
+            ),
           ),
-        ),
+          if (showResetButton)
+            TextButton.icon(
+              onPressed: _handleResetAll,
+              icon: Icon(Icons.refresh, size: 18, color: context.theme.accent),
+              label: Text(
+                'Reset',
+                style: TextStyle(
+                  color: context.theme.accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  Future<void> _handleResetAll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset items?'),
+        content: const Text(
+          'This will reset all item statuses, pieces, and checks back to their defaults.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Reset', style: TextStyle(color: context.theme.accent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isMultiSelectMode = false;
+      _selectedItemIds.clear();
+    });
+
+    await viewModel.resetAllToDefaults();
   }
 
   void _handlePreviewAction() {

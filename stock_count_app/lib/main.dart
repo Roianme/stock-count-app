@@ -13,6 +13,10 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // CRITICAL: Capture the original seed data BEFORE loading persisted items
+  // This ensures seedItemsById has the true defaults to reset to
+  initializeSeedData();
+
   // Initialize platform-aware repository (uses Hive on mobile, SharedPreferences on web)
   final repository = PlatformItemRepository();
   await repository.initialize();

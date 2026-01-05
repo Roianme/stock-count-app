@@ -192,6 +192,32 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> resetAllToDefaults() async {
+    for (var i = 0; i < data.items.length; i++) {
+      final current = data.items[i];
+      final seed = data.seedItemsById[current.id];
+
+      if (seed != null) {
+        data.items[i] = seed.copyWith(isChecked: false);
+      } else {
+        data.items[i] = current.copyWith(
+          status: model.ItemStatus.ok,
+          pieces: 0,
+          isChecked: false,
+        );
+      }
+    }
+
+    if (_query.isNotEmpty) {
+      matchedItems = data.items
+          .where((i) => i.name.toLowerCase().contains(_query))
+          .toList();
+    }
+
+    await _saveItems();
+    setMessage('All items reset to defaults');
+  }
+
   bool get hasCheckedItems => data.items.any((i) => i.isChecked);
 
   // UI Message handling

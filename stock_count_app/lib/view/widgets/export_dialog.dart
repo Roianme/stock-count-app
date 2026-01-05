@@ -163,26 +163,24 @@ class _ExportDialogState extends State<ExportDialog> {
                     Row(
                       children: [
                         Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: context.theme.accent.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              'Cancel',
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              await _performExport();
+                            },
+                            icon: const Icon(Icons.share, size: 24),
+                            label: const Text(
+                              'Share',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: context.theme.accent,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              backgroundColor: context.theme.accent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
@@ -218,24 +216,26 @@ class _ExportDialogState extends State<ExportDialog> {
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          await _performExport();
-                        },
-                        icon: const Icon(Icons.share, size: 24),
-                        label: const Text(
-                          'Share',
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: context.theme.accent.withValues(
+                                alpha: 0.3,
+                              ),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          backgroundColor: context.theme.accent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            color: context.theme.accent,
                           ),
                         ),
                       ),
