@@ -20,7 +20,7 @@ class ReportWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final dateStr = DateFormat('dd/MM/yy').format(now);
+    final dateStr = DateFormat('EEEE, dd MMM yyyy').format(now);
 
     // Group items by category
     final groupedItems = <Category, List<Item>>{};
@@ -31,24 +31,85 @@ class ReportWidget extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columnCount = 4;
-        final columns = <List<Category>>[];
+        // Build columns with a specific ordering:
+        // - Move FILIPINO SUPPLIER to where MISC was (3rd column, middle)
+        // - Place MISC under CHEMICALS (4th column bottom)
+        final columns = List.generate(4, (_) => <Category>[]);
 
-        for (int i = 0; i < columnCount; i++) {
-          columns.add([]);
+        void addIfPresent(Category c, int col) {
+          if (groupedItems.containsKey(c)) columns[col].add(c);
         }
 
-        for (int i = 0; i < categories.length; i++) {
-          columns[i % columnCount].add(categories[i]);
+        // Desired per-column order
+        // Column 0
+        addIfPresent(Category.bbqGrill, 0);
+        addIfPresent(Category.spices, 0);
+        addIfPresent(Category.colesWoolies, 0);
+        // Column 1
+        addIfPresent(Category.rawItems, 1);
+        addIfPresent(Category.drinks, 1);
+        addIfPresent(Category.produce, 1);
+        // Column 2
+        addIfPresent(Category.warehouse, 2);
+        addIfPresent(Category.filipinoSupplier, 2);
+        // Column 3
+        addIfPresent(Category.essentials, 3);
+        addIfPresent(Category.supplier, 3);
+        addIfPresent(Category.chemicals, 3);
+        addIfPresent(Category.misc, 3);
+
+        // Fallback: place any remaining categories not yet placed
+        final placed = columns.expand((c) => c).toSet();
+        if (placed.length != categories.length) {
+          int idx = 0;
+          for (final c in categories) {
+            if (!placed.contains(c)) {
+              columns[idx % 4].add(c);
+              idx++;
+            }
+          }
         }
 
         return Material(
           color: Colors.white,
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${(location ?? title).toUpperCase()} | $dateStr',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'COUNT BY: ${name ?? 'Not provided'}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,45 +124,6 @@ class ReportWidget extends StatelessWidget {
                         ),
                       );
                     }).toList(),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        location?.toUpperCase() ?? title.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'COUNT BY: $name',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'DATE: $dateStr',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -122,7 +144,7 @@ class ReportWidget extends StatelessWidget {
 
   Widget _buildCategoryColumn(Category category, List<Item> items) {
     return Container(
-      margin: const EdgeInsets.all(10),
+      margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(8),
       color: Colors.grey[100],
       child: Padding(
@@ -131,7 +153,7 @@ class ReportWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.yellow[700],
                 borderRadius: BorderRadius.circular(4),
@@ -145,7 +167,7 @@ class ReportWidget extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             ...items.map((item) {
               String statusMarker = 'OK';
               Color markerColor = Colors.greenAccent;
@@ -165,46 +187,45 @@ class ReportWidget extends StatelessWidget {
               }
 
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          item.name,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      child: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          height: 1.28,
+                          color: Colors.black,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    if (statusMarker.isNotEmpty)
-                      Container(
+                    const SizedBox(width: 10),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 70),
+                      child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 2,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: markerColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           statusMarker,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: markerColor,
                           ),
                         ),
-                      )
-                    else
-                      const Icon(Icons.circle, size: 20, color: Colors.black),
+                      ),
+                    ),
                   ],
                 ),
               );

@@ -304,7 +304,12 @@ final List<Item> items = [
     category: Category.spices,
     status: ItemStatus.pieces,
   ),
-  Item(id: 50, name: 'salt', category: Category.spices, status: ItemStatus.ok),
+  Item(
+    id: 50,
+    name: 'salt',
+    category: Category.spices,
+    status: ItemStatus.pieces,
+  ),
   Item(
     id: 51,
     name: 'onion powder',
@@ -343,7 +348,12 @@ final List<Item> items = [
   ),
 
   // DRINKS
-  Item(id: 57, name: 'coke', category: Category.drinks, status: ItemStatus.ok),
+  Item(
+    id: 57,
+    name: 'coke',
+    category: Category.drinks,
+    status: ItemStatus.pieces,
+  ),
   Item(
     id: 58,
     name: 'coke no sugar',
@@ -356,18 +366,38 @@ final List<Item> items = [
     category: Category.drinks,
     status: ItemStatus.pieces,
   ),
-  Item(id: 60, name: 'fanta', category: Category.drinks, status: ItemStatus.ok),
-  Item(id: 61, name: 'water', category: Category.drinks, status: ItemStatus.ok),
+  Item(
+    id: 60,
+    name: 'fanta',
+    category: Category.drinks,
+    status: ItemStatus.pieces,
+  ),
+  Item(
+    id: 61,
+    name: 'water',
+    category: Category.drinks,
+    status: ItemStatus.pieces,
+  ),
   Item(
     id: 62,
     name: 'c2 500ml',
     category: Category.drinks,
     status: ItemStatus.pieces,
   ),
-  Item(id: 63, name: 'zesto', category: Category.drinks, status: ItemStatus.ok),
+  Item(
+    id: 63,
+    name: 'zesto',
+    category: Category.drinks,
+    status: ItemStatus.pieces,
+  ),
 
   // MISC
-  Item(id: 64, name: 'rice', category: Category.misc, status: ItemStatus.ok),
+  Item(
+    id: 64,
+    name: 'rice',
+    category: Category.misc,
+    status: ItemStatus.pieces,
+  ),
   Item(
     id: 65,
     name: 'garlic oil',
@@ -554,7 +584,12 @@ final List<Item> items = [
     category: Category.produce,
     status: ItemStatus.pieces,
   ),
-  Item(id: 95, name: 'eggs', category: Category.produce, status: ItemStatus.ok),
+  Item(
+    id: 95,
+    name: 'eggs',
+    category: Category.produce,
+    status: ItemStatus.pieces,
+  ),
 
   // FILIPINO SUPPLIER
   Item(
