@@ -5,3 +5,4 @@ stock_count_app/windows/flutter/generated_plugin_registrant.cc
 stock_count_app/windows/flutter/generated_plugins.cmake
 PERSISTENCE_SETUP.md
 stock_count_app/linux/flutter/generated_plugin_registrant.cc
+*.md
