@@ -4,14 +4,14 @@ import '../model/item_model.dart';
 import 'category_view.dart';
 
 class ReportWidget extends StatelessWidget {
-  final List<Item> checkedItems;
+  final List<Item> items;
   final String title;
   final String? location;
   final String? name;
 
   const ReportWidget({
     super.key,
-    required this.checkedItems,
+    required this.items,
     this.title = 'Stock Count Report',
     this.location,
     this.name,
@@ -24,7 +24,7 @@ class ReportWidget extends StatelessWidget {
 
     // Group items by category
     final groupedItems = <Category, List<Item>>{};
-    for (final item in checkedItems) {
+    for (final item in items) {
       groupedItems.putIfAbsent(item.category, () => []).add(item);
     }
     final categories = groupedItems.keys.toList();
@@ -134,14 +134,6 @@ class ReportWidget extends StatelessWidget {
     );
   }
 
-  // int _columnCountForWidth(double width) {
-  //   // Use responsive helper breakpoints for consistency
-  //   if (width >= 1400) return 4;
-  //   if (width >= 1024) return 3;
-  //   if (width >= 700) return 2;
-  //   return 1;
-  // }
-
   Widget _buildCategoryColumn(Category category, List<Item> items) {
     return Container(
       margin: const EdgeInsets.all(8),
@@ -153,7 +145,7 @@ class ReportWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.yellow[700],
                 borderRadius: BorderRadius.circular(4),
@@ -167,12 +159,16 @@ class ReportWidget extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             ...items.map((item) {
+              final isUnchecked = !item.isChecked;
               String statusMarker = 'OK';
               Color markerColor = Colors.greenAccent;
 
-              if (item.status == ItemStatus.low) {
+              if (isUnchecked) {
+                statusMarker = '';
+                markerColor = Colors.grey;
+              } else if (item.status == ItemStatus.low) {
                 statusMarker = 'LOW';
                 markerColor = Colors.orangeAccent;
               } else if (item.status == ItemStatus.zero) {
@@ -194,10 +190,10 @@ class ReportWidget extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
-                          height: 1.28,
-                          color: Colors.black,
+                          height: 1.2,
+                          color: isUnchecked ? Colors.black45 : Colors.black,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -208,20 +204,27 @@ class ReportWidget extends StatelessWidget {
                       constraints: const BoxConstraints(minWidth: 70),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 7,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: markerColor.withValues(alpha: 0.2),
+                          color: markerColor.withValues(
+                            alpha: isUnchecked ? 0.08 : 0.2,
+                          ),
                           borderRadius: BorderRadius.circular(4),
+                          border: isUnchecked
+                              ? Border.all(
+                                  color: Colors.grey.withValues(alpha: 0.6),
+                                )
+                              : null,
                         ),
                         child: Text(
                           statusMarker,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: markerColor,
+                            color: isUnchecked ? Colors.grey : markerColor,
                           ),
                         ),
                       ),

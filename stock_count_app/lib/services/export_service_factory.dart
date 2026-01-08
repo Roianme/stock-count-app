@@ -22,14 +22,14 @@ class ExportService {
   /// Convenience static methods that delegate to the platform-specific instance
   static Future<bool> exportAndShare(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
   }) {
     return _instance.exportAndShare(
       context,
-      checkedItems,
+      items,
       title: title,
       location: location,
       name: name,
@@ -38,14 +38,14 @@ class ExportService {
 
   static Future<String?> saveToDevice(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
   }) {
     return _instance.saveToDevice(
       context,
-      checkedItems,
+      items,
       title: title,
       location: location,
       name: name,
@@ -54,14 +54,14 @@ class ExportService {
 
   static Future<dynamic> generateReportImage(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
   }) {
     return _instance.generateReportImage(
       context,
-      checkedItems,
+      items,
       title: title,
       location: location,
       name: name,

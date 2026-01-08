@@ -16,7 +16,7 @@ class MobileExportService extends ExportServiceBase {
   @override
   Future<bool> exportAndShare(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -25,7 +25,7 @@ class MobileExportService extends ExportServiceBase {
       // Render widget to image using overlay
       final image = await _captureReportWidget(
         context,
-        checkedItems,
+        items,
         title: title,
         location: location,
         name: name,
@@ -54,7 +54,7 @@ class MobileExportService extends ExportServiceBase {
   @override
   Future<String?> saveToDevice(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -63,7 +63,7 @@ class MobileExportService extends ExportServiceBase {
       // Render widget to image using overlay
       final image = await _captureReportWidget(
         context,
-        checkedItems,
+        items,
         title: title,
         location: location,
         name: name,
@@ -93,14 +93,14 @@ class MobileExportService extends ExportServiceBase {
   @override
   Future<Uint8List?> generateReportImage(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
   }) async {
     return _captureReportWidget(
       context,
-      checkedItems,
+      items,
       title: title,
       location: location,
       name: name,
@@ -110,7 +110,7 @@ class MobileExportService extends ExportServiceBase {
   /// Capture report widget as image using overlay
   Future<Uint8List?> _captureReportWidget(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -131,7 +131,7 @@ class MobileExportService extends ExportServiceBase {
               child: RepaintBoundary(
                 key: boundary,
                 child: ReportWidget(
-                  checkedItems: checkedItems,
+                  items: items,
                   title: title,
                   location: location,
                   name: name,

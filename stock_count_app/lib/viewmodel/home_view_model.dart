@@ -266,22 +266,16 @@ class HomeViewModel extends ChangeNotifier {
       return false;
     }
 
+    // Include all items in the report so unchecked ones appear struck through
+    final allItems = List<model.Item>.from(data.items);
+
     final success = await ExportService.exportAndShare(
       context,
-      checkedItems,
+      allItems,
       title: 'Stock Count Report',
       location: location,
       name: name,
     );
-
-    if (success) {
-      // Clear all checked items after successful export
-      for (int i = 0; i < data.items.length; i++) {
-        data.items[i] = data.items[i].copyWith(isChecked: false);
-      }
-      await _saveItems();
-      notifyListeners();
-    }
 
     return success;
   }
@@ -296,22 +290,15 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
+    final allItems = List<model.Item>.from(data.items);
+
     final filePath = await ExportService.saveToDevice(
       context,
-      checkedItems,
+      allItems,
       title: 'Stock Count Report',
       location: location,
       name: name,
     );
-
-    if (filePath != null) {
-      // Clear all checked items after successful save
-      for (int i = 0; i < data.items.length; i++) {
-        data.items[i] = data.items[i].copyWith(isChecked: false);
-      }
-      await _saveItems();
-      notifyListeners();
-    }
 
     return filePath;
   }
@@ -323,9 +310,11 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
+    final allItems = List<model.Item>.from(data.items);
+
     final image = await ExportService.generateReportImage(
       context,
-      checkedItems,
+      allItems,
       title: 'Stock Count Report',
       location: currentLocation.displayName,
       name: '',

@@ -13,7 +13,7 @@ class WebExportService extends ExportServiceBase {
   @override
   Future<bool> exportAndShare(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -21,7 +21,7 @@ class WebExportService extends ExportServiceBase {
     try {
       final image = await generateReportImage(
         context,
-        checkedItems,
+        items,
         title: title,
         location: location,
         name: name,
@@ -63,7 +63,7 @@ class WebExportService extends ExportServiceBase {
   @override
   Future<String?> saveToDevice(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -71,7 +71,7 @@ class WebExportService extends ExportServiceBase {
     try {
       final image = await generateReportImage(
         context,
-        checkedItems,
+        items,
         title: title,
         location: location,
         name: name,
@@ -82,9 +82,10 @@ class WebExportService extends ExportServiceBase {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _downloadImage(image, 'stock_report_$timestamp.png');
+      final filename = 'stock_report_$timestamp.png';
+      _downloadImage(image, filename);
 
-      return 'Report downloaded successfully';
+      return 'Report saved to: Downloads/$filename';
     } catch (e) {
       debugPrint('Save error: $e');
       return null;
@@ -94,14 +95,14 @@ class WebExportService extends ExportServiceBase {
   @override
   Future<Uint8List?> generateReportImage(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
   }) async {
     return _captureReportWidget(
       context,
-      checkedItems,
+      items,
       title: title,
       location: location,
       name: name,
@@ -111,7 +112,7 @@ class WebExportService extends ExportServiceBase {
   /// Capture report widget as image using overlay
   Future<Uint8List?> _captureReportWidget(
     BuildContext context,
-    List<Item> checkedItems, {
+    List<Item> items, {
     String title = 'Stock Count Report',
     String? location,
     String? name,
@@ -132,7 +133,7 @@ class WebExportService extends ExportServiceBase {
               child: RepaintBoundary(
                 key: boundary,
                 child: ReportWidget(
-                  checkedItems: checkedItems,
+                  items: items,
                   title: title,
                   location: location,
                   name: name,

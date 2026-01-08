@@ -671,7 +671,7 @@ class _HomePageState extends State<HomePage> {
   void _showExportSuccess() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Report shared and checks cleared!'),
+        content: Text('Report shared successfully!'),
         duration: Duration(seconds: 2),
       ),
     );
@@ -680,7 +680,7 @@ class _HomePageState extends State<HomePage> {
   void _showSaveSuccess(String filePath) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Report saved to:\n$filePath'),
+        content: Text(filePath),
         duration: const Duration(seconds: 4),
         action: SnackBarAction(label: 'OK', onPressed: () {}),
       ),
