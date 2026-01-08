@@ -8,6 +8,7 @@ import 'item_repository.dart';
 class HiveItemRepository implements ItemRepository {
   static const String boxName = 'items_box';
   late Box<Item> _box;
+  bool _closed = false;
 
   /// Initialize Hive and open the box
   Future<void> initialize() async {
@@ -86,7 +87,12 @@ class HiveItemRepository implements ItemRepository {
   }
 
   /// Close the box (call on app shutdown)
+  @override
   Future<void> close() async {
-    await _box.close();
+    if (_closed) return;
+    _closed = true;
+    if (_box.isOpen) {
+      await _box.close();
+    }
   }
 }

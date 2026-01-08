@@ -21,6 +21,7 @@ class MobileExportService extends ExportServiceBase {
     String? location,
     String? name,
   }) async {
+    File? file;
     try {
       // Render widget to image using overlay
       final image = await _captureReportWidget(
@@ -38,7 +39,7 @@ class MobileExportService extends ExportServiceBase {
       // Save to temporary file
       final tempDir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final file = File('${tempDir.path}/stock_report_$timestamp.png');
+      file = File('${tempDir.path}/stock_report_$timestamp.png');
       await file.writeAsBytes(image);
 
       // Share the file
@@ -48,6 +49,14 @@ class MobileExportService extends ExportServiceBase {
     } catch (e) {
       debugPrint('Export error: $e');
       return false;
+    } finally {
+      try {
+        if (file != null && await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {
+        // Best-effort cleanup only.
+      }
     }
   }
 

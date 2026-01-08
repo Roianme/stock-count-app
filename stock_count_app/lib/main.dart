@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -30,17 +32,44 @@ void main() async {
   runApp(MyApp(repository: repository));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final ItemRepository repository;
 
   const MyApp({super.key, required this.repository});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Best-effort: flush/close resources when backgrounding.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(widget.repository.close());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(widget.repository.close());
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Stock Count',
       theme: AppTheme.lightTheme,
-      home: HomePage(repository: repository),
+      home: HomePage(repository: widget.repository),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -18,4 +18,7 @@ abstract class ItemRepository {
 
   /// Delete all stored data
   Future<void> deleteAll();
+
+  /// Close any resources (Hive boxes, etc.). Safe to call multiple times.
+  Future<void> close();
 }
