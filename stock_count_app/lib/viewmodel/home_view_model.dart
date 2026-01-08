@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../model/item_model.dart' as model;
 import '../data/item_data.dart' as data;
 import '../data/item_repository.dart';
-import '../services/export_service.dart';
+import '../services/export_service_factory.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final List<model.Category> allCategories;
@@ -86,6 +86,24 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Batch update for multi-select operations
+  void batchSetItemsChecked(List<int> itemIds, bool value) {
+    for (final itemId in itemIds) {
+      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+      if (mainIndex != -1) {
+        data.items[mainIndex] = data.items[mainIndex].copyWith(
+          isChecked: value,
+        );
+      }
+      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+      if (matchIndex != -1) {
+        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+      }
+    }
+    _saveItems();
+    notifyListeners();
+  }
+
   List<model.Item> itemsForCategory(model.Category category) {
     return data.items.where((i) => i.category == category).toList();
   }
@@ -126,6 +144,24 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Batch status update for multi-select operations (no intermediate notifies)
+  void batchUpdateItemStatus(List<int> itemIds, model.ItemStatus newStatus) {
+    for (final itemId in itemIds) {
+      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+      if (mainIndex != -1) {
+        data.items[mainIndex] = data.items[mainIndex].copyWith(
+          status: newStatus,
+        );
+      }
+      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+      if (matchIndex != -1) {
+        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+      }
+    }
+    _saveItems();
+    notifyListeners();
+  }
+
   void setItemPieces(int itemId, int pieces) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
@@ -138,6 +174,48 @@ class HomeViewModel extends ChangeNotifier {
     }
     _saveItems();
     notifyListeners();
+  }
+
+  // Batch pieces update for multi-select operations (no intermediate notifies)
+  void batchSetItemPieces(List<int> itemIds, int pieces) {
+    for (final itemId in itemIds) {
+      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+      if (mainIndex != -1) {
+        data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
+      }
+      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
+      if (matchIndex != -1) {
+        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+      }
+    }
+    _saveItems();
+    notifyListeners();
+  }
+
+  Future<void> resetAllToDefaults() async {
+    for (var i = 0; i < data.items.length; i++) {
+      final current = data.items[i];
+      final seed = data.seedItemsById[current.id];
+
+      if (seed != null) {
+        data.items[i] = seed.copyWith(isChecked: false);
+      } else {
+        data.items[i] = current.copyWith(
+          status: model.ItemStatus.ok,
+          pieces: 0,
+          isChecked: false,
+        );
+      }
+    }
+
+    if (_query.isNotEmpty) {
+      matchedItems = data.items
+          .where((i) => i.name.toLowerCase().contains(_query))
+          .toList();
+    }
+
+    await _saveItems();
+    setMessage('All items reset to defaults');
   }
 
   bool get hasCheckedItems => data.items.any((i) => i.isChecked);
@@ -174,7 +252,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       await repository.saveItems(data.items);
     } catch (e) {
-      print('Error saving items in HomeViewModel: $e');
+      debugPrint('Error saving items in HomeViewModel: $e');
     }
   }
 
@@ -188,22 +266,16 @@ class HomeViewModel extends ChangeNotifier {
       return false;
     }
 
+    // Include all items in the report so unchecked ones appear struck through
+    final allItems = List<model.Item>.from(data.items);
+
     final success = await ExportService.exportAndShare(
       context,
-      checkedItems,
+      allItems,
       title: 'Stock Count Report',
       location: location,
       name: name,
     );
-
-    if (success) {
-      // Clear all checked items after successful export
-      for (int i = 0; i < data.items.length; i++) {
-        data.items[i] = data.items[i].copyWith(isChecked: false);
-      }
-      await _saveItems();
-      notifyListeners();
-    }
 
     return success;
   }
@@ -218,22 +290,15 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
+    final allItems = List<model.Item>.from(data.items);
+
     final filePath = await ExportService.saveToDevice(
       context,
-      checkedItems,
+      allItems,
       title: 'Stock Count Report',
       location: location,
       name: name,
     );
-
-    if (filePath != null) {
-      // Clear all checked items after successful save
-      for (int i = 0; i < data.items.length; i++) {
-        data.items[i] = data.items[i].copyWith(isChecked: false);
-      }
-      await _saveItems();
-      notifyListeners();
-    }
 
     return filePath;
   }
@@ -245,10 +310,14 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
+    final allItems = List<model.Item>.from(data.items);
+
     final image = await ExportService.generateReportImage(
       context,
-      checkedItems,
+      allItems,
       title: 'Stock Count Report',
+      location: currentLocation.displayName,
+      name: '',
     );
 
     return image;

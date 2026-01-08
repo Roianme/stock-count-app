@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import '../model/item_model.dart';
@@ -7,6 +8,7 @@ import 'item_repository.dart';
 class HiveItemRepository implements ItemRepository {
   static const String boxName = 'items_box';
   late Box<Item> _box;
+  bool _closed = false;
 
   /// Initialize Hive and open the box
   Future<void> initialize() async {
@@ -46,7 +48,7 @@ class HiveItemRepository implements ItemRepository {
         await _box.put(item.id, item);
       }
     } catch (e) {
-      print('Error saving items: $e');
+      debugPrint('Error saving items: $e');
       rethrow;
     }
   }
@@ -64,7 +66,7 @@ class HiveItemRepository implements ItemRepository {
       }).toList();
       await saveItems(updated);
     } catch (e) {
-      print('Error clearing checked items: $e');
+      debugPrint('Error clearing checked items: $e');
       rethrow;
     }
   }
@@ -79,13 +81,18 @@ class HiveItemRepository implements ItemRepository {
     try {
       await _box.clear();
     } catch (e) {
-      print('Error deleting all items: $e');
+      debugPrint('Error deleting all items: $e');
       rethrow;
     }
   }
 
   /// Close the box (call on app shutdown)
+  @override
   Future<void> close() async {
-    await _box.close();
+    if (_closed) return;
+    _closed = true;
+    if (_box.isOpen) {
+      await _box.close();
+    }
   }
 }

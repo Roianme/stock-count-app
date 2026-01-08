@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
+import 'widgets/item_card_widget.dart';
+import '../utils/index.dart';
 
 class CategoryView extends StatefulWidget {
   const CategoryView({
@@ -19,6 +20,8 @@ class CategoryView extends StatefulWidget {
 
 class _CategoryViewState extends State<CategoryView> {
   late final CategoryViewModel viewModel;
+  final Set<int> _selectedItemIds = {};
+  bool _isMultiSelectMode = false;
 
   @override
   void initState() {
@@ -40,194 +43,145 @@ class _CategoryViewState extends State<CategoryView> {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, _) {
-        final categoryItems = viewModel.itemsInCategory;
-        final allChecked =
-            viewModel.totalItemsCount > 0 &&
-            viewModel.checkedItemsCount == viewModel.totalItemsCount;
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: Text(widget.category.displayName),
+            title: _isMultiSelectMode
+                ? Text(
+                    '${_selectedItemIds.length} item${_selectedItemIds.length == 1 ? '' : 's'} selected',
+                    style: TextStyle(color: context.theme.accent),
+                  )
+                : Text(widget.category.displayName),
             elevation: 0,
-            actions: [
-              const Text("Check All (Sure ka?)"),
-              IconButton(
-                icon: Icon(
-                  allChecked ? Icons.check_box : Icons.check_box_outline_blank,
-                ),
-                tooltip: allChecked ? 'Unselect all' : 'Select all',
-                onPressed: () => viewModel.setAllChecked(!allChecked),
-              ),
-            ],
+            leading: _isMultiSelectMode
+                ? IconButton(
+                    icon: Icon(Icons.close, color: context.theme.accent),
+                    onPressed: () {
+                      setState(() {
+                        _isMultiSelectMode = false;
+                        _selectedItemIds.clear();
+                      });
+                    },
+                  )
+                : null,
           ),
           body: SafeArea(
-            child: categoryItems.isEmpty
-                ? const Center(child: Text('No items in this category'))
-                : Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      // Items list
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          itemCount: categoryItems.length,
-                          itemBuilder: (context, index) {
-                            final item = categoryItems[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    Transform.scale(
-                                      scale: 1.3,
-                                      child: Checkbox(
-                                        value: item.isChecked,
-                                        onChanged: (_) {
-                                          viewModel.toggleItemChecked(item.id);
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    // Icon
-                                    CircleAvatar(
-                                      backgroundColor: item.category.color
-                                          .withOpacity(0.12),
-                                      child: Icon(
-                                        item.category.icon,
-                                        color: item.category.color,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.name,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                        ],
-                                      ),
-                                    ),
-                                    if (item.status != ItemStatus.pieces)
-                                      Container(
-                                        width: 120,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<ItemStatus>(
-                                            value: item.status,
-                                            isExpanded: true,
-                                            items: ItemStatus.values.map((
-                                              status,
-                                            ) {
-                                              return DropdownMenuItem<
-                                                ItemStatus
-                                              >(
-                                                value: status,
-                                                child: Text(status.displayName),
-                                              );
-                                            }).toList(),
-                                            onChanged: (newStatus) {
-                                              if (newStatus != null) {
-                                                viewModel.updateItemStatus(
-                                                  item.id,
-                                                  newStatus,
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        width: 120,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextFormField(
-                                                key: ValueKey(
-                                                  'pieces_${item.id}',
-                                                ),
-                                                initialValue: item.pieces == 0
-                                                    ? ''
-                                                    : item.pieces.toString(),
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter
-                                                      .digitsOnly,
-                                                ],
-                                                textAlign: TextAlign.center,
-                                                decoration:
-                                                    const InputDecoration(
-                                                      isDense: true,
-                                                      border: InputBorder.none,
-                                                      hintText: 'Pieces',
-                                                    ),
-                                                onChanged: (value) {
-                                                  final parsed =
-                                                      int.tryParse(value) ?? 0;
-                                                  viewModel.setItemPieces(
-                                                    item.id,
-                                                    parsed,
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            IconButton(
-                                              tooltip: 'Back to status',
-                                              icon: const Icon(
-                                                Icons
-                                                    .arrow_drop_down_circle_outlined,
-                                              ),
-                                              onPressed: () {
-                                                viewModel.updateItemStatus(
-                                                  item.id,
-                                                  ItemStatus.ok,
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.responsive.maxContentWidth(),
+                    ),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: context.responsive.verticalPadding(
+                            portraitValue: 16,
+                            landscapeValue: 8,
+                          ),
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: viewModel.itemsInCategory.isEmpty
+                              ? const Center(
+                                  child: Text('No items in this category'),
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  itemCount: viewModel.itemsInCategory.length,
+                                  itemBuilder: (context, index) {
+                                    final item =
+                                        viewModel.itemsInCategory[index];
+                                    return _buildCategoryItemCard(
+                                      item,
+                                      context.statusControlWidth,
+                                      context.isLandscape,
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
+                );
+              },
+            ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildCategoryItemCard(
+    Item item,
+    double statusControlWidth,
+    bool isLandscape,
+  ) {
+    return ItemCardWidget(
+      item: item,
+      statusControlWidth: statusControlWidth,
+      onCheckChanged: () {
+        if (_isMultiSelectMode) {
+          return;
+        }
+        viewModel.batchSetItemsChecked([item.id], !item.isChecked);
+      },
+      onPiecesChanged: (pieces) {
+        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
+          // Batch apply pieces to all selected items
+          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
+          // Then check all selected items if pieces > 0
+          if (pieces > 0) {
+            viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
+          }
+          // Exit multi-select mode
+          setState(() {
+            _isMultiSelectMode = false;
+            _selectedItemIds.clear();
+          });
+        } else {
+          viewModel.setItemPieces(item.id, pieces);
+        }
+      },
+      onStatusChanged: (newStatus) {
+        if (_isMultiSelectMode) {
+          final idsToUpdate = {..._selectedItemIds, item.id}.toList();
+          // Batch apply status to all selected items (plus the menu-target item)
+          viewModel.batchUpdateItemStatus(idsToUpdate, newStatus);
+          // Then check all affected items
+          viewModel.batchSetItemsChecked(idsToUpdate, true);
+          // Exit multi-select mode
+          setState(() {
+            _isMultiSelectMode = false;
+            _selectedItemIds.clear();
+          });
+        } else {
+          viewModel.updateItemStatus(item.id, newStatus);
+          viewModel.batchSetItemsChecked([item.id], true);
+        }
+      },
+      showItemNameInColumn: false,
+      isMultiSelectMode: _isMultiSelectMode,
+      isSelected: _selectedItemIds.contains(item.id),
+      onLongPress: () {
+        setState(() {
+          _isMultiSelectMode = true;
+          _selectedItemIds.add(item.id);
+        });
+      },
+      onTap: () {
+        setState(() {
+          if (_selectedItemIds.contains(item.id)) {
+            _selectedItemIds.remove(item.id);
+            if (_selectedItemIds.isEmpty) {
+              _isMultiSelectMode = false;
+            }
+          } else {
+            _selectedItemIds.add(item.id);
+          }
+        });
       },
     );
   }

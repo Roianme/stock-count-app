@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/item_repository.dart';
+import '../utils/index.dart';
 
 class HpView extends StatelessWidget {
   final ItemRepository repository;
@@ -14,16 +15,16 @@ class HpView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: context.theme.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.theme.surface,
         elevation: 0,
-        title: const Text(
-          'HP - Homepage',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        title: Text(
+          context.responsive.compactTitle('HP', 'HP - Homepage'),
+          style: context.theme.appBarTitle,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black87),
+          icon: Icon(Icons.menu, color: context.theme.textPrimary),
           onPressed: onDrawerToggle,
         ),
       ),
@@ -33,42 +34,55 @@ class HpView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                padding: EdgeInsets.all(
+                  context.responsive.spacing(
+                    portraitValue: 24,
+                    landscapeValue: 16,
+                  ),
                 ),
+                decoration: context.theme.cardDecoration,
                 child: Column(
                   children: [
-                    const Icon(Icons.business, size: 64, color: Colors.blue),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'HP Stock Count',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    Icon(
+                      Icons.business,
+                      size: context.responsive.iconSize(64),
+                      color: context.theme.hpAccent,
+                    ),
+                    SizedBox(
+                      height: context.responsive.verticalPadding(
+                        portraitValue: 16,
+                        landscapeValue: 12,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    Text(
+                      'HP Stock Count',
+                      style: context.theme.largeTitle.copyWith(
+                        fontSize: context.responsive.fontSize(24, 20),
+                      ),
+                    ),
+                    SizedBox(
+                      height: context.responsive.verticalPadding(
+                        portraitValue: 12,
+                        landscapeValue: 8,
+                      ),
+                    ),
                     Text(
                       'HP items here in future version.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: context.theme.subtitle.copyWith(
+                        fontSize: context.responsive.fontSize(14, 12),
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(
+                      height: context.responsive.verticalPadding(
+                        portraitValue: 24,
+                        landscapeValue: 16,
+                      ),
+                    ),
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(8),
+                      decoration: context.theme.lightBackgroundDecoration(
+                        context.theme.hpAccent,
                       ),
                     ),
                   ],

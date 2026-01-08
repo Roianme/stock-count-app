@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "64878894302",
+    "project_id": "stock-count-app-c381c",
+    "storage_bucket": "stock-count-app-c381c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64878894302:android:163e65e1480bc6ce40f64f",
+        "android_client_info": {
+          "package_name": "com.barkada.stockcount"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIcoe89FTV-oDcA4F9gOQbt06iesEm9co"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64878894302:android:dc3b22642d092cc040f64f",
+        "android_client_info": {
+          "package_name": "com.example.stock_count_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIcoe89FTV-oDcA4F9gOQbt06iesEm9co"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

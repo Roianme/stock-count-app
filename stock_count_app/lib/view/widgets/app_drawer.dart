@@ -90,8 +90,8 @@ class _AppDrawerState extends State<AppDrawer> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Colors.blue.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.1),
+                            ? Colors.blue.withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -113,7 +113,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         ? const Icon(Icons.check_circle, color: Colors.blue)
                         : null,
                     selected: isSelected,
-                    selectedTileColor: Colors.blue.withOpacity(0.05),
+                    selectedTileColor: Colors.blue.withValues(alpha: 0.05),
                     onTap: () {
                       widget.onLocationChanged(location);
                       Navigator.pop(context);
