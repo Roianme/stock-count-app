@@ -33,6 +33,16 @@ class ItemCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isCompact = context.screenWidth < 420;
+    final bool showIcon = !isCompact;
+    final bool useColumnLayout = showItemNameInColumn || isCompact;
+    final double checkboxScale = isCompact ? 1.2 : 1.8;
+    final double avatarRadius = isCompact ? 22 : 32;
+    final double iconSize = isCompact ? 22 : 32;
+    final double checkboxToIconSpacing = isCompact ? 8 : 10;
+    final double iconToTextSpacing = isCompact ? 10 : 12;
+    final double checkboxToTextSpacing = isCompact ? 8 : 10;
+
     return GestureDetector(
       onLongPress: onLongPress,
       onTap: isMultiSelectMode ? onTap : null,
@@ -57,7 +67,7 @@ class ItemCardWidget extends StatelessWidget {
           child: Row(
             children: [
               Transform.scale(
-                scale: 1.8,
+                scale: checkboxScale,
                 child: Checkbox(
                   value: item.isChecked,
                   onChanged: (_) {
@@ -69,37 +79,45 @@ class ItemCardWidget extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 20),
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: item.category.color.withValues(
-                      alpha: 0.12,
-                    ),
-                    child: Icon(
-                      item.category.icon,
-                      color: item.category.color,
-                      size: 32,
-                    ),
-                  ),
-                  if (isMultiSelectMode && isSelected)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: context.theme.accent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.check, color: Colors.white, size: 18),
+              SizedBox(
+                width: showIcon ? checkboxToIconSpacing : checkboxToTextSpacing,
+              ),
+              if (showIcon) ...[
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: avatarRadius,
+                      backgroundColor: item.category.color.withValues(
+                        alpha: 0.12,
+                      ),
+                      child: Icon(
+                        item.category.icon,
+                        color: item.category.color,
+                        size: iconSize,
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              if (showItemNameInColumn)
+                    if (isMultiSelectMode && isSelected)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: context.theme.accent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(width: iconToTextSpacing),
+              ],
+              if (useColumnLayout)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,8 +128,23 @@ class ItemCardWidget extends StatelessWidget {
                           fontSize: context.responsive.fontSize(18, 16),
                           fontWeight: FontWeight.w600,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      if (isCompact)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            item.category.displayName,
+                            style: context.theme.subtitle.copyWith(
+                              fontSize: context.responsive.fontSize(13, 12),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      if (showItemNameInColumn && !isCompact)
+                        const SizedBox(height: 6),
                     ],
                   ),
                 )
@@ -236,8 +269,9 @@ class ItemCardWidget extends StatelessWidget {
               ),
             ),
             PopupMenuButton<ItemStatus>(
-              icon: const Icon(Icons.more_vert, size: 28),
+              icon: const Icon(Icons.more_vert, size: 20),
               tooltip: 'Change status',
+              padding: EdgeInsets.zero,
               onSelected: (newStatus) {
                 onStatusChanged(newStatus);
                 // Auto-check item when status is updated
