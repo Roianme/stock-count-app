@@ -38,6 +38,12 @@ class _HomePageState extends State<HomePage> {
       repository: widget.repository,
     );
     viewModel.addListener(_handleViewModelChanges);
+
+    // Initialize view mode based on screen width (deferred until after frame).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      viewModel.initializeViewMode(screenWidth);
+    });
   }
 
   @override

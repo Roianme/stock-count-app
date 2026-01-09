@@ -9,7 +9,7 @@ class HomeViewModel extends ChangeNotifier {
   final List<model.Category> allCategories;
   final ItemRepository repository;
   List<model.Category> visibleCategories;
-  bool isGrid = true;
+  late bool isGrid;
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
@@ -21,7 +21,19 @@ class HomeViewModel extends ChangeNotifier {
   bool shouldShowExportDialog = false;
 
   HomeViewModel({required this.allCategories, required this.repository})
-    : visibleCategories = List.from(allCategories);
+    : visibleCategories = List.from(allCategories) {
+    // Default to list mode on small screens, grid on larger screens.
+    // This will be overridden by initializeViewMode() in the UI layer.
+    isGrid = true;
+  }
+
+  /// Initialize view mode based on screen width.
+  /// Call this from the UI layer after building the widget tree.
+  void initializeViewMode(double screenWidth) {
+    // Default to list mode on phones (< 600dp), grid on tablets/desktop.
+    isGrid = screenWidth >= 600;
+    notifyListeners();
+  }
 
   void toggleViewMode() {
     isGrid = !isGrid;
