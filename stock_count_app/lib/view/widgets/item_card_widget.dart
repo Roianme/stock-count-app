@@ -16,6 +16,8 @@ class ItemCardWidget extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onLongPress;
   final VoidCallback? onTap;
+  final bool hideIcon;
+  final bool isListView;
 
   const ItemCardWidget({
     super.key,
@@ -29,12 +31,15 @@ class ItemCardWidget extends StatelessWidget {
     this.isSelected = false,
     this.onLongPress,
     this.onTap,
+    this.hideIcon = false,
+    this.isListView = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final bool isCompact = context.screenWidth < 420;
-    final bool showIcon = !isCompact;
+    final bool showIcon =
+        !hideIcon && (context.isWideScreen || context.isLandscape);
     final bool useColumnLayout = showItemNameInColumn || isCompact;
     final double checkboxScale = isCompact ? 1.2 : 1.8;
     final double avatarRadius = isCompact ? 22 : 32;
@@ -53,117 +58,149 @@ class ItemCardWidget extends StatelessWidget {
         ),
         elevation: isSelected ? 8 : 2,
         color: isSelected ? context.theme.accent.withValues(alpha: 0.15) : null,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.responsive.verticalPadding(
-              portraitValue: 16,
-              landscapeValue: 12,
-            ),
-            vertical: context.responsive.verticalPadding(
-              portraitValue: 16,
-              landscapeValue: 12,
-            ),
-          ),
-          child: Row(
-            children: [
-              Transform.scale(
-                scale: checkboxScale,
-                child: Checkbox(
-                  value: item.isChecked,
-                  onChanged: (_) {
-                    if (isMultiSelectMode) {
-                      onTap?.call();
-                    } else {
-                      onCheckChanged();
-                    }
-                  },
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.responsive.verticalPadding(
+                  portraitValue: 16,
+                  landscapeValue: 12,
+                ),
+                vertical: context.responsive.verticalPadding(
+                  portraitValue: 16,
+                  landscapeValue: 12,
                 ),
               ),
-              SizedBox(
-                width: showIcon ? checkboxToIconSpacing : checkboxToTextSpacing,
-              ),
-              if (showIcon) ...[
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: avatarRadius,
-                      backgroundColor: item.category.color.withValues(
-                        alpha: 0.12,
-                      ),
-                      child: Icon(
-                        item.category.icon,
-                        color: item.category.color,
-                        size: iconSize,
-                      ),
-                    ),
-                    if (isMultiSelectMode && isSelected)
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: context.theme.accent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                SizedBox(width: iconToTextSpacing),
-              ],
-              if (useColumnLayout)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        item.name,
-                        style: TextStyle(
-                          fontSize: context.responsive.fontSize(18, 16),
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (isCompact)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            item.category.displayName,
-                            style: context.theme.subtitle.copyWith(
-                              fontSize: context.responsive.fontSize(13, 12),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
                           ),
+                          decoration: BoxDecoration(
+                            color: (isListView && item.isChecked)
+                                ? Colors.green.withValues(alpha: 0.12)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: (isListView && (isCompact || !showIcon))
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.name,
+                                      style: TextStyle(
+                                        fontSize: context.responsive.fontSize(
+                                          18,
+                                          16,
+                                        ),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item.category.displayName,
+                                      style: context.theme.subtitle.copyWith(
+                                        fontSize: context.responsive.fontSize(
+                                          13,
+                                          12,
+                                        ),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                )
+                              : (useColumnLayout
+                                    ? Text(
+                                        item.name,
+                                        style: TextStyle(
+                                          fontSize: context.responsive.fontSize(
+                                            18,
+                                            16,
+                                          ),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    : Text(
+                                        item.name,
+                                        style: context.theme.itemName.copyWith(
+                                          fontSize: context.responsive.fontSize(
+                                            18,
+                                            16,
+                                          ),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      )),
                         ),
-                      if (showItemNameInColumn && !isCompact)
-                        const SizedBox(height: 6),
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatusOrPiecesWidget(context),
                     ],
                   ),
-                )
-              else
-                Expanded(
-                  child: Text(
-                    item.name,
-                    style: context.theme.itemName.copyWith(
-                      fontSize: context.responsive.fontSize(18, 16),
-                      fontWeight: FontWeight.w500,
+                  if (showItemNameInColumn && !isCompact)
+                    const SizedBox(height: 6),
+                  if (showIcon)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          if (isMultiSelectMode) {
+                            onTap?.call();
+                          } else {
+                            onCheckChanged();
+                          }
+                        },
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: avatarRadius,
+                              backgroundColor: item.category.color.withValues(
+                                alpha: 0.12,
+                              ),
+                              child: Icon(
+                                item.category.icon,
+                                color: item.category.color,
+                                size: iconSize,
+                              ),
+                            ),
+                            if (isMultiSelectMode && isSelected)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: context.theme.accent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              const SizedBox(width: 12),
-              _buildStatusOrPiecesWidget(context),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -179,7 +216,7 @@ class ItemCardWidget extends StatelessWidget {
       }
       return Container(
         width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: context.theme.statusControlDecoration,
         child: Row(
           children: [
@@ -227,8 +264,9 @@ class ItemCardWidget extends StatelessWidget {
               ),
             ),
             PopupMenuButton<ItemStatus>(
-              icon: const Icon(Icons.more_vert, size: 28),
+              icon: const Icon(Icons.more_vert, size: 20),
               tooltip: 'Change status',
+              padding: EdgeInsets.zero,
               onSelected: (newStatus) {
                 onStatusChanged(newStatus);
                 // Auto-check item when status is updated
@@ -253,7 +291,7 @@ class ItemCardWidget extends StatelessWidget {
     } else {
       return Container(
         width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: context.theme.statusControlDecoration,
         child: Row(
           children: [

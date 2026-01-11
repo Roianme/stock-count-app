@@ -175,6 +175,7 @@ class _HomePageState extends State<HomePage> {
                                     : _buildListView(
                                         categories,
                                         statusControlWidth,
+                                        isWide: isWide,
                                       )),
                         ),
                       ],
@@ -298,6 +299,19 @@ class _HomePageState extends State<HomePage> {
                     Icons.search,
                     color: context.theme.textSecondary,
                   ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: context.theme.textSecondary,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            viewModel.setQuery('');
+                          },
+                          tooltip: 'Clear search',
+                        )
+                      : null,
                   fillColor: context.theme.surface,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 18,
@@ -440,39 +454,137 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildListView(List<Category> categories, double statusControlWidth) {
+  Widget _buildListView(
+    List<Category> categories,
+    double statusControlWidth, {
+    required bool isWide,
+  }) {
     final itemsByCategory = viewModel.groupedItems(categories);
-    final listChildren = <Widget>[];
+    final use2Columns = isWide || context.isLandscape;
 
-    for (final category in categories) {
-      final categoryItems = itemsByCategory[category] ?? [];
-      if (categoryItems.isEmpty) continue;
+    // Filter out empty categories
+    final categoriesWithItems = categories.where((category) {
+      final items = itemsByCategory[category] ?? [];
+      return items.isNotEmpty;
+    }).toList();
 
-      listChildren.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            category.displayName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    if (!use2Columns) {
+      // Single column for mobile
+      final listChildren = <Widget>[];
+      for (final category in categoriesWithItems) {
+        final categoryItems = itemsByCategory[category] ?? [];
+
+        listChildren.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              category.displayName,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-      );
+        );
 
-      for (final item in categoryItems) {
-        listChildren.add(_buildItemCard(item, statusControlWidth));
+        for (final item in categoryItems) {
+          listChildren.add(_buildItemCard(item, statusControlWidth));
+        }
       }
+
+      return ListView(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        children: listChildren,
+      );
     }
 
+    // Distribute categories into 3 columns
+    final columns = List.generate(3, (_) => <Category>[]);
+    for (int i = 0; i < categoriesWithItems.length; i++) {
+      columns[i % 3].add(categoriesWithItems[i]);
+    }
+
+    // Reduced width for 3-column layout
+    final threeColumnStatusWidth = 130.0;
+
+    // Three column layout for wide/landscape: like report widget but with full item cards
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      children: listChildren,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: columns.map((columnCategories) {
+              return Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: columnCategories.map((category) {
+                    final items = itemsByCategory[category] ?? [];
+                    return _buildCategorySection(
+                      category,
+                      items,
+                      threeColumnStatusWidth,
+                    );
+                  }).toList(),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildItemCard(Item item, double statusControlWidth) {
+  Widget _buildCategorySection(
+    Category category,
+    List<Item> items,
+    double statusControlWidth,
+  ) {
+    return Container(
+      margin: const EdgeInsets.all(1),
+      padding: const EdgeInsets.all(1),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              color: category.color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              category.displayName.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...items.map((item) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: _buildItemCard(item, statusControlWidth, hideIcon: true),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemCard(
+    Item item,
+    double statusControlWidth, {
+    bool hideIcon = false,
+  }) {
     return ItemCardWidget(
       item: item,
       statusControlWidth: statusControlWidth,
+      hideIcon: hideIcon,
+      isListView: !viewModel.isGrid,
       onCheckChanged: () {
         if (_isMultiSelectMode) {
           return;
