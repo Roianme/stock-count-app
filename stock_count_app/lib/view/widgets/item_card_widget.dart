@@ -212,7 +212,7 @@ class ItemCardWidget extends StatelessWidget {
           children: [
             Expanded(
               child: TextFormField(
-                key: ValueKey('pieces_${item.id}'),
+                key: ValueKey('pieces_${item.id}_${item.pieces}'),
                 initialValue: item.pieces == 0 ? '' : item.pieces.toString(),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],

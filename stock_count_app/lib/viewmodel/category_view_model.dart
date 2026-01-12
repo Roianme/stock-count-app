@@ -17,6 +17,11 @@ class CategoryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reload/refresh items from data source
+  void reload() {
+    load();
+  }
+
   void updateItemStatus(int itemId, model.ItemStatus newStatus) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {

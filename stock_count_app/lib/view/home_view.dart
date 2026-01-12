@@ -217,6 +217,19 @@ class _HomePageState extends State<HomePage> {
       actions: _isMultiSelectMode
           ? []
           : [
+              IconButton(
+                icon: Icon(Icons.sync, color: context.theme.textPrimary),
+                onPressed: () {
+                  viewModel.reload();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('View refreshed'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+                tooltip: 'Reload view',
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Tooltip(

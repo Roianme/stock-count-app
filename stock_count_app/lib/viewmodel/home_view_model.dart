@@ -177,7 +177,35 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     await _saveItems();
+
+    // Refresh search results if searching
+    if (_query.isNotEmpty) {
+      matchedItems = data.items
+          .where((i) => i.name.toLowerCase().contains(_query))
+          .toList();
+    }
+
     setMessage('All items reset to defaults');
+    notifyListeners();
+  }
+
+  /// Reload/refresh the view state without resetting data
+  void reload() {
+    // Refresh search results if applicable
+    if (_query.isNotEmpty) {
+      matchedItems = data.items
+          .where((i) => i.name.toLowerCase().contains(_query))
+          .toList();
+      final matchedCategories = matchedItems
+          .map((i) => i.category)
+          .toSet()
+          .toList();
+      visibleCategories = allCategories
+          .where((c) => matchedCategories.contains(c))
+          .toList();
+    } else {
+      visibleCategories = List.from(allCategories);
+    }
     notifyListeners();
   }
 

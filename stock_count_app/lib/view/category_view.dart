@@ -64,6 +64,23 @@ class _CategoryViewState extends State<CategoryView> {
                     },
                   )
                 : null,
+            actions: _isMultiSelectMode
+                ? []
+                : [
+                    IconButton(
+                      icon: const Icon(Icons.sync),
+                      onPressed: () {
+                        viewModel.reload();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('View refreshed'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      tooltip: 'Reload view',
+                    ),
+                  ],
           ),
           body: SafeArea(
             child: LayoutBuilder(
