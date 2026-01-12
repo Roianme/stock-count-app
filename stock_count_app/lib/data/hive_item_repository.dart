@@ -44,9 +44,8 @@ class HiveItemRepository implements ItemRepository {
   Future<void> saveItems(List<Item> itemsToSave) async {
     try {
       await _box.clear();
-      for (final item in itemsToSave) {
-        await _box.put(item.id, item);
-      }
+      final itemsMap = {for (var item in itemsToSave) item.id: item};
+      await _box.putAll(itemsMap);
     } catch (e) {
       debugPrint('Error saving items: $e');
       rethrow;

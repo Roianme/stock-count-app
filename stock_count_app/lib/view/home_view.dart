@@ -390,10 +390,12 @@ class _HomePageState extends State<HomePage> {
 
     if (confirmed != true) return;
 
-    setState(() {
-      _isMultiSelectMode = false;
-      _selectedItemIds.clear();
-    });
+    if (_isMultiSelectMode) {
+      setState(() {
+        _isMultiSelectMode = false;
+        _selectedItemIds.clear();
+      });
+    }
     await viewModel.resetAllToDefaults();
   }
 
@@ -589,11 +591,11 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           if (_selectedItemIds.contains(item.id)) {
             _selectedItemIds.remove(item.id);
+            if (_selectedItemIds.isEmpty) {
+              _isMultiSelectMode = false;
+            }
           } else {
             _selectedItemIds.add(item.id);
-          }
-          if (_selectedItemIds.isEmpty) {
-            _isMultiSelectMode = false;
           }
         });
       },

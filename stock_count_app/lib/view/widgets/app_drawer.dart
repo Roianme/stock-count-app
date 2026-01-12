@@ -28,10 +28,12 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Future<void> _loadVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    setState(() {
-      _version = packageInfo.version;
-      _buildNumber = packageInfo.buildNumber;
-    });
+    if (mounted) {
+      setState(() {
+        _version = packageInfo.version;
+        _buildNumber = packageInfo.buildNumber;
+      });
+    }
   }
 
   @override

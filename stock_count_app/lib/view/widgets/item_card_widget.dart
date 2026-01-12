@@ -204,12 +204,6 @@ class ItemCardWidget extends StatelessWidget {
 
   Widget _buildStatusOrPiecesWidget(BuildContext context) {
     if (item.status == ItemStatus.pieces) {
-      // If pieces is blank, auto-uncheck the item
-      if (item.pieces == 0 && item.isChecked) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          onCheckChanged();
-        });
-      }
       return Container(
         width: statusControlWidth,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

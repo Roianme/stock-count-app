@@ -172,6 +172,7 @@ class _CategoryViewState extends State<CategoryView> {
         });
       },
       onTap: () {
+        if (!_isMultiSelectMode) return;
         setState(() {
           if (_selectedItemIds.contains(item.id)) {
             _selectedItemIds.remove(item.id);
