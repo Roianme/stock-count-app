@@ -41,12 +41,8 @@ class ItemCardWidget extends StatelessWidget {
     final bool showIcon =
         !hideIcon && (context.isWideScreen || context.isLandscape);
     final bool useColumnLayout = showItemNameInColumn || isCompact;
-    final double checkboxScale = isCompact ? 1.2 : 1.8;
     final double avatarRadius = isCompact ? 22 : 32;
     final double iconSize = isCompact ? 22 : 32;
-    final double checkboxToIconSpacing = isCompact ? 8 : 10;
-    final double iconToTextSpacing = isCompact ? 10 : 12;
-    final double checkboxToTextSpacing = isCompact ? 8 : 10;
 
     return GestureDetector(
       onLongPress: onLongPress,

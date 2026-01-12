@@ -263,7 +263,7 @@ extension CategoryUI on Category {
       case Category.misc:
         return Colors.purple;
       case Category.supplier:
-        return Colors.green;
+        return Colors.yellow;
       case Category.produce:
         return Colors.lightGreen;
       case Category.filipinoSupplier:
