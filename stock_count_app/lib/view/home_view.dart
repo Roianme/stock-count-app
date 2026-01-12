@@ -163,13 +163,11 @@ class _HomePageState extends State<HomePage> {
                         _buildSearchBar(isWide: isWide),
                         _buildSectionTitle(),
                         Expanded(
-                          child: viewModel.isSearching
-                              ? _buildSearchResults(viewModel.matchedItems)
-                              : _buildListView(
-                                  categories,
-                                  statusControlWidth,
-                                  isWide: isWide,
-                                ),
+                          child: _buildListView(
+                              categories,
+                              statusControlWidth,
+                              isWide: isWide,
+                            ),
                         ),
                       ],
                     ),
@@ -434,8 +432,26 @@ class _HomePageState extends State<HomePage> {
     required bool isWide,
   }) {
     final itemsByCategory = viewModel.groupedItems(categories);
+    
+    // Filter items based on search query
+    final filteredItemsByCategory = <Category, List<Item>>{};
+    if (viewModel.isSearching) {
+      // Only show items that match the search
+      final matchedIds = viewModel.matchedItems.map((i) => i.id).toSet();
+      for (final category in categories) {
+        final items = itemsByCategory[category] ?? [];
+        final filtered = items.where((item) => matchedIds.contains(item.id)).toList();
+        if (filtered.isNotEmpty) {
+          filteredItemsByCategory[category] = filtered;
+        }
+      }
+    } else {
+      // Show all items
+      filteredItemsByCategory.addAll(itemsByCategory);
+    }
+    
     final categoriesWithItems = categories
-        .where((cat) => (itemsByCategory[cat] ?? []).isNotEmpty)
+        .where((cat) => (filteredItemsByCategory[cat] ?? []).isNotEmpty)
         .toList();
 
     if (categoriesWithItems.isEmpty) {
@@ -478,7 +494,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               // Single column list
-              ...itemsByCategory[category]!.map(
+              ...filteredItemsByCategory[category]!.map(
                 (item) => Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -528,7 +544,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: _MasonryLayout(
-                items: itemsByCategory[category]!,
+                items: filteredItemsByCategory[category]!,
                 statusWidth: statusWidth,
                 buildItemCard: (item) =>
                     _buildItemCard(item, statusWidth, hideIcon: true),
@@ -615,45 +631,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchResults(List<Item> itemsList) {
-    if (itemsList.isEmpty) {
-      return const Center(child: Text('No matching items'));
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: itemsList.length,
-      itemBuilder: (context, index) {
-        final item = itemsList[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.shadowColor,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              title: Text(item.name, style: context.theme.itemName),
-              subtitle: Text(
-                item.category.displayName,
-                style: context.theme.subtitle,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+
 
   void _showExportDialog() {
     showDialog(
