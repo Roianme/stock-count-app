@@ -1,7 +1,7 @@
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/home_view_model.dart';
@@ -30,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final Set<int> _selectedItemIds = {};
   bool _isMultiSelectMode = false;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     viewModel.removeListener(_handleViewModelChanges);
     viewModel.dispose();
@@ -50,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleViewModelChanges() {
+    if (!mounted) return;
     // Handle any notifications from ViewModel
     if (viewModel.showMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -278,36 +281,48 @@ class _HomePageState extends State<HomePage> {
               decoration: context.theme.searchBarDecoration.copyWith(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: viewModel.setQuery,
-                style: TextStyle(fontSize: context.responsive.fontSize(16)),
-                decoration: InputDecoration(
-                  hintText: 'Search for keyword',
-                  hintStyle: AppTheme.searchHint,
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: context.theme.textSecondary,
-                  ),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            color: context.theme.textSecondary,
-                          ),
-                          onPressed: () {
-                            _searchController.clear();
-                            viewModel.setQuery('');
-                          },
-                          tooltip: 'Clear search',
-                        )
-                      : null,
-                  fillColor: context.theme.surface,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: context.isLandscape ? 12 : 14,
-                  ),
-                ),
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _searchController,
+                builder: (context, value, _) {
+                  return TextField(
+                    controller: _searchController,
+                    onChanged: (text) {
+                      _searchDebounce?.cancel();
+                      _searchDebounce = Timer(
+                        const Duration(milliseconds: 200),
+                        () => viewModel.setQuery(text),
+                      );
+                    },
+                    style: TextStyle(fontSize: context.responsive.fontSize(16)),
+                    decoration: InputDecoration(
+                      hintText: 'Search for keyword',
+                      hintStyle: AppTheme.searchHint,
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.theme.textSecondary,
+                      ),
+                      suffixIcon: value.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: context.theme.textSecondary,
+                              ),
+                              onPressed: () {
+                                _searchDebounce?.cancel();
+                                _searchController.clear();
+                                viewModel.setQuery('');
+                              },
+                              tooltip: 'Clear search',
+                            )
+                          : null,
+                      fillColor: context.theme.surface,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: context.isLandscape ? 12 : 14,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -404,126 +419,107 @@ class _HomePageState extends State<HomePage> {
     required bool isWide,
   }) {
     final itemsByCategory = viewModel.groupedItems(categories);
-    final use3Columns = isWide || context.isLandscape;
+    final categoriesWithItems = categories
+        .where((cat) => (itemsByCategory[cat] ?? []).isNotEmpty)
+        .toList();
 
-    // Filter out empty categories
-    final categoriesWithItems = categories.where((category) {
-      final items = itemsByCategory[category] ?? [];
-      return items.isNotEmpty;
-    }).toList();
+    if (categoriesWithItems.isEmpty) {
+      return const Center(child: Text('No items'));
+    }
 
-    // Lazy-load categories one by one
-    final statusWidth = use3Columns ? 130.0 : statusControlWidth;
+    final statusWidth = (isWide || context.isLandscape)
+        ? 130.0
+        : statusControlWidth;
 
-    if (!use3Columns) {
-      // Single column for mobile - lazy load individual categories
-      return ListView.builder(
+    final useMultiColumn = isWide || context.isLandscape;
+
+    // Single column for mobile/portrait
+    if (!useMultiColumn) {
+      return SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: categoriesWithItems.length,
-        cacheExtent: 500,
-        itemBuilder: (context, index) {
-          final category = categoriesWithItems[index];
-          final items = itemsByCategory[category] ?? [];
-          return RepaintBoundary(
-            key: ValueKey(category),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final category in categoriesWithItems) ...[
+              // Category header
+              RepaintBoundary(
+                key: ValueKey('h-${category.name}'),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(color: category.color),
+                  width: double.infinity,
                   child: Text(
                     category.displayName,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                ...items.map(
-                  (item) => _buildItemCard(item, statusWidth, hideIcon: true),
+              ),
+              // Single column list
+              ...itemsByCategory[category]!.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: RepaintBoundary(
+                    key: ValueKey('i-${item.id}'),
+                    child: _buildItemCard(item, statusWidth, hideIcon: true),
+                  ),
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ],
+        ),
       );
     }
 
-    // True masonry/waterfall layout: distribute categories across 3 columns
-    // Each category goes to the shortest column for natural flow
-    final columns = <List<Category>>[[], [], []];
-
-    // Distribute categories round-robin for sequential loading
-    for (int i = 0; i < categoriesWithItems.length; i++) {
-      columns[i % 3].add(categoriesWithItems[i]);
-    }
-
+    // Multi-column masonry for wide screens/landscape
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int colIndex = 0; colIndex < 3; colIndex++)
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: colIndex == 0 ? 0 : 2,
-                  right: colIndex == 2 ? 0 : 2,
-                ),
-                child: _MasonryColumn(
-                  categories: columns[colIndex],
-                  itemsByCategory: itemsByCategory,
-                  statusWidth: statusWidth,
-                  isMultiSelectMode: _isMultiSelectMode,
-                  selectedItemIds: _selectedItemIds,
-                  viewModel: viewModel,
-                  setState: setState,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategorySection(
-    Category category,
-    List<Item> items,
-    double statusControlWidth,
-  ) {
-    return Container(
-      margin: const EdgeInsets.all(1),
-      padding: const EdgeInsets.all(1),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            decoration: BoxDecoration(
-              color: category.color,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              category.displayName.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          for (final category in categoriesWithItems) ...[
+            // Category header
+            RepaintBoundary(
+              key: ValueKey('h-${category.name}'),
+              child: Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(color: category.color),
+                width: double.infinity,
+                child: Text(
+                  category.displayName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          ...items.map((item) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: _buildItemCard(item, statusControlWidth, hideIcon: true),
-            );
-          }).toList(),
+            // Masonry layout for items
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: _MasonryLayout(
+                items: itemsByCategory[category]!,
+                statusWidth: statusWidth,
+                buildItemCard: (item) =>
+                    _buildItemCard(item, statusWidth, hideIcon: true),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -556,6 +552,7 @@ class _HomePageState extends State<HomePage> {
           // Exit multi-select mode
           setState(() {
             _selectedItemIds.clear();
+            _isMultiSelectMode = false;
           });
         } else {
           viewModel.setItemPieces(item.id, pieces);
@@ -571,6 +568,7 @@ class _HomePageState extends State<HomePage> {
           // Exit multi-select mode
           setState(() {
             _selectedItemIds.clear();
+            _isMultiSelectMode = false;
           });
         } else {
           viewModel.updateItemStatus(item.id, newStatus);
@@ -582,15 +580,20 @@ class _HomePageState extends State<HomePage> {
       isSelected: _selectedItemIds.contains(item.id),
       onLongPress: () {
         setState(() {
+          _isMultiSelectMode = true;
           _selectedItemIds.add(item.id);
         });
       },
       onTap: () {
+        if (!_isMultiSelectMode) return;
         setState(() {
           if (_selectedItemIds.contains(item.id)) {
             _selectedItemIds.remove(item.id);
           } else {
             _selectedItemIds.add(item.id);
+          }
+          if (_selectedItemIds.isEmpty) {
+            _isMultiSelectMode = false;
           }
         });
       },
@@ -682,48 +685,53 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Optimized masonry column with lazy loading
-class _MasonryColumn extends StatelessWidget {
-  final List<Category> categories;
-  final Map<Category, List<Item>> itemsByCategory;
+/// Masonry layout that distributes items across 3 columns
+class _MasonryLayout extends StatelessWidget {
+  final List<Item> items;
   final double statusWidth;
-  final bool isMultiSelectMode;
-  final Set<int> selectedItemIds;
-  final HomeViewModel viewModel;
-  final Function(VoidCallback) setState;
+  final Widget Function(Item) buildItemCard;
 
-  const _MasonryColumn({
-    required this.categories,
-    required this.itemsByCategory,
+  const _MasonryLayout({
+    required this.items,
     required this.statusWidth,
-    required this.isMultiSelectMode,
-    required this.selectedItemIds,
-    required this.viewModel,
-    required this.setState,
+    required this.buildItemCard,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    // Distribute items across 3 columns in a round-robin fashion
+    final columns = <List<Item>>[[], [], []];
+
+    for (int i = 0; i < items.length; i++) {
+      columns[i % 3].add(items[i]);
+    }
+
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: categories.map((category) {
-        final items = itemsByCategory[category] ?? [];
-        return RepaintBoundary(
-          key: ValueKey(category),
-          child: _buildCategorySection(context, category, items),
-        );
-      }).toList(),
+      children: [
+        for (int colIndex = 0; colIndex < 3; colIndex++)
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: colIndex == 0 ? 0 : 2,
+                right: colIndex == 2 ? 0 : 2,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final item in columns[colIndex])
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: RepaintBoundary(
+                        key: ValueKey('i-${item.id}'),
+                        child: buildItemCard(item),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
-  }
-
-  Widget _buildCategorySection(
-    BuildContext context,
-    Category category,
-    List<Item> items,
-  ) {
-    final homeState = context.findAncestorStateOfType<_HomePageState>();
-    if (homeState == null) return const SizedBox();
-
-    return homeState._buildCategorySection(category, items, statusWidth);
   }
 }

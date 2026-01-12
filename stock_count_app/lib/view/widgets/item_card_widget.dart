@@ -298,6 +298,7 @@ class ItemCardWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: context.responsive.fontSize(20, 18),
                     fontWeight: FontWeight.w600,
+                    color: context.theme.textPrimary,
                   ),
                 ),
               ),
