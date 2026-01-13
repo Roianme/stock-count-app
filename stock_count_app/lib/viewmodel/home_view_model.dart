@@ -32,7 +32,11 @@ class HomeViewModel extends ChangeNotifier {
     } else {
       isSearching = true;
       matchedItems = data.items
-          .where((i) => i.name.toLowerCase().contains(_query))
+          .where(
+            (i) =>
+                i.modes.contains(currentLocation) &&
+                i.name.toLowerCase().contains(_query),
+          )
           .toList();
       final matchedCategories = matchedItems
           .map((i) => i.category)
@@ -84,7 +88,11 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   List<model.Item> itemsForCategory(model.Category category) {
-    return data.items.where((i) => i.category == category).toList();
+    return data.items
+        .where(
+          (i) => i.category == category && i.modes.contains(currentLocation),
+        )
+        .toList();
   }
 
   Map<model.Category, List<model.Item>> groupedItems(
@@ -194,7 +202,11 @@ class HomeViewModel extends ChangeNotifier {
     // Refresh search results if applicable
     if (_query.isNotEmpty) {
       matchedItems = data.items
-          .where((i) => i.name.toLowerCase().contains(_query))
+          .where(
+            (i) =>
+                i.modes.contains(currentLocation) &&
+                i.name.toLowerCase().contains(_query),
+          )
           .toList();
       final matchedCategories = matchedItems
           .map((i) => i.category)

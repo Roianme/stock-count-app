@@ -76,7 +76,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    'SELECT LOCATION',
+                    'CHANGE ITEMS FOR:',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,

@@ -10,11 +10,8 @@ import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/item_card_widget.dart';
-import 'hp_view.dart';
-import 'cafe_view.dart';
-import 'warehouse_view.dart';
-import 'category_view.dart';
 import '../utils/index.dart';
+import 'category_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.repository});
@@ -80,65 +77,7 @@ class _HomePageState extends State<HomePage> {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, _) {
-        // Render different views based on location
-        if (viewModel.currentLocation == Mode.hp) {
-          return PopScope(
-            canPop: true,
-            child: Scaffold(
-              key: _scaffoldKey,
-              drawer: AppDrawer(
-                currentLocation: viewModel.currentLocation,
-                onLocationChanged: viewModel.setLocation,
-              ),
-              body: HpView(
-                repository: widget.repository,
-                onDrawerToggle: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-              ),
-            ),
-          );
-        }
-
-        if (viewModel.currentLocation == Mode.cafe) {
-          return PopScope(
-            canPop: true,
-            child: Scaffold(
-              key: _scaffoldKey,
-              drawer: AppDrawer(
-                currentLocation: viewModel.currentLocation,
-                onLocationChanged: viewModel.setLocation,
-              ),
-              body: CafeView(
-                repository: widget.repository,
-                onDrawerToggle: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-              ),
-            ),
-          );
-        }
-
-        if (viewModel.currentLocation == Mode.warehouse) {
-          return PopScope(
-            canPop: true,
-            child: Scaffold(
-              key: _scaffoldKey,
-              drawer: AppDrawer(
-                currentLocation: viewModel.currentLocation,
-                onLocationChanged: viewModel.setLocation,
-              ),
-              body: WarehouseView(
-                repository: widget.repository,
-                onDrawerToggle: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-              ),
-            ),
-          );
-        }
-
-        // City location (default view)
+        // Use the same view for all modes - filter items by currentLocation
         final categories = viewModel.visibleCategories;
         return Scaffold(
           key: _scaffoldKey,
