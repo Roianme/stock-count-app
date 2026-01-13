@@ -269,8 +269,10 @@ class HomeViewModel extends ChangeNotifier {
       return false;
     }
 
-    // Include all items in the report so unchecked ones appear struck through
-    final allItems = List<model.Item>.from(data.items);
+    // Include only items that match the current mode
+    final allItems = data.items
+        .where((i) => i.modes.contains(currentLocation))
+        .toList();
 
     final success = await ExportService.exportAndShare(
       context,
@@ -293,7 +295,10 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    final allItems = List<model.Item>.from(data.items);
+    // Include only items that match the current mode
+    final allItems = data.items
+        .where((i) => i.modes.contains(currentLocation))
+        .toList();
 
     final filePath = await ExportService.saveToDevice(
       context,
@@ -313,7 +318,10 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    final allItems = List<model.Item>.from(data.items);
+    // Include only items that match the current mode
+    final allItems = data.items
+        .where((i) => i.modes.contains(currentLocation))
+        .toList();
 
     final image = await ExportService.generateReportImage(
       context,
