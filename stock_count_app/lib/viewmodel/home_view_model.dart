@@ -12,7 +12,7 @@ class HomeViewModel extends ChangeNotifier {
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
-  model.Location currentLocation = model.Location.city;
+  model.Mode currentLocation = model.Mode.city;
 
   // UI state for dialogs and messages
   String? showMessage;
@@ -32,7 +32,11 @@ class HomeViewModel extends ChangeNotifier {
     } else {
       isSearching = true;
       matchedItems = data.items
-          .where((i) => i.name.toLowerCase().contains(_query))
+          .where(
+            (i) =>
+                i.modes.contains(currentLocation) &&
+                i.name.toLowerCase().contains(_query),
+          )
           .toList();
       final matchedCategories = matchedItems
           .map((i) => i.category)
@@ -49,7 +53,7 @@ class HomeViewModel extends ChangeNotifier {
     setQuery('');
   }
 
-  void setLocation(model.Location location) {
+  void setLocation(model.Mode location) {
     if (currentLocation != location) {
       currentLocation = location;
       notifyListeners();
@@ -84,7 +88,11 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   List<model.Item> itemsForCategory(model.Category category) {
-    return data.items.where((i) => i.category == category).toList();
+    return data.items
+        .where(
+          (i) => i.category == category && i.modes.contains(currentLocation),
+        )
+        .toList();
   }
 
   Map<model.Category, List<model.Item>> groupedItems(
@@ -194,7 +202,11 @@ class HomeViewModel extends ChangeNotifier {
     // Refresh search results if applicable
     if (_query.isNotEmpty) {
       matchedItems = data.items
-          .where((i) => i.name.toLowerCase().contains(_query))
+          .where(
+            (i) =>
+                i.modes.contains(currentLocation) &&
+                i.name.toLowerCase().contains(_query),
+          )
           .toList();
       final matchedCategories = matchedItems
           .map((i) => i.category)
@@ -257,8 +269,10 @@ class HomeViewModel extends ChangeNotifier {
       return false;
     }
 
-    // Include all items in the report so unchecked ones appear struck through
-    final allItems = List<model.Item>.from(data.items);
+    // Include only items that match the current mode
+    final allItems = data.items
+        .where((i) => i.modes.contains(currentLocation))
+        .toList();
 
     final success = await ExportService.exportAndShare(
       context,
@@ -281,7 +295,10 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    final allItems = List<model.Item>.from(data.items);
+    // Include only items that match the current mode
+    final allItems = data.items
+        .where((i) => i.modes.contains(currentLocation))
+        .toList();
 
     final filePath = await ExportService.saveToDevice(
       context,
@@ -301,7 +318,10 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    final allItems = List<model.Item>.from(data.items);
+    // Include only items that match the current mode
+    final allItems = data.items
+        .where((i) => i.modes.contains(currentLocation))
+        .toList();
 
     final image = await ExportService.generateReportImage(
       context,

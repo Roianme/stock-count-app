@@ -45,32 +45,36 @@ enum Category {
   chemicals,
 }
 
-enum Location { city, cafe, hp, warehouse }
+enum Mode { city, cafe, hp, warehouse, manager }
 
-extension LocationExtension on Location {
+extension ModeExtension on Mode {
   String get displayName {
     switch (this) {
-      case Location.city:
+      case Mode.city:
         return 'City';
-      case Location.cafe:
+      case Mode.cafe:
         return 'Cafe';
-      case Location.hp:
+      case Mode.hp:
         return 'HP';
-      case Location.warehouse:
+      case Mode.warehouse:
         return 'Warehouse';
+      case Mode.manager:
+        return 'Manager';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case Location.city:
+      case Mode.city:
         return Icons.location_city;
-      case Location.cafe:
+      case Mode.cafe:
         return Icons.local_cafe;
-      case Location.hp:
+      case Mode.hp:
         return Icons.business;
-      case Location.warehouse:
+      case Mode.warehouse:
         return Icons.warehouse;
+      case Mode.manager:
+        return Icons.admin_panel_settings;
     }
   }
 }
@@ -97,6 +101,9 @@ class Item {
   @HiveField(5)
   final int pieces;
 
+  @HiveField(6)
+  final Set<Mode> modes;
+
   Item({
     int? id,
     String? name,
@@ -104,6 +111,7 @@ class Item {
     ItemStatus? status,
     this.isChecked = false,
     this.pieces = 0,
+    this.modes = const {Mode.city},
   }) : id = id ?? _nextId++,
        name = name ?? 'Unnamed Item',
        category = category ?? Category.misc,
@@ -118,6 +126,7 @@ class Item {
     ItemStatus? status,
     bool? isChecked,
     int? pieces,
+    Set<Mode>? modes,
   }) {
     return Item(
       id: id ?? this.id,
@@ -126,6 +135,7 @@ class Item {
       status: status ?? this.status,
       isChecked: isChecked ?? this.isChecked,
       pieces: pieces ?? this.pieces,
+      modes: modes ?? this.modes,
     );
   }
 }
