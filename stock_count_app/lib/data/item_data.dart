@@ -7,6 +7,7 @@ final List<Item> items = [
     name: 'pork skewers',
     category: Category.bbqGrill,
     status: ItemStatus.pieces,
+    modes: {Mode.city, Mode.hp},
   ),
   Item(
     id: 2,
@@ -767,6 +768,7 @@ void initializeSeedData() {
       status: item.status, // Capture the ORIGINAL status from the defined seed
       isChecked: false, // Always reset to unchecked
       pieces: item.pieces, // Capture the ORIGINAL pieces from the defined seed
+      modes: item.modes, // Capture the ORIGINAL modes from the defined seed
     );
   }
 }

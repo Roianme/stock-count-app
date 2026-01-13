@@ -3,8 +3,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../model/item_model.dart';
 
 class AppDrawer extends StatefulWidget {
-  final Location currentLocation;
-  final ValueChanged<Location> onLocationChanged;
+  final Mode currentLocation;
+  final ValueChanged<Mode> onLocationChanged;
 
   const AppDrawer({
     super.key,
@@ -85,7 +85,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ),
                 ),
-                ...Location.values.map((location) {
+                ...Mode.values.map((location) {
                   final isSelected = location == widget.currentLocation;
                   return ListTile(
                     leading: Container(

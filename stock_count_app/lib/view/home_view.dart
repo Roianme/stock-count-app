@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
       animation: viewModel,
       builder: (context, _) {
         // Render different views based on location
-        if (viewModel.currentLocation == Location.hp) {
+        if (viewModel.currentLocation == Mode.hp) {
           return PopScope(
             canPop: true,
             child: Scaffold(
@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
           );
         }
 
-        if (viewModel.currentLocation == Location.cafe) {
+        if (viewModel.currentLocation == Mode.cafe) {
           return PopScope(
             canPop: true,
             child: Scaffold(
@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
           );
         }
 
-        if (viewModel.currentLocation == Location.warehouse) {
+        if (viewModel.currentLocation == Mode.warehouse) {
           return PopScope(
             canPop: true,
             child: Scaffold(

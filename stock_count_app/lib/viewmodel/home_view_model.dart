@@ -12,7 +12,7 @@ class HomeViewModel extends ChangeNotifier {
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
-  model.Location currentLocation = model.Location.city;
+  model.Mode currentLocation = model.Mode.city;
 
   // UI state for dialogs and messages
   String? showMessage;
@@ -49,7 +49,7 @@ class HomeViewModel extends ChangeNotifier {
     setQuery('');
   }
 
-  void setLocation(model.Location location) {
+  void setLocation(model.Mode location) {
     if (currentLocation != location) {
       currentLocation = location;
       notifyListeners();
