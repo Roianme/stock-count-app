@@ -164,10 +164,10 @@ class _HomePageState extends State<HomePage> {
                         _buildSectionTitle(),
                         Expanded(
                           child: _buildListView(
-                              categories,
-                              statusControlWidth,
-                              isWide: isWide,
-                            ),
+                            categories,
+                            statusControlWidth,
+                            isWide: isWide,
+                          ),
                         ),
                       ],
                     ),
@@ -321,6 +321,8 @@ class _HomePageState extends State<HomePage> {
                               onPressed: () {
                                 _searchDebounce?.cancel();
                                 _searchController.clear();
+                                // Remove focus so keyboard closes after clearing search
+                                FocusScope.of(context).unfocus();
                                 viewModel.setQuery('');
                               },
                               tooltip: 'Clear search',
@@ -432,7 +434,7 @@ class _HomePageState extends State<HomePage> {
     required bool isWide,
   }) {
     final itemsByCategory = viewModel.groupedItems(categories);
-    
+
     // Filter items based on search query
     final filteredItemsByCategory = <Category, List<Item>>{};
     if (viewModel.isSearching) {
@@ -440,7 +442,9 @@ class _HomePageState extends State<HomePage> {
       final matchedIds = viewModel.matchedItems.map((i) => i.id).toSet();
       for (final category in categories) {
         final items = itemsByCategory[category] ?? [];
-        final filtered = items.where((item) => matchedIds.contains(item.id)).toList();
+        final filtered = items
+            .where((item) => matchedIds.contains(item.id))
+            .toList();
         if (filtered.isNotEmpty) {
           filteredItemsByCategory[category] = filtered;
         }
@@ -449,7 +453,7 @@ class _HomePageState extends State<HomePage> {
       // Show all items
       filteredItemsByCategory.addAll(itemsByCategory);
     }
-    
+
     final categoriesWithItems = categories
         .where((cat) => (filteredItemsByCategory[cat] ?? []).isNotEmpty)
         .toList();
@@ -630,8 +634,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-
 
   void _showExportDialog() {
     showDialog(
