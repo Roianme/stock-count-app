@@ -1,9 +1,9 @@
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/item_model.dart';
-import 'category_view.dart';
 import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
 import 'widgets/export_dialog.dart';
@@ -13,6 +13,7 @@ import 'widgets/item_card_widget.dart';
 import 'hp_view.dart';
 import 'cafe_view.dart';
 import 'warehouse_view.dart';
+import 'category_view.dart';
 import '../utils/index.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final Set<int> _selectedItemIds = {};
   bool _isMultiSelectMode = false;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     viewModel.removeListener(_handleViewModelChanges);
     viewModel.dispose();
@@ -49,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleViewModelChanges() {
+    if (!mounted) return;
     // Handle any notifications from ViewModel
     if (viewModel.showMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,17 +163,11 @@ class _HomePageState extends State<HomePage> {
                         _buildSearchBar(isWide: isWide),
                         _buildSectionTitle(),
                         Expanded(
-                          child: viewModel.isSearching
-                              ? _buildSearchResults(viewModel.matchedItems)
-                              : (viewModel.isGrid
-                                    ? _buildGridView(
-                                        categories,
-                                        maxContentWidth,
-                                      )
-                                    : _buildListView(
-                                        categories,
-                                        statusControlWidth,
-                                      )),
+                          child: _buildListView(
+                            categories,
+                            statusControlWidth,
+                            isWide: isWide,
+                          ),
                         ),
                       ],
                     ),
@@ -217,6 +215,19 @@ class _HomePageState extends State<HomePage> {
       actions: _isMultiSelectMode
           ? []
           : [
+              IconButton(
+                icon: Icon(Icons.sync, color: context.theme.textPrimary),
+                onPressed: () {
+                  viewModel.reload();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('View refreshed'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+                tooltip: 'Reload view',
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Tooltip(
@@ -281,38 +292,51 @@ class _HomePageState extends State<HomePage> {
               decoration: context.theme.searchBarDecoration.copyWith(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: viewModel.setQuery,
-                style: TextStyle(fontSize: context.responsive.fontSize(16)),
-                decoration: InputDecoration(
-                  hintText: 'Search for keyword',
-                  hintStyle: AppTheme.searchHint,
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: context.theme.textSecondary,
-                  ),
-                  fillColor: context.theme.surface,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: context.isLandscape ? 12 : 14,
-                  ),
-                ),
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _searchController,
+                builder: (context, value, _) {
+                  return TextField(
+                    controller: _searchController,
+                    onChanged: (text) {
+                      _searchDebounce?.cancel();
+                      _searchDebounce = Timer(
+                        const Duration(milliseconds: 200),
+                        () => viewModel.setQuery(text),
+                      );
+                    },
+                    style: TextStyle(fontSize: context.responsive.fontSize(16)),
+                    decoration: InputDecoration(
+                      hintText: 'Search for keyword',
+                      hintStyle: AppTheme.searchHint,
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.theme.textSecondary,
+                      ),
+                      suffixIcon: value.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: context.theme.textSecondary,
+                              ),
+                              onPressed: () {
+                                _searchDebounce?.cancel();
+                                _searchController.clear();
+                                // Remove focus so keyboard closes after clearing search
+                                FocusScope.of(context).unfocus();
+                                viewModel.setQuery('');
+                              },
+                              tooltip: 'Clear search',
+                            )
+                          : null,
+                      fillColor: context.theme.surface,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: context.isLandscape ? 12 : 14,
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            decoration: context.theme.searchBarDecoration,
-            child: IconButton(
-              icon: Icon(
-                viewModel.isGrid ? Icons.view_list : Icons.grid_view,
-                color: context.theme.textPrimary,
-              ),
-              onPressed: viewModel.toggleViewMode,
-              tooltip: viewModel.isGrid
-                  ? 'Switch to list view'
-                  : 'Switch to grid view',
             ),
           ),
         ],
@@ -379,11 +403,12 @@ class _HomePageState extends State<HomePage> {
 
     if (confirmed != true) return;
 
-    setState(() {
-      _isMultiSelectMode = false;
-      _selectedItemIds.clear();
-    });
-
+    if (_isMultiSelectMode) {
+      setState(() {
+        _isMultiSelectMode = false;
+        _selectedItemIds.clear();
+      });
+    }
     await viewModel.resetAllToDefaults();
   }
 
@@ -403,70 +428,148 @@ class _HomePageState extends State<HomePage> {
     viewModel.requestExportDialog();
   }
 
-  Widget _buildGridView(List<Category> categories, double maxWidth) {
-    final crossAxisCount = _gridCrossAxisCount(maxWidth);
-    final aspectRatio = _gridChildAspectRatio(maxWidth, crossAxisCount);
-
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: aspectRatio,
-      ),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return _buildCategoryCard(category);
-      },
-    );
-  }
-
-  int _gridCrossAxisCount(double maxWidth) {
-    return context.gridColumns;
-  }
-
-  double _gridChildAspectRatio(double maxWidth, int crossAxisCount) {
-    return context.responsive.calculateAspectRatio(
-      columns: crossAxisCount,
-      targetHeight: 210.0,
-    );
-  }
-
-  Widget _buildListView(List<Category> categories, double statusControlWidth) {
+  Widget _buildListView(
+    List<Category> categories,
+    double statusControlWidth, {
+    required bool isWide,
+  }) {
     final itemsByCategory = viewModel.groupedItems(categories);
-    final listChildren = <Widget>[];
 
-    for (final category in categories) {
-      final categoryItems = itemsByCategory[category] ?? [];
-      if (categoryItems.isEmpty) continue;
-
-      listChildren.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            category.displayName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
-      );
-
-      for (final item in categoryItems) {
-        listChildren.add(_buildItemCard(item, statusControlWidth));
+    // Filter items based on search query
+    final filteredItemsByCategory = <Category, List<Item>>{};
+    if (viewModel.isSearching) {
+      // Only show items that match the search
+      final matchedIds = viewModel.matchedItems.map((i) => i.id).toSet();
+      for (final category in categories) {
+        final items = itemsByCategory[category] ?? [];
+        final filtered = items
+            .where((item) => matchedIds.contains(item.id))
+            .toList();
+        if (filtered.isNotEmpty) {
+          filteredItemsByCategory[category] = filtered;
+        }
       }
+    } else {
+      // Show all items
+      filteredItemsByCategory.addAll(itemsByCategory);
     }
 
-    return ListView(
+    final categoriesWithItems = categories
+        .where((cat) => (filteredItemsByCategory[cat] ?? []).isNotEmpty)
+        .toList();
+
+    if (categoriesWithItems.isEmpty) {
+      return const Center(child: Text('No items'));
+    }
+
+    final statusWidth = (isWide || context.isLandscape)
+        ? 130.0
+        : statusControlWidth;
+
+    final useMultiColumn = isWide || context.isLandscape;
+
+    // Single column for mobile/portrait
+    if (!useMultiColumn) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final category in categoriesWithItems) ...[
+              // Category header
+              RepaintBoundary(
+                key: ValueKey('h-${category.name}'),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(color: category.color),
+                  width: double.infinity,
+                  child: Text(
+                    category.displayName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              // Single column list
+              ...filteredItemsByCategory[category]!.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: RepaintBoundary(
+                    key: ValueKey('i-${item.id}'),
+                    child: _buildItemCard(item, statusWidth, hideIcon: true),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Multi-column masonry for wide screens/landscape
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      children: listChildren,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final category in categoriesWithItems) ...[
+            // Category header
+            RepaintBoundary(
+              key: ValueKey('h-${category.name}'),
+              child: Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(color: category.color),
+                width: double.infinity,
+                child: Text(
+                  category.displayName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            // Masonry layout for items
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: _MasonryLayout(
+                items: filteredItemsByCategory[category]!,
+                statusWidth: statusWidth,
+                buildItemCard: (item) =>
+                    _buildItemCard(item, statusWidth, hideIcon: true),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _buildItemCard(Item item, double statusControlWidth) {
+  Widget _buildItemCard(
+    Item item,
+    double statusControlWidth, {
+    bool hideIcon = true,
+  }) {
     return ItemCardWidget(
       item: item,
       statusControlWidth: statusControlWidth,
+      hideIcon: hideIcon,
+      isListView: true,
       onCheckChanged: () {
         if (_isMultiSelectMode) {
           return;
@@ -483,8 +586,8 @@ class _HomePageState extends State<HomePage> {
           }
           // Exit multi-select mode
           setState(() {
-            _isMultiSelectMode = false;
             _selectedItemIds.clear();
+            _isMultiSelectMode = false;
           });
         } else {
           viewModel.setItemPieces(item.id, pieces);
@@ -499,8 +602,8 @@ class _HomePageState extends State<HomePage> {
           viewModel.batchSetItemsChecked(idsToUpdate, true);
           // Exit multi-select mode
           setState(() {
-            _isMultiSelectMode = false;
             _selectedItemIds.clear();
+            _isMultiSelectMode = false;
           });
         } else {
           viewModel.updateItemStatus(item.id, newStatus);
@@ -517,6 +620,7 @@ class _HomePageState extends State<HomePage> {
         });
       },
       onTap: () {
+        if (!_isMultiSelectMode) return;
         setState(() {
           if (_selectedItemIds.contains(item.id)) {
             _selectedItemIds.remove(item.id);
@@ -527,124 +631,6 @@ class _HomePageState extends State<HomePage> {
             _selectedItemIds.add(item.id);
           }
         });
-      },
-    );
-  }
-
-  Widget _buildCategoryCard(Category category) {
-    return Container(
-      decoration: context.theme.cardDecoration.copyWith(
-        borderRadius: BorderRadius.circular(ResponsiveSizes.borderRadiusXLarge),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _navigateToCategory(category),
-          borderRadius: BorderRadius.circular(
-            ResponsiveSizes.borderRadiusXLarge,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  category.icon,
-                  size: context.responsive.iconSize(40),
-                  color: category.color,
-                ),
-              ),
-              SizedBox(height: context.isLandscape ? 8 : 12),
-              Text(
-                category.displayName,
-                style: context.theme.cardTitle.copyWith(
-                  fontSize: context.responsive.fontSize(16, 14),
-                ),
-              ),
-              Text(
-                viewModel.categoryProgress(category),
-                style: TextStyle(
-                  fontSize: context.responsive.fontSize(12, 10),
-                  color: context.theme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToCategory(Category category) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            CategoryView(category: category, repository: widget.repository),
-      ),
-    );
-    setState(() {});
-  }
-
-  Widget _buildSearchResults(List<Item> itemsList) {
-    if (itemsList.isEmpty) {
-      return const Center(child: Text('No matching items'));
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: itemsList.length,
-      itemBuilder: (context, index) {
-        final item = itemsList[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.shadowColor,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: item.category.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  item.category.icon,
-                  color: item.category.color,
-                  size: 28,
-                ),
-              ),
-              title: Text(item.name, style: context.theme.itemName),
-              subtitle: Text(
-                item.category.displayName,
-                style: context.theme.subtitle,
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: context.theme.textSecondary,
-              ),
-              onTap: () => _navigateToCategory(item.category),
-            ),
-          ),
-        );
       },
     );
   }
@@ -690,6 +676,57 @@ class _HomePageState extends State<HomePage> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
+}
+
+/// Masonry layout that distributes items across 3 columns
+class _MasonryLayout extends StatelessWidget {
+  final List<Item> items;
+  final double statusWidth;
+  final Widget Function(Item) buildItemCard;
+
+  const _MasonryLayout({
+    required this.items,
+    required this.statusWidth,
+    required this.buildItemCard,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Distribute items across 3 columns in a round-robin fashion
+    final columns = <List<Item>>[[], [], []];
+
+    for (int i = 0; i < items.length; i++) {
+      columns[i % 3].add(items[i]);
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int colIndex = 0; colIndex < 3; colIndex++)
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: colIndex == 0 ? 0 : 2,
+                right: colIndex == 2 ? 0 : 2,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final item in columns[colIndex])
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: RepaintBoundary(
+                        key: ValueKey('i-${item.id}'),
+                        child: buildItemCard(item),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

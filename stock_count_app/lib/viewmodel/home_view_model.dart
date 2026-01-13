@@ -9,7 +9,6 @@ class HomeViewModel extends ChangeNotifier {
   final List<model.Category> allCategories;
   final ItemRepository repository;
   List<model.Category> visibleCategories;
-  bool isGrid = true;
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
@@ -22,11 +21,6 @@ class HomeViewModel extends ChangeNotifier {
 
   HomeViewModel({required this.allCategories, required this.repository})
     : visibleCategories = List.from(allCategories);
-
-  void toggleViewMode() {
-    isGrid = !isGrid;
-    notifyListeners();
-  }
 
   // Dynamic search: updates matches while typing
   void setQuery(String q) {
@@ -56,52 +50,37 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void setLocation(model.Location location) {
-    currentLocation = location;
-    notifyListeners();
+    if (currentLocation != location) {
+      currentLocation = location;
+      notifyListeners();
+    }
   }
-
-  // void _applyFilter() {
-  //   if (_query.isEmpty) {
-  //     visibleCategories = List.from(allCategories);
-  //   } else {
-  //     visibleCategories = allCategories
-  //         .where(
-  //           (c) => c.toString().split('.').last.toLowerCase().contains(_query),
-  //         )
-  //         .toList();
-  //   }
-  //   notifyListeners();
-  // }
 
   void setItemChecked(int itemId, bool value) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
       data.items[mainIndex] = data.items[mainIndex].copyWith(isChecked: value);
+      _saveItems();
+      notifyListeners();
     }
-    final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
-    if (matchIndex != -1) {
-      matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
-    }
-    _saveItems();
-    notifyListeners();
   }
 
   // Batch update for multi-select operations
   void batchSetItemsChecked(List<int> itemIds, bool value) {
+    bool updated = false;
     for (final itemId in itemIds) {
       final mainIndex = data.items.indexWhere((i) => i.id == itemId);
       if (mainIndex != -1) {
         data.items[mainIndex] = data.items[mainIndex].copyWith(
           isChecked: value,
         );
-      }
-      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
-      if (matchIndex != -1) {
-        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+        updated = true;
       }
     }
-    _saveItems();
-    notifyListeners();
+    if (updated) {
+      _saveItems();
+      notifyListeners();
+    }
   }
 
   List<model.Item> itemsForCategory(model.Category category) {
@@ -122,9 +101,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   String getSectionTitle() {
-    if (isGrid && !isSearching) {
-      return 'Categories';
-    } else if (isSearching) {
+    if (isSearching) {
       return 'Search results';
     } else {
       return 'All Items';
@@ -135,61 +112,52 @@ class HomeViewModel extends ChangeNotifier {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
       data.items[mainIndex] = data.items[mainIndex].copyWith(status: newStatus);
+      _saveItems();
+      notifyListeners();
     }
-    final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
-    if (matchIndex != -1) {
-      matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
-    }
-    _saveItems();
-    notifyListeners();
   }
 
   // Batch status update for multi-select operations (no intermediate notifies)
   void batchUpdateItemStatus(List<int> itemIds, model.ItemStatus newStatus) {
+    bool updated = false;
     for (final itemId in itemIds) {
       final mainIndex = data.items.indexWhere((i) => i.id == itemId);
       if (mainIndex != -1) {
         data.items[mainIndex] = data.items[mainIndex].copyWith(
           status: newStatus,
         );
-      }
-      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
-      if (matchIndex != -1) {
-        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+        updated = true;
       }
     }
-    _saveItems();
-    notifyListeners();
+    if (updated) {
+      _saveItems();
+      notifyListeners();
+    }
   }
 
   void setItemPieces(int itemId, int pieces) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
       data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
+      _saveItems();
+      notifyListeners();
     }
-
-    final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
-    if (matchIndex != -1) {
-      matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
-    }
-    _saveItems();
-    notifyListeners();
   }
 
   // Batch pieces update for multi-select operations (no intermediate notifies)
   void batchSetItemPieces(List<int> itemIds, int pieces) {
+    bool updated = false;
     for (final itemId in itemIds) {
       final mainIndex = data.items.indexWhere((i) => i.id == itemId);
       if (mainIndex != -1) {
         data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
-      }
-      final matchIndex = matchedItems.indexWhere((i) => i.id == itemId);
-      if (matchIndex != -1) {
-        matchedItems[matchIndex] = data.items.firstWhere((i) => i.id == itemId);
+        updated = true;
       }
     }
-    _saveItems();
-    notifyListeners();
+    if (updated) {
+      _saveItems();
+      notifyListeners();
+    }
   }
 
   Future<void> resetAllToDefaults() async {
@@ -208,14 +176,37 @@ class HomeViewModel extends ChangeNotifier {
       }
     }
 
+    await _saveItems();
+
+    // Refresh search results if searching
     if (_query.isNotEmpty) {
       matchedItems = data.items
           .where((i) => i.name.toLowerCase().contains(_query))
           .toList();
     }
 
-    await _saveItems();
     setMessage('All items reset to defaults');
+    notifyListeners();
+  }
+
+  /// Reload/refresh the view state without resetting data
+  void reload() {
+    // Refresh search results if applicable
+    if (_query.isNotEmpty) {
+      matchedItems = data.items
+          .where((i) => i.name.toLowerCase().contains(_query))
+          .toList();
+      final matchedCategories = matchedItems
+          .map((i) => i.category)
+          .toSet()
+          .toList();
+      visibleCategories = allCategories
+          .where((c) => matchedCategories.contains(c))
+          .toList();
+    } else {
+      visibleCategories = List.from(allCategories);
+    }
+    notifyListeners();
   }
 
   bool get hasCheckedItems => data.items.any((i) => i.isChecked);

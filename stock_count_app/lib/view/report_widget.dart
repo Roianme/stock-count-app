@@ -77,39 +77,6 @@ class ReportWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${(location ?? title).toUpperCase()} | $dateStr',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'COUNT BY: ${name ?? 'Not provided'}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,6 +91,29 @@ class ReportWidget extends StatelessWidget {
                         ),
                       );
                     }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 6),
+                      Text(
+                        '$location | $dateStr | BY: ${(name ?? 'Not provided').toUpperCase()}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -191,7 +181,7 @@ class ReportWidget extends StatelessWidget {
                       child: Text(
                         item.name,
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           height: 1.2,
                           color: isUnchecked ? Colors.black45 : Colors.black,
                         ),
@@ -222,7 +212,7 @@ class ReportWidget extends StatelessWidget {
                           statusMarker,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: isUnchecked ? Colors.grey : markerColor,
                           ),

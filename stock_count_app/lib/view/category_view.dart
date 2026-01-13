@@ -64,6 +64,23 @@ class _CategoryViewState extends State<CategoryView> {
                     },
                   )
                 : null,
+            actions: _isMultiSelectMode
+                ? []
+                : [
+                    IconButton(
+                      icon: const Icon(Icons.sync),
+                      onPressed: () {
+                        viewModel.reload();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('View refreshed'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      tooltip: 'Reload view',
+                    ),
+                  ],
           ),
           body: SafeArea(
             child: LayoutBuilder(
@@ -172,6 +189,7 @@ class _CategoryViewState extends State<CategoryView> {
         });
       },
       onTap: () {
+        if (!_isMultiSelectMode) return;
         setState(() {
           if (_selectedItemIds.contains(item.id)) {
             _selectedItemIds.remove(item.id);
@@ -263,7 +281,7 @@ extension CategoryUI on Category {
       case Category.misc:
         return Colors.purple;
       case Category.supplier:
-        return Colors.green;
+        return Colors.yellow;
       case Category.produce:
         return Colors.lightGreen;
       case Category.filipinoSupplier:
