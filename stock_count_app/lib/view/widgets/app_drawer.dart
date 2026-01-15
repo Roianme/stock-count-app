@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../model/item_model.dart';
+import '../todo_view.dart';
 
 class AppDrawer extends StatefulWidget {
   final Mode currentLocation;
@@ -76,7 +77,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    'CHANGE ITEMS FOR:',
+                    'CHANGE STOCKS FOR:',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -123,7 +124,29 @@ class _AppDrawerState extends State<AppDrawer> {
                   );
                 }),
                 const Divider(height: 32),
-                // Additional menu items can go here
+                // Additional menu items
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.checklist,
+                      color: Colors.grey[700],
+                      size: 24,
+                    ),
+                  ),
+                  title: const Text('Todo List'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const TodoView()),
+                    );
+                  },
+                ),
               ],
             ),
           ),

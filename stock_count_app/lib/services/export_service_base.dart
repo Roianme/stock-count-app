@@ -30,4 +30,13 @@ abstract class ExportServiceBase {
     String? location,
     String? name,
   });
+
+  /// Export an already-rendered image (PNG bytes). Used by Todo preview.
+  Future<bool> exportImageBytes(
+    BuildContext context,
+    Uint8List imageBytes, {
+    String filename = 'export.png',
+    String? title,
+    String? description,
+  });
 }

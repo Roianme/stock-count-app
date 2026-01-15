@@ -7,7 +7,7 @@ final List<Item> items = [
     name: 'pork skewers',
     category: Category.bbqGrill,
     status: ItemStatus.pieces,
-    modes: {Mode.city, Mode.hp},
+    modes: {Mode.hp},
   ),
   Item(
     id: 2,

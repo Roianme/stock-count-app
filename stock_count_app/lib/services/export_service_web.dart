@@ -109,6 +109,37 @@ class WebExportService extends ExportServiceBase {
     );
   }
 
+  @override
+  Future<bool> exportImageBytes(
+    BuildContext context,
+    Uint8List imageBytes, {
+    String filename = 'export.png',
+    String? title,
+    String? description,
+  }) async {
+    try {
+      // Try Web Share API first
+      try {
+        final blob = html.Blob([imageBytes], 'image/png');
+        final file = html.File([blob], filename, {'type': 'image/png'});
+        await html.window.navigator.share({
+          'title': title ?? filename,
+          'text': description ?? 'Export',
+          'files': [file],
+        });
+        return true;
+      } catch (e) {
+        debugPrint('Web Share failed, falling back to download: $e');
+      }
+
+      _downloadImage(imageBytes, filename);
+      return true;
+    } catch (e) {
+      debugPrint('Export image bytes error: $e');
+      return false;
+    }
+  }
+
   /// Capture report widget as image using overlay
   Future<Uint8List?> _captureReportWidget(
     BuildContext context,

@@ -116,6 +116,40 @@ class MobileExportService extends ExportServiceBase {
     );
   }
 
+  @override
+  Future<bool> exportImageBytes(
+    BuildContext context,
+    Uint8List imageBytes, {
+    String filename = 'export.png',
+    String? title,
+    String? description,
+  }) async {
+    File? file;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      file = File('${tempDir.path}/$filename');
+      await file.writeAsBytes(imageBytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: description ?? title ?? filename,
+        subject: title ?? filename,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Export image bytes error: $e');
+      return false;
+    } finally {
+      try {
+        if (file != null && await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {
+        // Best-effort cleanup only.
+      }
+    }
+  }
+
   /// Capture report widget as image using overlay
   Future<Uint8List?> _captureReportWidget(
     BuildContext context,
