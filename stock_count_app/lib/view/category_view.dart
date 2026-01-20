@@ -232,35 +232,8 @@ extension CategoryUI on Category {
         return 'Coles/Woolies';
       case Category.chemicals:
         return 'Chemicals';
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case Category.bbqGrill:
-        return Icons.outdoor_grill;
-      case Category.warehouse:
-        return Icons.warehouse;
-      case Category.essentials:
-        return Icons.shopping_basket;
-      case Category.spices:
-        return Icons.spa;
-      case Category.rawItems:
-        return Icons.inventory_2;
-      case Category.drinks:
-        return Icons.local_drink;
-      case Category.misc:
-        return Icons.category;
-      case Category.supplier:
-        return Icons.local_shipping;
-      case Category.produce:
-        return Icons.eco;
-      case Category.filipinoSupplier:
-        return Icons.store;
-      case Category.colesWoolies:
-        return Icons.shopping_cart;
-      case Category.chemicals:
-        return Icons.science;
+      case Category.dessert:
+        return 'Dessert';
     }
   }
 
@@ -290,6 +263,8 @@ extension CategoryUI on Category {
         return Colors.orange;
       case Category.chemicals:
         return Colors.teal;
+      case Category.dessert:
+        return Colors.pink;
     }
   }
 }

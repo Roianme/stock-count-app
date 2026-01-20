@@ -42,8 +42,6 @@ class ItemCardWidget extends StatelessWidget {
         !hideIcon && (context.isWideScreen || context.isLandscape);
     final bool useColumnLayout = showItemNameInColumn || isCompact;
     final double avatarRadius = isCompact ? 22 : 32;
-    final double iconSize = isCompact ? 22 : 32;
-
     return GestureDetector(
       onLongPress: onLongPress,
       onTap: isMultiSelectMode ? onTap : null,
@@ -165,11 +163,6 @@ class ItemCardWidget extends StatelessWidget {
                               radius: avatarRadius,
                               backgroundColor: item.category.color.withValues(
                                 alpha: 0.12,
-                              ),
-                              child: Icon(
-                                item.category.icon,
-                                color: item.category.color,
-                                size: iconSize,
                               ),
                             ),
                             if (isMultiSelectMode && isSelected)

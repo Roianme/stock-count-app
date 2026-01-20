@@ -140,6 +140,8 @@ class CategoryAdapter extends TypeAdapter<Category> {
         return Category.colesWoolies;
       case 11:
         return Category.chemicals;
+      case 12:
+        return Category.dessert;
       default:
         return Category.bbqGrill;
     }
@@ -183,6 +185,9 @@ class CategoryAdapter extends TypeAdapter<Category> {
         break;
       case Category.chemicals:
         writer.writeByte(11);
+        break;
+      case Category.dessert:
+        writer.writeByte(12);
         break;
     }
   }

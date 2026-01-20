@@ -43,6 +43,8 @@ enum Category {
   colesWoolies,
   @HiveField(11)
   chemicals,
+  @HiveField(12)
+  dessert,
 }
 
 enum Mode { city, cafe, hp, warehouse, manager }
