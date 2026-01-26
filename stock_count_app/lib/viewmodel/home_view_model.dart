@@ -69,24 +69,6 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  // Batch update for multi-select operations
-  void batchSetItemsChecked(List<int> itemIds, bool value) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(
-          isChecked: value,
-        );
-        updated = true;
-      }
-    }
-    if (updated) {
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
   List<model.Item> itemsForCategory(model.Category category) {
     return data.items
         .where(
@@ -137,70 +119,12 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  // Batch status update for multi-select operations (no intermediate notifies)
-  void batchUpdateItemStatus(List<int> itemIds, model.ItemStatus newStatus) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(
-          status: newStatus,
-        );
-        updated = true;
-      }
-    }
-    if (updated) {
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
-  void batchUpdateItemUnit(
-    List<int> itemIds,
-    String unit,
-    model.ItemStatus newStatus,
-  ) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(
-          unit: unit,
-          status: newStatus,
-        );
-        updated = true;
-      }
-    }
-    if (updated) {
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
   void setItemQuantity(int itemId, int quantity) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
       data.items[mainIndex] = data.items[mainIndex].copyWith(
         quantity: quantity,
       );
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
-  // Batch quantity update for multi-select operations (no intermediate notifies)
-  void batchSetItemQuantity(List<int> itemIds, int quantity) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(
-          quantity: quantity,
-        );
-        updated = true;
-      }
-    }
-    if (updated) {
       _saveItems();
       notifyListeners();
     }

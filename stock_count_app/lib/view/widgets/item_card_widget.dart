@@ -14,10 +14,6 @@ class ItemCardWidget extends StatelessWidget {
   final Function(ItemStatus) onStatusChanged;
   final Function(data.ItemUnitOption) onUnitChanged;
   final bool showItemNameInColumn;
-  final bool isMultiSelectMode;
-  final bool isSelected;
-  final VoidCallback? onLongPress;
-  final VoidCallback? onTap;
   final bool hideIcon;
   final bool isListView;
 
@@ -30,10 +26,6 @@ class ItemCardWidget extends StatelessWidget {
     required this.onStatusChanged,
     required this.onUnitChanged,
     this.showItemNameInColumn = false,
-    this.isMultiSelectMode = false,
-    this.isSelected = false,
-    this.onLongPress,
-    this.onTap,
     this.hideIcon = false,
     this.isListView = true,
   });
@@ -46,15 +38,12 @@ class ItemCardWidget extends StatelessWidget {
     final bool useColumnLayout = showItemNameInColumn || isCompact;
     final double avatarRadius = isCompact ? 22 : 32;
     return GestureDetector(
-      onLongPress: onLongPress,
-      onTap: isMultiSelectMode ? onTap : null,
       child: Card(
         margin: EdgeInsets.symmetric(
           horizontal: 12,
           vertical: context.isLandscape ? 6 : 12,
         ),
-        elevation: isSelected ? 8 : 2,
-        color: isSelected ? context.theme.accent.withValues(alpha: 0.15) : null,
+        elevation: 2,
         child: Stack(
           children: [
             Padding(
@@ -153,39 +142,12 @@ class ItemCardWidget extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: GestureDetector(
-                        onTap: () {
-                          if (isMultiSelectMode) {
-                            onTap?.call();
-                          } else {
-                            onCheckChanged();
-                          }
-                        },
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: avatarRadius,
-                              backgroundColor: item.category.color.withValues(
-                                alpha: 0.12,
-                              ),
-                            ),
-                            if (isMultiSelectMode && isSelected)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: context.theme.accent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                          ],
+                        onTap: onCheckChanged,
+                        child: CircleAvatar(
+                          radius: avatarRadius,
+                          backgroundColor: item.category.color.withValues(
+                            alpha: 0.12,
+                          ),
                         ),
                       ),
                     ),
@@ -284,13 +246,10 @@ class ItemCardWidget extends StatelessWidget {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       textAlign: TextAlign.center,
-                      enabled: !isMultiSelectMode,
                       style: TextStyle(
                         fontSize: context.responsive.fontSize(18, 16),
                         fontWeight: FontWeight.w600,
-                        color: isMultiSelectMode
-                            ? Colors.grey
-                            : context.theme.textPrimary,
+                        color: context.theme.textPrimary,
                       ),
                       decoration: InputDecoration(
                         isDense: false,
