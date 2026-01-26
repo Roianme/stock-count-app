@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
+import '../data/item_data.dart' as data;
 import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
@@ -325,7 +326,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context) => AlertDialog(
         title: const Text('Reset items?'),
         content: const Text(
-          'This will reset all item statuses, pieces, and checks back to their defaults.',
+          'This will reset all item statuses, quantities, and checks back to their defaults.',
         ),
         actions: [
           TextButton(
@@ -515,12 +516,12 @@ class _HomePageState extends State<HomePage> {
         }
         viewModel.setItemChecked(item.id, !item.isChecked);
       },
-      onPiecesChanged: (pieces) {
+      onQuantityChanged: (quantity) {
         if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
-          // Batch apply pieces to all selected items
-          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
-          // Then check all selected items if pieces > 0
-          if (pieces > 0) {
+          // Batch apply quantities to all selected items
+          viewModel.batchSetItemQuantity(_selectedItemIds.toList(), quantity);
+          // Then check all selected items if quantity > 0
+          if (quantity > 0) {
             viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
           }
           // Exit multi-select mode
@@ -529,16 +530,28 @@ class _HomePageState extends State<HomePage> {
             _isMultiSelectMode = false;
           });
         } else {
-          viewModel.setItemPieces(item.id, pieces);
+          viewModel.setItemQuantity(item.id, quantity);
         }
       },
       onStatusChanged: (newStatus) {
+        final requiresQuantity = newStatus == ItemStatus.quantity;
         if (_isMultiSelectMode) {
           final idsToUpdate = {..._selectedItemIds, item.id}.toList();
           // Batch apply status to all selected items (plus the menu-target item)
           viewModel.batchUpdateItemStatus(idsToUpdate, newStatus);
-          // Then check all affected items
-          viewModel.batchSetItemsChecked(idsToUpdate, true);
+          // Then check all affected items when allowed
+          final idsToCheck = requiresQuantity
+              ? idsToUpdate.where((id) {
+                  final target = data.items.firstWhere(
+                    (i) => i.id == id,
+                    orElse: () => item,
+                  );
+                  return target.quantity > 0;
+                }).toList()
+              : idsToUpdate;
+          if (idsToCheck.isNotEmpty) {
+            viewModel.batchSetItemsChecked(idsToCheck, true);
+          }
           // Exit multi-select mode
           setState(() {
             _selectedItemIds.clear();
@@ -546,6 +559,33 @@ class _HomePageState extends State<HomePage> {
           });
         } else {
           viewModel.updateItemStatus(item.id, newStatus);
+          if (newStatus == ItemStatus.urgent) {
+            viewModel.setItemChecked(item.id, true);
+          } else if (!requiresQuantity || item.quantity > 0) {
+            viewModel.setItemChecked(item.id, true);
+          }
+        }
+      },
+      onUnitChanged: (data.ItemUnitOption newUnit) {
+        final newStatus = newUnit.isUrgent
+            ? ItemStatus.urgent
+            : ItemStatus.quantity;
+        if (_isMultiSelectMode) {
+          final idsToUpdate = {..._selectedItemIds, item.id}.where((id) {
+            final options = data.itemUnitOptionsById[id];
+            return options?.any((o) => o.label == newUnit.label) ?? false;
+          }).toList();
+
+          if (idsToUpdate.isEmpty) return;
+
+          viewModel.batchUpdateItemUnit(idsToUpdate, newUnit.label, newStatus);
+          viewModel.batchSetItemsChecked(idsToUpdate, true);
+          setState(() {
+            _selectedItemIds.clear();
+            _isMultiSelectMode = false;
+          });
+        } else {
+          viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
           viewModel.setItemChecked(item.id, true);
         }
       },

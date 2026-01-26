@@ -84,9 +84,14 @@ class ResponsiveHelper {
     }
   }
 
-  /// Get status control width for dropdowns
+  /// Get status control width for dropdowns based on screen size
   double statusControlWidth() {
-    return isWideScreen ? 170.0 : 130.0;
+    if (screenWidth >= 1200) return 180.0; // Extra wide screens
+    if (screenWidth >= 900) return 160.0; // Tablets
+    if (screenWidth >= 600) return 140.0; // Large phones
+    if (screenWidth >= 420) return 130.0; // Medium phones
+    if (screenWidth >= 360) return 120.0; // Small phones
+    return 110.0; // Very small screens
   }
 
   /// Get max content width for centered layouts

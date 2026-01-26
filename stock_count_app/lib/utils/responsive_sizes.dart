@@ -48,8 +48,12 @@ class ResponsiveSizes {
   static const double cardAspectRatio = 1.2;
 
   // Status control dimensions
-  static const double statusControlWidthRegular = 130.0;
-  static const double statusControlWidthWide = 170.0;
+  static const double statusControlWidthXLarge = 190.0; // ≥1200px
+  static const double statusControlWidthLarge = 170.0; // ≥900px
+  static const double statusControlWidthMedium = 150.0; // ≥600px
+  static const double statusControlWidthRegular = 140.0; // ≥420px
+  static const double statusControlWidthSmall = 130.0; // ≥360px
+  static const double statusControlWidthXSmall = 120.0; // <360px
 
   // Max content widths
   static const double maxContentWidthPortrait = 900.0;

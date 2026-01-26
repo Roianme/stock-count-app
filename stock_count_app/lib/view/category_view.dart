@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
+import '../data/item_data.dart' as data;
 import 'widgets/item_card_widget.dart';
 import '../utils/index.dart';
 
@@ -145,12 +146,12 @@ class _CategoryViewState extends State<CategoryView> {
         }
         viewModel.batchSetItemsChecked([item.id], !item.isChecked);
       },
-      onPiecesChanged: (pieces) {
+      onQuantityChanged: (quantity) {
         if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
-          // Batch apply pieces to all selected items
-          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
-          // Then check all selected items if pieces > 0
-          if (pieces > 0) {
+          // Batch apply quantities to all selected items
+          viewModel.batchSetItemQuantity(_selectedItemIds.toList(), quantity);
+          // Then check all selected items if quantity > 0
+          if (quantity > 0) {
             viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
           }
           // Exit multi-select mode
@@ -159,16 +160,28 @@ class _CategoryViewState extends State<CategoryView> {
             _selectedItemIds.clear();
           });
         } else {
-          viewModel.setItemPieces(item.id, pieces);
+          viewModel.setItemQuantity(item.id, quantity);
         }
       },
       onStatusChanged: (newStatus) {
+        final requiresQuantity = newStatus == ItemStatus.quantity;
         if (_isMultiSelectMode) {
           final idsToUpdate = {..._selectedItemIds, item.id}.toList();
           // Batch apply status to all selected items (plus the menu-target item)
           viewModel.batchUpdateItemStatus(idsToUpdate, newStatus);
-          // Then check all affected items
-          viewModel.batchSetItemsChecked(idsToUpdate, true);
+          // Then check all affected items when allowed
+          final idsToCheck = requiresQuantity
+              ? idsToUpdate.where((id) {
+                  final target = data.items.firstWhere(
+                    (i) => i.id == id,
+                    orElse: () => item,
+                  );
+                  return target.quantity > 0;
+                }).toList()
+              : idsToUpdate;
+          if (idsToCheck.isNotEmpty) {
+            viewModel.batchSetItemsChecked(idsToCheck, true);
+          }
           // Exit multi-select mode
           setState(() {
             _isMultiSelectMode = false;
@@ -176,6 +189,33 @@ class _CategoryViewState extends State<CategoryView> {
           });
         } else {
           viewModel.updateItemStatus(item.id, newStatus);
+          if (newStatus == ItemStatus.urgent) {
+            viewModel.batchSetItemsChecked([item.id], true);
+          } else if (!requiresQuantity || item.quantity > 0) {
+            viewModel.batchSetItemsChecked([item.id], true);
+          }
+        }
+      },
+      onUnitChanged: (data.ItemUnitOption newUnit) {
+        final newStatus = newUnit.isUrgent
+            ? ItemStatus.urgent
+            : ItemStatus.quantity;
+        if (_isMultiSelectMode) {
+          final idsToUpdate = {..._selectedItemIds, item.id}.where((id) {
+            final options = data.itemUnitOptionsById[id];
+            return options?.any((o) => o.label == newUnit.label) ?? false;
+          }).toList();
+
+          if (idsToUpdate.isEmpty) return;
+
+          viewModel.batchUpdateItemUnit(idsToUpdate, newUnit.label, newStatus);
+          viewModel.batchSetItemsChecked(idsToUpdate, true);
+          setState(() {
+            _selectedItemIds.clear();
+            _isMultiSelectMode = false;
+          });
+        } else {
+          viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
           viewModel.batchSetItemsChecked([item.id], true);
         }
       },
@@ -272,16 +312,10 @@ extension CategoryUI on Category {
 extension ItemStatusUI on ItemStatus {
   String get displayName {
     switch (this) {
-      case ItemStatus.zero:
-        return 'Zero';
-      case ItemStatus.low:
-        return 'Low';
-      case ItemStatus.ok:
-        return 'OK';
       case ItemStatus.urgent:
         return 'Urgent';
-      case ItemStatus.pieces:
-        return 'Pieces';
+      case ItemStatus.quantity:
+        return 'Quantity';
     }
   }
 }
