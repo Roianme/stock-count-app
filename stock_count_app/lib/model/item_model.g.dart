@@ -125,7 +125,7 @@ class CategoryAdapter extends TypeAdapter<Category> {
       case 6:
         return Category.misc;
       case 7:
-        return Category.supplier;
+        return Category.asianSupplier;
       case 8:
         return Category.produce;
       case 9:
@@ -165,7 +165,7 @@ class CategoryAdapter extends TypeAdapter<Category> {
       case Category.misc:
         writer.writeByte(6);
         break;
-      case Category.supplier:
+      case Category.asianSupplier:
         writer.writeByte(7);
         break;
       case Category.produce:
@@ -182,6 +182,9 @@ class CategoryAdapter extends TypeAdapter<Category> {
         break;
       case Category.dessert:
         writer.writeByte(12);
+        break;
+      case Category.asianGrocer:
+        writer.writeByte(13);
         break;
     }
   }

@@ -28,7 +28,7 @@ enum Category {
   @HiveField(6)
   misc,
   @HiveField(7)
-  supplier,
+  asianSupplier,
   @HiveField(8)
   produce,
   @HiveField(9)
@@ -39,6 +39,8 @@ enum Category {
   chemicals,
   @HiveField(12)
   dessert,
+  @HiveField(13)
+  asianGrocer,
 }
 
 enum Mode { city, cafe, hp, warehouse, manager }

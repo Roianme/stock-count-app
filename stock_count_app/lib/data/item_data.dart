@@ -416,31 +416,31 @@ final List<Item> items = [
   Item(
     id: 67,
     name: 'fishball',
-    category: Category.supplier,
+    category: Category.asianSupplier,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 68,
     name: 'chicken powder',
-    category: Category.supplier,
+    category: Category.asianSupplier,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 69,
     name: 'quail eggs',
-    category: Category.supplier,
+    category: Category.asianSupplier,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 70,
     name: 'jackfruit',
-    category: Category.supplier,
+    category: Category.asianSupplier,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 71,
-    name: 'champignon',
-    category: Category.supplier,
+    name: 'champignon (cans)',
+    category: Category.asianSupplier,
     status: ItemStatus.quantity,
   ),
 
@@ -496,6 +496,60 @@ final List<Item> items = [
   Item(
     id: 80,
     name: 'small freezer bag (bags)',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 147,
+    name: 'biscoff crunch',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 148,
+    name: 'choc syrup',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 149,
+    name: 'fresh full cream milk',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 150,
+    name: 'oat milk',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 151,
+    name: 'almond milk',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 152,
+    name: 'bonsoy milk',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 153,
+    name: 'fresh skim milk',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 154,
+    name: 'nutella (jar)',
+    category: Category.colesWoolies,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 155,
+    name: 'vanilla extract',
     category: Category.colesWoolies,
     status: ItemStatus.quantity,
   ),
@@ -686,25 +740,25 @@ final List<Item> items = [
   ),
   Item(
     id: 112,
-    name: 'dorothy',
+    name: 'dorothy (dish washing liquid)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 113,
-    name: 'harry',
+    name: 'harry (floor cleaner)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 114,
-    name: 'barry',
+    name: 'barry (bleach)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 115,
-    name: 'louie',
+    name: 'louie (toilet cleaner)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
@@ -716,19 +770,19 @@ final List<Item> items = [
   ),
   Item(
     id: 117,
-    name: 'samantha',
+    name: 'samantha (sanitizer)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 118,
-    name: 'kent (ken)',
+    name: 'kent (ken-degreaser)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
   Item(
     id: 119,
-    name: 'hannah',
+    name: 'hannah (disinfectant)',
     category: Category.chemicals,
     status: ItemStatus.quantity,
   ),
@@ -870,6 +924,114 @@ final List<Item> items = [
     category: Category.dessert,
     status: ItemStatus.quantity,
   ),
+  Item(
+    id: 143,
+    name: 'pata (cooked)',
+    category: Category.bbqGrill,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 144,
+    name: 'curly fries (bags)',
+    category: Category.asianSupplier,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 145,
+    name: 'potato fries (bags)',
+    category: Category.asianSupplier,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 146,
+    name: 'frozen kikiam (bags)',
+    category: Category.filipinoSupplier,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 156,
+    name: 'banana essence',
+    category: Category.asianGrocer,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 157,
+    name: 'palm/coconut dark brown sugar',
+    category: Category.asianGrocer,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 158,
+    name: 'Pandan',
+    category: Category.asianGrocer,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 159,
+    name: 'pinipig',
+    category: Category.asianGrocer,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 160,
+    name: 'cakes (pcs) - original yema',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 161,
+    name: 'cakes (pcs) - original brazo',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 162,
+    name: 'leche flan (halo-halo)',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 163,
+    name: 'cakes (pcs) - leche flan',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 164,
+    name: 'ice candy - avocado',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 165,
+    name: 'ice candy - melon',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 166,
+    name: 'ice candy - mango',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 167,
+    name: 'ice candy - milo',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 168,
+    name: 'cakes (pcs) - ube yema',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
+  Item(
+    id: 169,
+    name: 'cakes (pcs) - ube brazo',
+    category: Category.dessert,
+    status: ItemStatus.quantity,
+  ),
 ];
 
 class ItemUnitOption {
@@ -892,7 +1054,9 @@ const _basahanOptions = [
   ItemUnitOption('<6', isUrgent: true),
   ItemUnitOption('>6'),
   ItemUnitOption('Unopened'),
-  ItemUnitOption('1-3'),
+  ItemUnitOption('1'),
+  ItemUnitOption('2'),
+  ItemUnitOption('3'),
 ];
 
 const _spiceOptions = [
@@ -903,13 +1067,26 @@ const _spiceOptions = [
 
 const _drinkBoxOptions = [
   ItemUnitOption('<1', isUrgent: true),
-  ItemUnitOption('1-10 (Unopened)'),
+  ItemUnitOption('1 (unopened)'),
+  ItemUnitOption('2 (unopened)'),
+  ItemUnitOption('3 (unopened)'),
+  ItemUnitOption('4 (unopened)'),
+  ItemUnitOption('5 (unopened)'),
+  ItemUnitOption('6 (unopened)'),
+  ItemUnitOption('7 (unopened)'),
+  ItemUnitOption('8 (unopened)'),
+  ItemUnitOption('9 (unopened)'),
+  ItemUnitOption('10 (unopened)'),
 ];
 
 const _sauceCupOptions = [
   ItemUnitOption('¼', isUrgent: true),
   ItemUnitOption('½'),
-  ItemUnitOption('1-5'),
+  ItemUnitOption('1'),
+  ItemUnitOption('2'),
+  ItemUnitOption('3'),
+  ItemUnitOption('4'),
+  ItemUnitOption('5'),
 ];
 
 const _etaOptions = [
@@ -932,25 +1109,40 @@ const _veganOptions = [
 
 const _garlicOilOptions = [
   ItemUnitOption('½ jar', isUrgent: true),
-  ItemUnitOption('1-5 jars'),
+  ItemUnitOption('1 jar'),
+  ItemUnitOption('2 jars'),
+  ItemUnitOption('3 jars'),
+  ItemUnitOption('4 jars'),
+  ItemUnitOption('5 jars'),
 ];
 
 const _quailOptions = [
   ItemUnitOption('<½ box', isUrgent: true),
   ItemUnitOption('<1 box'),
-  ItemUnitOption('1-6 boxes'),
+  ItemUnitOption('1 box'),
+  ItemUnitOption('2 boxes'),
+  ItemUnitOption('3 boxes'),
+  ItemUnitOption('4 boxes'),
+  ItemUnitOption('5 boxes'),
+  ItemUnitOption('6 boxes'),
 ];
 
 const _jackOptions = [
   ItemUnitOption('<½ box', isUrgent: true),
   ItemUnitOption('<1 box'),
-  ItemUnitOption('1-3 boxes'),
+  ItemUnitOption('1 box'),
+  ItemUnitOption('2 boxes'),
+  ItemUnitOption('3 boxes'),
 ];
 
 const _saladOptions = [
   ItemUnitOption('½ box', isUrgent: true),
   ItemUnitOption('<1'),
-  ItemUnitOption('1-5 boxes'),
+  ItemUnitOption('1 box'),
+  ItemUnitOption('2 boxes'),
+  ItemUnitOption('3 boxes'),
+  ItemUnitOption('4 boxes'),
+  ItemUnitOption('5 boxes'),
 ];
 
 const _tomatoOptions = [
@@ -968,7 +1160,9 @@ const _lemonOptions = [
 const _garlicBagOptions = [
   ItemUnitOption('<½ bag', isUrgent: true),
   ItemUnitOption('>½ bag'),
-  ItemUnitOption('1-3 bags'),
+  ItemUnitOption('1 bag'),
+  ItemUnitOption('2 bags'),
+  ItemUnitOption('3 bags'),
 ];
 
 const _freshGingerOptions = [
@@ -1015,14 +1209,18 @@ const _beefCubesOptions = [
   ItemUnitOption('<10 pcs', isUrgent: true),
   ItemUnitOption('>10 pcs'),
   ItemUnitOption('<1 box'),
-  ItemUnitOption('1-4 boxes'),
+  ItemUnitOption('1 box'),
+  ItemUnitOption('2 boxes'),
+  ItemUnitOption('3 boxes'),
+  ItemUnitOption('4 boxes'),
 ];
 
 const _liverSpreadOptions = [
   ItemUnitOption('<5', isUrgent: true),
   ItemUnitOption('>5'),
   ItemUnitOption('>10'),
-  ItemUnitOption('1-2 boxes'),
+  ItemUnitOption('1 box'),
+  ItemUnitOption('2 boxes'),
 ];
 
 const _glutinousOptions = [
@@ -1039,23 +1237,62 @@ const _mangTomasOptions = [
   ItemUnitOption('>2'),
   ItemUnitOption('>9'),
   ItemUnitOption('1 box'),
-  ItemUnitOption('2 box'),
+  ItemUnitOption('2 boxes'),
 ];
 
 const _knorrOptions = [
   ItemUnitOption('<2 pcs', isUrgent: true),
-  ItemUnitOption('3-8 pcs'),
+  ItemUnitOption('3 pcs'),
+  ItemUnitOption('4 pcs'),
+  ItemUnitOption('5 pcs'),
+  ItemUnitOption('6 pcs'),
+  ItemUnitOption('7 pcs'),
+  ItemUnitOption('8 pcs'),
 ];
 
 const _beansOptions = [
   ItemUnitOption('<6', isUrgent: true),
   ItemUnitOption('>6'),
-  ItemUnitOption('1-2 boxes'),
+  ItemUnitOption('1 box'),
+  ItemUnitOption('2 boxes'),
 ];
 
 const _scrambleOptions = [
   ItemUnitOption('<1 bag', isUrgent: true),
-  ItemUnitOption('1-8 bags'),
+  ItemUnitOption('1 bag'),
+  ItemUnitOption('2 bags'),
+  ItemUnitOption('3 bags'),
+  ItemUnitOption('4 bags'),
+  ItemUnitOption('5 bags'),
+  ItemUnitOption('6 bags'),
+  ItemUnitOption('7 bags'),
+  ItemUnitOption('8 bags'),
+];
+
+const _nutellaJarOptions = [
+  ItemUnitOption('less than half jar', isUrgent: true),
+  ItemUnitOption('half jar'),
+  ItemUnitOption('more half'),
+  ItemUnitOption('1'),
+  ItemUnitOption('2'),
+];
+
+const _pcsOptions = [
+  ItemUnitOption('<2 pcs', isUrgent: true),
+  ItemUnitOption('2-5 pcs'),
+  ItemUnitOption('>5 pcs'),
+];
+
+const _lecheFlanOptions = [
+  ItemUnitOption('less than 1', isUrgent: true),
+  ItemUnitOption('1'),
+  ItemUnitOption('2'),
+  ItemUnitOption('3'),
+  ItemUnitOption('4'),
+  ItemUnitOption('5'),
+  ItemUnitOption('6'),
+  ItemUnitOption('7'),
+  ItemUnitOption('8'),
 ];
 
 const _taktakIds = [20, 24, 25, 29, 40, 41, 43];
@@ -1118,6 +1355,19 @@ final Map<int, List<ItemUnitOption>> itemUnitOptionsById = {
 
   // Chemicals (same as taktak set)
   for (final id in _chemicalIds) id: _taktakOptions,
+
+  // Coles/Woolies
+  147: _nutellaJarOptions, // biscoff crunch (same as nutella jar)
+  149: _pcsOptions, // fresh full crm milk
+  150: _pcsOptions, // oat
+  151: _pcsOptions, // almond
+  152: _pcsOptions, // bonsoy
+  153: _pcsOptions, // fresh skim
+  154: _nutellaJarOptions, // nutella (jar)
+  // Dessert
+  160: _pcsOptions, // cakes (pcs) - ube/orig yema
+  161: _pcsOptions, // cakes (pcs) - ube/orig brazo
+  163: _lecheFlanOptions, // leche flan (pcs)
 };
 
 List<ItemUnitOption> unitOptionsForItem(Item item) {

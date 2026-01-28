@@ -55,7 +55,7 @@ class ReportWidget extends StatelessWidget {
         addIfPresent(Category.filipinoSupplier, 2);
         // Column 3
         addIfPresent(Category.essentials, 3);
-        addIfPresent(Category.supplier, 3);
+        addIfPresent(Category.asianSupplier, 3);
         addIfPresent(Category.chemicals, 3);
         addIfPresent(Category.misc, 3);
 

@@ -167,8 +167,8 @@ extension CategoryUI on Category {
         return 'Drinks';
       case Category.misc:
         return 'Misc';
-      case Category.supplier:
-        return 'Supplier';
+      case Category.asianSupplier:
+        return 'Asian Supplier';
       case Category.produce:
         return 'Produce';
       case Category.filipinoSupplier:
@@ -179,6 +179,8 @@ extension CategoryUI on Category {
         return 'Chemicals';
       case Category.dessert:
         return 'Dessert';
+      case Category.asianGrocer:
+        return 'Asian Grocer';
     }
   }
 
@@ -198,7 +200,7 @@ extension CategoryUI on Category {
         return Colors.cyan;
       case Category.misc:
         return Colors.purple;
-      case Category.supplier:
+      case Category.asianSupplier:
         return Colors.yellow;
       case Category.produce:
         return Colors.lightGreen;
@@ -210,6 +212,8 @@ extension CategoryUI on Category {
         return Colors.teal;
       case Category.dessert:
         return Colors.pink;
+      case Category.asianGrocer:
+        return Colors.lime;
     }
   }
 }
