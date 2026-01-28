@@ -35,32 +35,13 @@ class CategoryViewModel extends ChangeNotifier {
     }
   }
 
-  // Batch status update for multi-select operations
-  void batchUpdateItemStatus(List<int> itemIds, model.ItemStatus newStatus) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(
-          status: newStatus,
-        );
-        final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-        if (idx != -1) {
-          itemsInCategory[idx] = data.items[mainIndex];
-        }
-        updated = true;
-      }
-    }
-    if (updated) {
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
-  void setItemPieces(int itemId, int pieces) {
+  void updateItemUnit(int itemId, String unit, model.ItemStatus newStatus) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
     if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
+      data.items[mainIndex] = data.items[mainIndex].copyWith(
+        unit: unit,
+        status: newStatus,
+      );
       final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
       if (idx != -1) {
         itemsInCategory[idx] = data.items[mainIndex];
@@ -70,21 +51,16 @@ class CategoryViewModel extends ChangeNotifier {
     }
   }
 
-  // Batch pieces update for multi-select operations
-  void batchSetItemPieces(List<int> itemIds, int pieces) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(pieces: pieces);
-        final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-        if (idx != -1) {
-          itemsInCategory[idx] = data.items[mainIndex];
-        }
-        updated = true;
+  void setItemQuantity(int itemId, int quantity) {
+    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+    if (mainIndex != -1) {
+      data.items[mainIndex] = data.items[mainIndex].copyWith(
+        quantity: quantity,
+      );
+      final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
+      if (idx != -1) {
+        itemsInCategory[idx] = data.items[mainIndex];
       }
-    }
-    if (updated) {
       _saveItems();
       notifyListeners();
     }
@@ -100,28 +76,6 @@ class CategoryViewModel extends ChangeNotifier {
       if (idx != -1) {
         itemsInCategory[idx] = data.items[mainIndex];
       }
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
-  // Batch check for multi-select operations
-  void batchSetItemsChecked(List<int> itemIds, bool value) {
-    bool updated = false;
-    for (final itemId in itemIds) {
-      final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-      if (mainIndex != -1) {
-        data.items[mainIndex] = data.items[mainIndex].copyWith(
-          isChecked: value,
-        );
-        final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-        if (idx != -1) {
-          itemsInCategory[idx] = data.items[mainIndex];
-        }
-        updated = true;
-      }
-    }
-    if (updated) {
       _saveItems();
       notifyListeners();
     }

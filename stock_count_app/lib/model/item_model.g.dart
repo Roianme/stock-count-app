@@ -22,14 +22,15 @@ class ItemAdapter extends TypeAdapter<Item> {
       category: fields[2] as Category?,
       status: fields[3] as ItemStatus?,
       isChecked: fields[4] as bool,
-      pieces: fields[5] as int,
+      quantity: fields[5] as int,
+      unit: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Item obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class ItemAdapter extends TypeAdapter<Item> {
       ..writeByte(4)
       ..write(obj.isChecked)
       ..writeByte(5)
-      ..write(obj.pieces);
+      ..write(obj.quantity)
+      ..writeByte(7)
+      ..write(obj.unit);
   }
 
   @override
@@ -63,36 +66,27 @@ class ItemStatusAdapter extends TypeAdapter<ItemStatus> {
   ItemStatus read(BinaryReader reader) {
     switch (reader.readByte()) {
       case 0:
-        return ItemStatus.zero;
+        return ItemStatus.quantity;
       case 1:
-        return ItemStatus.low;
+        return ItemStatus.quantity;
       case 2:
-        return ItemStatus.ok;
+        return ItemStatus.quantity;
       case 3:
         return ItemStatus.urgent;
       case 4:
-        return ItemStatus.pieces;
+        return ItemStatus.quantity;
       default:
-        return ItemStatus.zero;
+        return ItemStatus.quantity;
     }
   }
 
   @override
   void write(BinaryWriter writer, ItemStatus obj) {
     switch (obj) {
-      case ItemStatus.zero:
-        writer.writeByte(0);
-        break;
-      case ItemStatus.low:
-        writer.writeByte(1);
-        break;
-      case ItemStatus.ok:
-        writer.writeByte(2);
-        break;
       case ItemStatus.urgent:
         writer.writeByte(3);
         break;
-      case ItemStatus.pieces:
+      case ItemStatus.quantity:
         writer.writeByte(4);
         break;
     }
@@ -131,7 +125,7 @@ class CategoryAdapter extends TypeAdapter<Category> {
       case 6:
         return Category.misc;
       case 7:
-        return Category.supplier;
+        return Category.asianSupplier;
       case 8:
         return Category.produce;
       case 9:
@@ -171,7 +165,7 @@ class CategoryAdapter extends TypeAdapter<Category> {
       case Category.misc:
         writer.writeByte(6);
         break;
-      case Category.supplier:
+      case Category.asianSupplier:
         writer.writeByte(7);
         break;
       case Category.produce:
@@ -188,6 +182,9 @@ class CategoryAdapter extends TypeAdapter<Category> {
         break;
       case Category.dessert:
         writer.writeByte(12);
+        break;
+      case Category.asianGrocer:
+        writer.writeByte(13);
         break;
     }
   }

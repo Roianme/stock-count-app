@@ -173,7 +173,7 @@ class PlatformItemRepository implements ItemRepository {
       category: Category.values[json['category'] as int],
       status: ItemStatus.values[json['status'] as int],
       isChecked: json['isChecked'] as bool,
-      pieces: json['pieces'] as int,
+      quantity: json['quantity'] as int,
     );
   }
 }

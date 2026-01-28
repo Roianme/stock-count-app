@@ -6,15 +6,9 @@ part 'item_model.g.dart';
 @HiveType(typeId: 0)
 enum ItemStatus {
   @HiveField(0)
-  zero,
-  @HiveField(1)
-  low,
-  @HiveField(2)
-  ok,
-  @HiveField(3)
   urgent,
-  @HiveField(4)
-  pieces,
+  @HiveField(1)
+  quantity,
 }
 
 @HiveType(typeId: 1)
@@ -34,7 +28,7 @@ enum Category {
   @HiveField(6)
   misc,
   @HiveField(7)
-  supplier,
+  asianSupplier,
   @HiveField(8)
   produce,
   @HiveField(9)
@@ -45,6 +39,8 @@ enum Category {
   chemicals,
   @HiveField(12)
   dessert,
+  @HiveField(13)
+  asianGrocer,
 }
 
 enum Mode { city, cafe, hp, warehouse, manager }
@@ -101,10 +97,13 @@ class Item {
   final bool isChecked;
 
   @HiveField(5)
-  final int pieces;
+  final int quantity;
 
   @HiveField(6)
   final Set<Mode> modes;
+
+  @HiveField(7)
+  final String? unit;
 
   Item({
     int? id,
@@ -112,12 +111,13 @@ class Item {
     Category? category,
     ItemStatus? status,
     this.isChecked = false,
-    this.pieces = 0,
+    this.quantity = 0,
     this.modes = const {Mode.city},
+    this.unit,
   }) : id = id ?? _nextId++,
        name = name ?? 'Unnamed Item',
        category = category ?? Category.misc,
-       status = status ?? ItemStatus.ok {
+       status = status ?? ItemStatus.quantity {
     if (id != null && id >= _nextId) _nextId = id + 1;
   }
 
@@ -127,8 +127,9 @@ class Item {
     Category? category,
     ItemStatus? status,
     bool? isChecked,
-    int? pieces,
+    int? quantity,
     Set<Mode>? modes,
+    String? unit,
   }) {
     return Item(
       id: id ?? this.id,
@@ -136,8 +137,9 @@ class Item {
       category: category ?? this.category,
       status: status ?? this.status,
       isChecked: isChecked ?? this.isChecked,
-      pieces: pieces ?? this.pieces,
+      quantity: quantity ?? this.quantity,
       modes: modes ?? this.modes,
+      unit: unit ?? this.unit,
     );
   }
 }

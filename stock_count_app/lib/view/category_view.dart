@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/item_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
+import '../data/item_data.dart' as data;
 import 'widgets/item_card_widget.dart';
 import '../utils/index.dart';
 
@@ -20,8 +21,6 @@ class CategoryView extends StatefulWidget {
 
 class _CategoryViewState extends State<CategoryView> {
   late final CategoryViewModel viewModel;
-  final Set<int> _selectedItemIds = {};
-  bool _isMultiSelectMode = false;
 
   @override
   void initState() {
@@ -46,41 +45,23 @@ class _CategoryViewState extends State<CategoryView> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: _isMultiSelectMode
-                ? Text(
-                    '${_selectedItemIds.length} item${_selectedItemIds.length == 1 ? '' : 's'} selected',
-                    style: TextStyle(color: context.theme.accent),
-                  )
-                : Text(widget.category.displayName),
+            title: Text(widget.category.displayName),
             elevation: 0,
-            leading: _isMultiSelectMode
-                ? IconButton(
-                    icon: Icon(Icons.close, color: context.theme.accent),
-                    onPressed: () {
-                      setState(() {
-                        _isMultiSelectMode = false;
-                        _selectedItemIds.clear();
-                      });
-                    },
-                  )
-                : null,
-            actions: _isMultiSelectMode
-                ? []
-                : [
-                    IconButton(
-                      icon: const Icon(Icons.sync),
-                      onPressed: () {
-                        viewModel.reload();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('View refreshed'),
-                            duration: Duration(seconds: 1),
-                          ),
-                        );
-                      },
-                      tooltip: 'Reload view',
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.sync),
+                onPressed: () {
+                  viewModel.reload();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('View refreshed'),
+                      duration: Duration(seconds: 1),
                     ),
-                  ],
+                  );
+                },
+                tooltip: 'Reload view',
+              ),
+            ],
           ),
           body: SafeArea(
             child: LayoutBuilder(
@@ -140,67 +121,31 @@ class _CategoryViewState extends State<CategoryView> {
       item: item,
       statusControlWidth: statusControlWidth,
       onCheckChanged: () {
-        if (_isMultiSelectMode) {
-          return;
-        }
-        viewModel.batchSetItemsChecked([item.id], !item.isChecked);
+        viewModel.toggleItemChecked(item.id);
       },
-      onPiecesChanged: (pieces) {
-        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
-          // Batch apply pieces to all selected items
-          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
-          // Then check all selected items if pieces > 0
-          if (pieces > 0) {
-            viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
-          }
-          // Exit multi-select mode
-          setState(() {
-            _isMultiSelectMode = false;
-            _selectedItemIds.clear();
-          });
-        } else {
-          viewModel.setItemPieces(item.id, pieces);
-        }
+      onQuantityChanged: (quantity) {
+        viewModel.setItemQuantity(item.id, quantity);
       },
       onStatusChanged: (newStatus) {
-        if (_isMultiSelectMode) {
-          final idsToUpdate = {..._selectedItemIds, item.id}.toList();
-          // Batch apply status to all selected items (plus the menu-target item)
-          viewModel.batchUpdateItemStatus(idsToUpdate, newStatus);
-          // Then check all affected items
-          viewModel.batchSetItemsChecked(idsToUpdate, true);
-          // Exit multi-select mode
-          setState(() {
-            _isMultiSelectMode = false;
-            _selectedItemIds.clear();
-          });
+        viewModel.updateItemStatus(item.id, newStatus);
+        if (newStatus == ItemStatus.urgent) {
+          viewModel.toggleItemChecked(item.id);
+        } else if (newStatus == ItemStatus.quantity) {
+          if (item.quantity > 0) {
+            viewModel.toggleItemChecked(item.id);
+          }
         } else {
-          viewModel.updateItemStatus(item.id, newStatus);
-          viewModel.batchSetItemsChecked([item.id], true);
+          viewModel.toggleItemChecked(item.id);
         }
       },
+      onUnitChanged: (data.ItemUnitOption newUnit) {
+        final newStatus = newUnit.isUrgent
+            ? ItemStatus.urgent
+            : ItemStatus.quantity;
+        viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
+        viewModel.toggleItemChecked(item.id);
+      },
       showItemNameInColumn: false,
-      isMultiSelectMode: _isMultiSelectMode,
-      isSelected: _selectedItemIds.contains(item.id),
-      onLongPress: () {
-        setState(() {
-          _isMultiSelectMode = true;
-          _selectedItemIds.add(item.id);
-        });
-      },
-      onTap: () {
-        if (!_isMultiSelectMode) return;
-        setState(() {
-          if (_selectedItemIds.contains(item.id)) {
-            _selectedItemIds.remove(item.id);
-            if (_selectedItemIds.isEmpty) {
-              _isMultiSelectMode = false;
-            }
-          } else {
-            _selectedItemIds.add(item.id);
-          }
-        });
-      },
     );
   }
 }
@@ -222,8 +167,8 @@ extension CategoryUI on Category {
         return 'Drinks';
       case Category.misc:
         return 'Misc';
-      case Category.supplier:
-        return 'Supplier';
+      case Category.asianSupplier:
+        return 'Asian Supplier';
       case Category.produce:
         return 'Produce';
       case Category.filipinoSupplier:
@@ -234,6 +179,8 @@ extension CategoryUI on Category {
         return 'Chemicals';
       case Category.dessert:
         return 'Dessert';
+      case Category.asianGrocer:
+        return 'Asian Grocer';
     }
   }
 
@@ -253,7 +200,7 @@ extension CategoryUI on Category {
         return Colors.cyan;
       case Category.misc:
         return Colors.purple;
-      case Category.supplier:
+      case Category.asianSupplier:
         return Colors.yellow;
       case Category.produce:
         return Colors.lightGreen;
@@ -265,6 +212,8 @@ extension CategoryUI on Category {
         return Colors.teal;
       case Category.dessert:
         return Colors.pink;
+      case Category.asianGrocer:
+        return Colors.lime;
     }
   }
 }
@@ -272,16 +221,10 @@ extension CategoryUI on Category {
 extension ItemStatusUI on ItemStatus {
   String get displayName {
     switch (this) {
-      case ItemStatus.zero:
-        return 'Zero';
-      case ItemStatus.low:
-        return 'Low';
-      case ItemStatus.ok:
-        return 'OK';
       case ItemStatus.urgent:
         return 'Urgent';
-      case ItemStatus.pieces:
-        return 'Pieces';
+      case ItemStatus.quantity:
+        return 'Quantity';
     }
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
+import '../data/item_data.dart' as data;
 import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
@@ -25,8 +26,6 @@ class _HomePageState extends State<HomePage> {
   late final HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final Set<int> _selectedItemIds = {};
-  bool _isMultiSelectMode = false;
   Timer? _searchDebounce;
 
   @override
@@ -124,96 +123,77 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       backgroundColor: context.theme.surface,
       elevation: 0,
-      title: _isMultiSelectMode
-          ? Text(
-              '${_selectedItemIds.length} item${_selectedItemIds.length == 1 ? '' : 's'} selected',
-              style: context.theme.appBarTitle.copyWith(
-                color: context.theme.accent,
+      title: Text(
+        '${viewModel.currentLocation.displayName} - Stock Count',
+        style: context.theme.appBarTitle,
+      ),
+      leading: IconButton(
+        icon: Icon(Icons.menu, color: context.theme.textPrimary),
+        onPressed: () {
+          _scaffoldKey.currentState?.openDrawer();
+        },
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.sync, color: context.theme.textPrimary),
+          onPressed: () {
+            viewModel.reload();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('View refreshed'),
+                duration: Duration(seconds: 1),
               ),
-            )
-          : Text(
-              '${viewModel.currentLocation.displayName} - Stock Count',
-              style: context.theme.appBarTitle,
-            ),
-      leading: _isMultiSelectMode
-          ? IconButton(
-              icon: Icon(Icons.close, color: context.theme.accent),
-              onPressed: () {
-                setState(() {
-                  _isMultiSelectMode = false;
-                  _selectedItemIds.clear();
-                });
-              },
-            )
-          : IconButton(
-              icon: Icon(Icons.menu, color: context.theme.textPrimary),
-              onPressed: () {
-                _scaffoldKey.currentState?.openDrawer();
-              },
-            ),
-      actions: _isMultiSelectMode
-          ? []
-          : [
-              IconButton(
-                icon: Icon(Icons.sync, color: context.theme.textPrimary),
-                onPressed: () {
-                  viewModel.reload();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('View refreshed'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                },
-                tooltip: 'Reload view',
+            );
+          },
+          tooltip: 'Reload view',
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Tooltip(
+            message: 'Preview checked items',
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.theme.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Tooltip(
-                  message: 'Preview checked items',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.theme.accent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextButton(
-                      onPressed: _handlePreviewAction,
-                      child: Text(
-                        'Preview',
-                        style: TextStyle(
-                          color: context.theme.accent,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+              child: TextButton(
+                onPressed: _handlePreviewAction,
+                child: Text(
+                  'Preview',
+                  style: TextStyle(
+                    color: context.theme.accent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Tooltip(
-                  message: 'Export/Share checked items',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.theme.accent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextButton(
-                      onPressed: _handleExportAction,
-                      child: Text(
-                        'Export',
-                        style: TextStyle(
-                          color: context.theme.accent,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Tooltip(
+            message: 'Export/Share checked items',
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.theme.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextButton(
+                onPressed: _handleExportAction,
+                child: Text(
+                  'Export',
+                  style: TextStyle(
+                    color: context.theme.accent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-            ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -325,7 +305,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context) => AlertDialog(
         title: const Text('Reset items?'),
         content: const Text(
-          'This will reset all item statuses, pieces, and checks back to their defaults.',
+          'This will reset all item statuses, quantities, and checks back to their defaults.',
         ),
         actions: [
           TextButton(
@@ -341,13 +321,6 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (confirmed != true) return;
-
-    if (_isMultiSelectMode) {
-      setState(() {
-        _isMultiSelectMode = false;
-        _selectedItemIds.clear();
-      });
-    }
     await viewModel.resetAllToDefaults();
   }
 
@@ -510,67 +483,31 @@ class _HomePageState extends State<HomePage> {
       hideIcon: hideIcon,
       isListView: true,
       onCheckChanged: () {
-        if (_isMultiSelectMode) {
-          return;
-        }
         viewModel.setItemChecked(item.id, !item.isChecked);
       },
-      onPiecesChanged: (pieces) {
-        if (_isMultiSelectMode && _selectedItemIds.isNotEmpty) {
-          // Batch apply pieces to all selected items
-          viewModel.batchSetItemPieces(_selectedItemIds.toList(), pieces);
-          // Then check all selected items if pieces > 0
-          if (pieces > 0) {
-            viewModel.batchSetItemsChecked(_selectedItemIds.toList(), true);
-          }
-          // Exit multi-select mode
-          setState(() {
-            _selectedItemIds.clear();
-            _isMultiSelectMode = false;
-          });
-        } else {
-          viewModel.setItemPieces(item.id, pieces);
-        }
+      onQuantityChanged: (quantity) {
+        viewModel.setItemQuantity(item.id, quantity);
       },
       onStatusChanged: (newStatus) {
-        if (_isMultiSelectMode) {
-          final idsToUpdate = {..._selectedItemIds, item.id}.toList();
-          // Batch apply status to all selected items (plus the menu-target item)
-          viewModel.batchUpdateItemStatus(idsToUpdate, newStatus);
-          // Then check all affected items
-          viewModel.batchSetItemsChecked(idsToUpdate, true);
-          // Exit multi-select mode
-          setState(() {
-            _selectedItemIds.clear();
-            _isMultiSelectMode = false;
-          });
+        viewModel.updateItemStatus(item.id, newStatus);
+        if (newStatus == ItemStatus.urgent) {
+          viewModel.setItemChecked(item.id, true);
+        } else if (newStatus == ItemStatus.quantity) {
+          if (item.quantity > 0) {
+            viewModel.setItemChecked(item.id, true);
+          }
         } else {
-          viewModel.updateItemStatus(item.id, newStatus);
           viewModel.setItemChecked(item.id, true);
         }
       },
+      onUnitChanged: (data.ItemUnitOption newUnit) {
+        final newStatus = newUnit.isUrgent
+            ? ItemStatus.urgent
+            : ItemStatus.quantity;
+        viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
+        viewModel.setItemChecked(item.id, true);
+      },
       showItemNameInColumn: true,
-      isMultiSelectMode: _isMultiSelectMode,
-      isSelected: _selectedItemIds.contains(item.id),
-      onLongPress: () {
-        setState(() {
-          _isMultiSelectMode = true;
-          _selectedItemIds.add(item.id);
-        });
-      },
-      onTap: () {
-        if (!_isMultiSelectMode) return;
-        setState(() {
-          if (_selectedItemIds.contains(item.id)) {
-            _selectedItemIds.remove(item.id);
-            if (_selectedItemIds.isEmpty) {
-              _isMultiSelectMode = false;
-            }
-          } else {
-            _selectedItemIds.add(item.id);
-          }
-        });
-      },
     );
   }
 

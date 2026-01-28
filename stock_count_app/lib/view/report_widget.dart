@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/item_model.dart';
+import '../data/item_data.dart' as data;
 import 'category_view.dart';
 
 class ReportWidget extends StatelessWidget {
@@ -54,7 +55,7 @@ class ReportWidget extends StatelessWidget {
         addIfPresent(Category.filipinoSupplier, 2);
         // Column 3
         addIfPresent(Category.essentials, 3);
-        addIfPresent(Category.supplier, 3);
+        addIfPresent(Category.asianSupplier, 3);
         addIfPresent(Category.chemicals, 3);
         addIfPresent(Category.misc, 3);
 
@@ -152,23 +153,26 @@ class ReportWidget extends StatelessWidget {
             const SizedBox(height: 4),
             ...items.map((item) {
               final isUnchecked = !item.isChecked;
+              final selectedUnit = data.selectedUnitOption(item);
               String statusMarker = 'OK';
               Color markerColor = Colors.greenAccent;
 
               if (isUnchecked) {
                 statusMarker = '';
                 markerColor = Colors.grey;
-              } else if (item.status == ItemStatus.low) {
-                statusMarker = 'LOW';
-                markerColor = Colors.orangeAccent;
-              } else if (item.status == ItemStatus.zero) {
-                statusMarker = 'O';
-                markerColor = Colors.black;
+              } else if (selectedUnit != null) {
+                if (selectedUnit.isUrgent) {
+                  statusMarker = 'URGENT';
+                  markerColor = Colors.redAccent;
+                } else {
+                  statusMarker = selectedUnit.label;
+                  markerColor = Colors.green;
+                }
               } else if (item.status == ItemStatus.urgent) {
                 statusMarker = 'URGENT';
                 markerColor = Colors.redAccent;
-              } else if (item.status == ItemStatus.pieces) {
-                statusMarker = item.pieces.toString();
+              } else if (item.status == ItemStatus.quantity) {
+                statusMarker = item.quantity.toString();
                 markerColor = Colors.blueAccent;
               }
 
