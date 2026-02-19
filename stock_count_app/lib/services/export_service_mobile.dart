@@ -134,8 +134,8 @@ class MobileExportService extends ExportServiceBase {
           top: -10000,
           child: Material(
             child: Container(
-              width: 1200,
-              height: 1800,
+              width: 2400,
+              height: 1600,
               color: Colors.white,
               child: RepaintBoundary(
                 key: boundary,
