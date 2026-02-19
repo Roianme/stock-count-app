@@ -252,8 +252,6 @@ class ReportWidget extends StatelessWidget {
                           color: isUnchecked ? Colors.black38 : Colors.black87,
                           fontWeight: FontWeight.w500,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
