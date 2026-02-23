@@ -380,17 +380,20 @@ class _HomePageState extends State<HomePage> {
 
     final useMultiColumn = isWide || context.isLandscape;
 
+    final loopLength = categoriesWithItems.length;
+
     // Single column for mobile/portrait
     if (!useMultiColumn) {
-      return SingleChildScrollView(
+      return ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final category in categoriesWithItems) ...[
+        itemBuilder: (context, index) {
+          final category = categoriesWithItems[index % loopLength];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               // Category header
               RepaintBoundary(
-                key: ValueKey('h-${category.name}'),
+                key: ValueKey('h-${category.name}-$index'),
                 child: Container(
                   margin: const EdgeInsets.only(top: 16),
                   padding: const EdgeInsets.symmetric(
@@ -417,27 +420,28 @@ class _HomePageState extends State<HomePage> {
                     vertical: 4,
                   ),
                   child: RepaintBoundary(
-                    key: ValueKey('i-${item.id}'),
+                    key: ValueKey('i-${item.id}-$index'),
                     child: _buildItemCard(item, statusWidth, hideIcon: true),
                   ),
                 ),
               ),
             ],
-          ],
-        ),
+          );
+        },
       );
     }
 
     // Multi-column masonry for wide screens/landscape
-    return SingleChildScrollView(
+    return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final category in categoriesWithItems) ...[
+      itemBuilder: (context, index) {
+        final category = categoriesWithItems[index % loopLength];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             // Category header
             RepaintBoundary(
-              key: ValueKey('h-${category.name}'),
+              key: ValueKey('h-${category.name}-$index'),
               child: Container(
                 margin: const EdgeInsets.only(top: 16),
                 padding: const EdgeInsets.symmetric(
@@ -467,8 +471,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
-        ],
-      ),
+        );
+      },
     );
   }
 
