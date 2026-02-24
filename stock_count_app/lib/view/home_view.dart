@@ -149,13 +149,13 @@ class _HomePageState extends State<HomePage> {
         ),
         IconButton(
           icon: Icon(
-            viewModel.isGridView ? Icons.grid_view : Icons.view_list,
+            viewModel.isGridView ? Icons.view_list : Icons.grid_view,
             color: context.theme.textPrimary,
           ),
           onPressed: viewModel.toggleViewMode,
           tooltip: viewModel.isGridView
-              ? 'Switch to grid view'
-              : 'Switch to list view',
+              ? 'Switch to list view'
+              : 'Switch to grid view',
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -388,84 +388,94 @@ class _HomePageState extends State<HomePage> {
         ? 130.0
         : statusControlWidth;
 
-    // List View: Single column with collapsible categories
-    if (!viewModel.isGridView) {
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+    // Grid View: Categories displayed as square cards in a grid
+    if (viewModel.isGridView) {
+      final gridColumns = context.gridColumns + 1; // +1 for smaller cards
+      return GridView.builder(
+        padding: const EdgeInsets.all(12),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: gridColumns,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.0, // Square cards
+        ),
         itemCount: categoriesWithItems.length,
         itemBuilder: (context, index) {
           final category = categoriesWithItems[index];
           final categoryItems = filteredItemsByCategory[category] ?? [];
-          final isExpanded = viewModel.isCategoryExpanded(category);
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Category header with toggle
-              RepaintBoundary(
-                key: ValueKey('h-${category.name}-$index'),
-                child: Material(
-                  child: InkWell(
-                    onTap: () => viewModel.toggleCategoryExpanded(category),
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 16),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(color: category.color),
-                      width: double.infinity,
-                      child: Row(
-                        children: [
-                          Icon(
-                            isExpanded ? Icons.expand_less : Icons.expand_more,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              category.displayName,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '(${categoryItems.length})',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
+          return RepaintBoundary(
+            key: ValueKey('cat-${category.name}-$index'),
+            child: Material(
+              elevation: 2,
+              borderRadius: BorderRadius.circular(8),
+              color: category.color,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  // Navigate to category view
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CategoryView(
+                        category: category,
+                        repository: viewModel.repository,
                       ),
                     ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _getCategoryIcon(category),
+                        size: 48,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        category.displayName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${categoryItems.length} items',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              // Items - shown when expanded
-              if (isExpanded)
-                ...categoryItems.map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    child: RepaintBoundary(
-                      key: ValueKey('i-${item.id}-$index'),
-                      child: _buildItemCard(item, statusWidth, hideIcon: true),
-                    ),
-                  );
-                }),
-            ],
+            ),
           );
         },
       );
     }
 
-    // Grid View: 3-column masonry layout
+    // List View: 3-column masonry layout
     final loopLength = categoriesWithItems.length;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -476,7 +486,7 @@ class _HomePageState extends State<HomePage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category header (not collapsible in grid view)
+            // Category header (not collapsible in list view)
             RepaintBoundary(
               key: ValueKey('h-${category.name}-$index'),
               child: Container(
@@ -645,5 +655,39 @@ class _MasonryLayout extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// Get icon for each category
+IconData _getCategoryIcon(Category category) {
+  switch (category) {
+    case Category.bbqGrill:
+      return Icons.outdoor_grill;
+    case Category.warehouse:
+      return Icons.warehouse;
+    case Category.essentials:
+      return Icons.shopping_basket;
+    case Category.spices:
+      return Icons.set_meal;
+    case Category.rawItems:
+      return Icons.inventory_2;
+    case Category.drinks:
+      return Icons.local_drink;
+    case Category.misc:
+      return Icons.category;
+    case Category.asianSupplier:
+      return Icons.store;
+    case Category.produce:
+      return Icons.park;
+    case Category.filipinoSupplier:
+      return Icons.storefront;
+    case Category.colesWoolies:
+      return Icons.shopping_cart;
+    case Category.chemicals:
+      return Icons.science;
+    case Category.dessert:
+      return Icons.cake;
+    case Category.asianGrocer:
+      return Icons.local_grocery_store;
   }
 }
