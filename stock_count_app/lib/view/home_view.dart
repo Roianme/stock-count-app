@@ -147,6 +147,16 @@ class _HomePageState extends State<HomePage> {
           },
           tooltip: 'Reload view',
         ),
+        IconButton(
+          icon: Icon(
+            viewModel.isGridView ? Icons.grid_view : Icons.view_list,
+            color: context.theme.textPrimary,
+          ),
+          onPressed: viewModel.toggleViewMode,
+          tooltip: viewModel.isGridView
+              ? 'Switch to grid view'
+              : 'Switch to list view',
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Tooltip(
@@ -378,68 +388,95 @@ class _HomePageState extends State<HomePage> {
         ? 130.0
         : statusControlWidth;
 
-    final useMultiColumn = isWide || context.isLandscape;
-
-    final loopLength = categoriesWithItems.length;
-
-    // Single column for mobile/portrait
-    if (!useMultiColumn) {
+    // List View: Single column with collapsible categories
+    if (!viewModel.isGridView) {
       return ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: categoriesWithItems.length,
         itemBuilder: (context, index) {
-          final category = categoriesWithItems[index % loopLength];
+          final category = categoriesWithItems[index];
+          final categoryItems = filteredItemsByCategory[category] ?? [];
+          final isExpanded = viewModel.isCategoryExpanded(category);
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category header
+              // Category header with toggle
               RepaintBoundary(
                 key: ValueKey('h-${category.name}-$index'),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(color: category.color),
-                  width: double.infinity,
-                  child: Text(
-                    category.displayName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                child: Material(
+                  child: InkWell(
+                    onTap: () => viewModel.toggleCategoryExpanded(category),
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(color: category.color),
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          Icon(
+                            isExpanded ? Icons.expand_less : Icons.expand_more,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              category.displayName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '(${categoryItems.length})',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-              // Single column list
-              ...filteredItemsByCategory[category]!.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: RepaintBoundary(
-                    key: ValueKey('i-${item.id}-$index'),
-                    child: _buildItemCard(item, statusWidth, hideIcon: true),
-                  ),
-                ),
-              ),
+              // Items - shown when expanded
+              if (isExpanded)
+                ...categoryItems.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: RepaintBoundary(
+                      key: ValueKey('i-${item.id}-$index'),
+                      child: _buildItemCard(item, statusWidth, hideIcon: true),
+                    ),
+                  );
+                }),
             ],
           );
         },
       );
     }
 
-    // Multi-column masonry for wide screens/landscape
+    // Grid View: 3-column masonry layout
+    final loopLength = categoriesWithItems.length;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemBuilder: (context, index) {
         final category = categoriesWithItems[index % loopLength];
+        final categoryItems = filteredItemsByCategory[category] ?? [];
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category header
+            // Category header (not collapsible in grid view)
             RepaintBoundary(
               key: ValueKey('h-${category.name}-$index'),
               child: Container(
@@ -464,7 +501,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: _MasonryLayout(
-                items: filteredItemsByCategory[category]!,
+                items: categoryItems,
                 statusWidth: statusWidth,
                 buildItemCard: (item) =>
                     _buildItemCard(item, statusWidth, hideIcon: true),

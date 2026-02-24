@@ -14,6 +14,10 @@ class HomeViewModel extends ChangeNotifier {
   List<model.Item> matchedItems = [];
   model.Mode currentLocation = model.Mode.city;
 
+  // Category expansion and view mode
+  Set<model.Category> expandedCategories = {};
+  bool isGridView = false;
+
   // UI state for dialogs and messages
   String? showMessage;
   Uint8List? previewImage;
@@ -58,6 +62,34 @@ class HomeViewModel extends ChangeNotifier {
       currentLocation = location;
       notifyListeners();
     }
+  }
+
+  void toggleCategoryExpanded(model.Category category) {
+    if (expandedCategories.contains(category)) {
+      expandedCategories.remove(category);
+    } else {
+      expandedCategories.add(category);
+    }
+    notifyListeners();
+  }
+
+  bool isCategoryExpanded(model.Category category) {
+    return expandedCategories.contains(category);
+  }
+
+  void toggleViewMode() {
+    isGridView = !isGridView;
+    notifyListeners();
+  }
+
+  void expandAllCategories(List<model.Category> categories) {
+    expandedCategories.addAll(categories);
+    notifyListeners();
+  }
+
+  void collapseAllCategories() {
+    expandedCategories.clear();
+    notifyListeners();
   }
 
   void setItemChecked(int itemId, bool value) {
