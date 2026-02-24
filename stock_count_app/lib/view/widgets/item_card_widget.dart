@@ -193,10 +193,6 @@ class ItemCardWidget extends StatelessWidget {
               padding: EdgeInsets.zero,
               onSelected: (newUnit) {
                 onUnitChanged(newUnit);
-                // Auto-check item when unit is updated
-                if (!item.isChecked) {
-                  onCheckChanged();
-                }
               },
               itemBuilder: (BuildContext context) => unitOptions.map((option) {
                 return PopupMenuItem<data.ItemUnitOption>(
@@ -237,9 +233,7 @@ class ItemCardWidget extends StatelessWidget {
                       ),
                     )
                   : TextFormField(
-                      key: ValueKey(
-                        'quantity_${item.id}_${item.quantity}_${item.status.name}',
-                      ),
+                      key: ValueKey('quantity_${item.id}_${item.status.name}'),
                       initialValue: item.quantity == 0
                           ? ''
                           : item.quantity.toString(),
@@ -264,15 +258,10 @@ class ItemCardWidget extends StatelessWidget {
                       ),
                       onChanged: (value) {
                         if (value.isEmpty) {
-                          // Blank input - don't auto-check
                           onQuantityChanged(0);
                         } else {
                           final parsed = int.tryParse(value) ?? 0;
                           onQuantityChanged(parsed);
-                          // Auto-check item when a value is explicitly entered (including 0)
-                          if (!item.isChecked) {
-                            onCheckChanged();
-                          }
                         }
                       },
                     ),
@@ -283,21 +272,6 @@ class ItemCardWidget extends StatelessWidget {
               padding: EdgeInsets.zero,
               onSelected: (newStatus) {
                 onStatusChanged(newStatus);
-                if (newStatus == ItemStatus.urgent) {
-                  if (!item.isChecked) {
-                    onCheckChanged();
-                  }
-                  return;
-                }
-
-                final requiresQuantity = newStatus == ItemStatus.quantity;
-                final hasQuantityInput = item.quantity > 0;
-                // Auto-check only when status doesn't require quantity input
-                // or when a quantity has been entered.
-                if (!item.isChecked &&
-                    (!requiresQuantity || hasQuantityInput)) {
-                  onCheckChanged();
-                }
               },
               itemBuilder: (BuildContext context) => const [
                 PopupMenuItem<ItemStatus>(
@@ -338,10 +312,6 @@ class ItemCardWidget extends StatelessWidget {
               padding: EdgeInsets.zero,
               onSelected: (newStatus) {
                 onStatusChanged(newStatus);
-                // Auto-check item when status is updated
-                if (!item.isChecked) {
-                  onCheckChanged();
-                }
               },
               itemBuilder: (BuildContext context) =>
                   ItemStatus.values.map((status) {

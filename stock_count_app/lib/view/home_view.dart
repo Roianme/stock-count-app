@@ -440,7 +440,7 @@ class _HomePageState extends State<HomePage> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Colors.black,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
@@ -538,6 +538,11 @@ class _HomePageState extends State<HomePage> {
       },
       onQuantityChanged: (quantity) {
         viewModel.setItemQuantity(item.id, quantity);
+        if (quantity > 0) {
+          viewModel.setItemChecked(item.id, true);
+        } else {
+          viewModel.setItemChecked(item.id, false);
+        }
       },
       onStatusChanged: (newStatus) {
         viewModel.updateItemStatus(item.id, newStatus);
@@ -546,6 +551,8 @@ class _HomePageState extends State<HomePage> {
         } else if (newStatus == ItemStatus.quantity) {
           if (item.quantity > 0) {
             viewModel.setItemChecked(item.id, true);
+          } else {
+            viewModel.setItemChecked(item.id, false);
           }
         } else {
           viewModel.setItemChecked(item.id, true);
@@ -645,7 +652,9 @@ class _MasonryLayout extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: RepaintBoundary(
-                        key: ValueKey('i-${item.id}'),
+                        key: ValueKey(
+                          'i-${item.id}-${item.status.name}-${item.quantity}-${item.isChecked}',
+                        ),
                         child: buildItemCard(item),
                       ),
                     ),
@@ -666,11 +675,11 @@ IconData _getCategoryIcon(Category category) {
     case Category.warehouse:
       return Icons.warehouse;
     case Category.essentials:
-      return Icons.shopping_basket;
+      return Icons.inventory_2;
     case Category.spices:
       return Icons.set_meal;
     case Category.rawItems:
-      return Icons.inventory_2;
+      return Icons.raw_on;
     case Category.drinks:
       return Icons.local_drink;
     case Category.misc:
@@ -678,7 +687,7 @@ IconData _getCategoryIcon(Category category) {
     case Category.asianSupplier:
       return Icons.store;
     case Category.produce:
-      return Icons.park;
+      return Icons.shopping_basket_outlined;
     case Category.filipinoSupplier:
       return Icons.storefront;
     case Category.colesWoolies:

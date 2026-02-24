@@ -81,6 +81,19 @@ class CategoryViewModel extends ChangeNotifier {
     }
   }
 
+  void setItemChecked(int itemId, bool value) {
+    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
+    if (mainIndex != -1) {
+      data.items[mainIndex] = data.items[mainIndex].copyWith(isChecked: value);
+      final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
+      if (idx != -1) {
+        itemsInCategory[idx] = data.items[mainIndex];
+      }
+      _saveItems();
+      notifyListeners();
+    }
+  }
+
   void setAllChecked(bool value) {
     for (var i = 0; i < data.items.length; i++) {
       if (data.items[i].category == category) {

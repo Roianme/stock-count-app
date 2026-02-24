@@ -92,10 +92,15 @@ class _CategoryViewState extends State<CategoryView> {
                                   itemBuilder: (context, index) {
                                     final item =
                                         viewModel.itemsInCategory[index];
-                                    return _buildCategoryItemCard(
-                                      item,
-                                      context.statusControlWidth,
-                                      context.isLandscape,
+                                    return KeyedSubtree(
+                                      key: ValueKey(
+                                        'cat-item-${item.id}-${item.status.name}-${item.quantity}-${item.isChecked}',
+                                      ),
+                                      child: _buildCategoryItemCard(
+                                        item,
+                                        context.statusControlWidth,
+                                        context.isLandscape,
+                                      ),
                                     );
                                   },
                                 ),
@@ -125,17 +130,24 @@ class _CategoryViewState extends State<CategoryView> {
       },
       onQuantityChanged: (quantity) {
         viewModel.setItemQuantity(item.id, quantity);
+        if (quantity > 0) {
+          viewModel.setItemChecked(item.id, true);
+        } else {
+          viewModel.setItemChecked(item.id, false);
+        }
       },
       onStatusChanged: (newStatus) {
         viewModel.updateItemStatus(item.id, newStatus);
         if (newStatus == ItemStatus.urgent) {
-          viewModel.toggleItemChecked(item.id);
+          viewModel.setItemChecked(item.id, true);
         } else if (newStatus == ItemStatus.quantity) {
           if (item.quantity > 0) {
-            viewModel.toggleItemChecked(item.id);
+            viewModel.setItemChecked(item.id, true);
+          } else {
+            viewModel.setItemChecked(item.id, false);
           }
         } else {
-          viewModel.toggleItemChecked(item.id);
+          viewModel.setItemChecked(item.id, true);
         }
       },
       onUnitChanged: (data.ItemUnitOption newUnit) {
@@ -143,7 +155,7 @@ class _CategoryViewState extends State<CategoryView> {
             ? ItemStatus.urgent
             : ItemStatus.quantity;
         viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
-        viewModel.toggleItemChecked(item.id);
+        viewModel.setItemChecked(item.id, true);
       },
       showItemNameInColumn: false,
     );
