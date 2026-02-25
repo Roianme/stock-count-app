@@ -473,10 +473,13 @@ class _HomePageState extends State<HomePage> {
 
     // List View: 3-column masonry layout
     final loopLength = categoriesWithItems.length;
+    final shouldLoop = !viewModel.isSearching;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: shouldLoop ? null : loopLength,
       itemBuilder: (context, index) {
-        final category = categoriesWithItems[index % loopLength];
+        final category =
+            categoriesWithItems[shouldLoop ? index % loopLength : index];
         final categoryItems = filteredItemsByCategory[category] ?? [];
 
         return Column(
