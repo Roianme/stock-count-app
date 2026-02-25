@@ -11,6 +11,7 @@ import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/item_card_widget.dart';
+import 'widgets/masonry_layout.dart';
 import '../utils/index.dart';
 import 'category_view.dart';
 
@@ -403,6 +404,11 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, index) {
           final category = categoriesWithItems[index];
           final categoryItems = filteredItemsByCategory[category] ?? [];
+          final foregroundColor =
+              ThemeData.estimateBrightnessForColor(category.color) ==
+                  Brightness.dark
+              ? Colors.white
+              : Colors.black;
 
           return RepaintBoundary(
             key: ValueKey('cat-${category.name}-$index'),
@@ -429,7 +435,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(category.icon, size: 48, color: Colors.white),
+                      Icon(category.icon, size: 48, color: foregroundColor),
                       const SizedBox(height: 12),
                       Text(
                         category.displayName,
@@ -509,7 +515,7 @@ class _HomePageState extends State<HomePage> {
             // Masonry layout for items
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: _MasonryLayout(
+              child: MasonryLayout(
                 items: categoryItems,
                 statusWidth: statusWidth,
                 buildItemCard: (item) =>
@@ -589,59 +595,6 @@ class _HomePageState extends State<HomePage> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-  }
-}
-
-/// Masonry layout that distributes items across 3 columns
-class _MasonryLayout extends StatelessWidget {
-  final List<Item> items;
-  final double statusWidth;
-  final Widget Function(Item) buildItemCard;
-
-  const _MasonryLayout({
-    required this.items,
-    required this.statusWidth,
-    required this.buildItemCard,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Distribute items across 3 columns in a round-robin fashion
-    final columns = <List<Item>>[[], [], []];
-
-    for (int i = 0; i < items.length; i++) {
-      columns[i % 3].add(items[i]);
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int colIndex = 0; colIndex < 3; colIndex++)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: colIndex == 0 ? 0 : 2,
-                right: colIndex == 2 ? 0 : 2,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final item in columns[colIndex])
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: RepaintBoundary(
-                        key: ValueKey(
-                          'i-${item.id}-${item.status.name}-${item.quantity}-${item.isChecked}',
-                        ),
-                        child: buildItemCard(item),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

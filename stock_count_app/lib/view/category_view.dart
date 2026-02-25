@@ -4,6 +4,7 @@ import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
 import '../data/item_data.dart' as data;
 import 'widgets/item_card_widget.dart';
+import 'widgets/masonry_layout.dart';
 import '../utils/index.dart';
 
 class CategoryView extends StatefulWidget {
@@ -84,25 +85,21 @@ class _CategoryViewState extends State<CategoryView> {
                               ? const Center(
                                   child: Text('No items in this category'),
                                 )
-                              : ListView.builder(
+                              : SingleChildScrollView(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
+                                    vertical: 8,
                                   ),
-                                  itemCount: viewModel.itemsInCategory.length,
-                                  itemBuilder: (context, index) {
-                                    final item =
-                                        viewModel.itemsInCategory[index];
-                                    return KeyedSubtree(
-                                      key: ValueKey(
-                                        'cat-item-${item.id}-${item.status.name}-${item.quantity}-${item.isChecked}',
-                                      ),
-                                      child: _buildCategoryItemCard(
-                                        item,
-                                        context.statusControlWidth,
-                                        context.isLandscape,
-                                      ),
-                                    );
-                                  },
+                                  child: MasonryLayout(
+                                    items: viewModel.itemsInCategory,
+                                    statusWidth: context.statusControlWidth,
+                                    buildItemCard: (item) =>
+                                        _buildCategoryItemCard(
+                                          item,
+                                          context.statusControlWidth,
+                                          context.isLandscape,
+                                        ),
+                                  ),
                                 ),
                         ),
                       ],
@@ -125,6 +122,7 @@ class _CategoryViewState extends State<CategoryView> {
     return ItemCardWidget(
       item: item,
       statusControlWidth: statusControlWidth,
+      hideIcon: true,
       onCheckChanged: () {
         viewModel.toggleItemChecked(item.id);
       },
