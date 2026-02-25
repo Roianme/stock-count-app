@@ -429,11 +429,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(
-                        _getCategoryIcon(category),
-                        size: 48,
-                        color: Colors.white,
-                      ),
+                      Icon(category.icon, size: 48, color: Colors.white),
                       const SizedBox(height: 12),
                       Text(
                         category.displayName,
@@ -453,7 +449,7 @@ class _HomePageState extends State<HomePage> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -537,33 +533,13 @@ class _HomePageState extends State<HomePage> {
         viewModel.setItemChecked(item.id, !item.isChecked);
       },
       onQuantityChanged: (quantity) {
-        viewModel.setItemQuantity(item.id, quantity);
-        if (quantity > 0) {
-          viewModel.setItemChecked(item.id, true);
-        } else {
-          viewModel.setItemChecked(item.id, false);
-        }
+        viewModel.applyItemQuantityChange(item.id, quantity);
       },
       onStatusChanged: (newStatus) {
-        viewModel.updateItemStatus(item.id, newStatus);
-        if (newStatus == ItemStatus.urgent) {
-          viewModel.setItemChecked(item.id, true);
-        } else if (newStatus == ItemStatus.quantity) {
-          if (item.quantity > 0) {
-            viewModel.setItemChecked(item.id, true);
-          } else {
-            viewModel.setItemChecked(item.id, false);
-          }
-        } else {
-          viewModel.setItemChecked(item.id, true);
-        }
+        viewModel.applyItemStatusChange(item.id, newStatus);
       },
       onUnitChanged: (data.ItemUnitOption newUnit) {
-        final newStatus = newUnit.isUrgent
-            ? ItemStatus.urgent
-            : ItemStatus.quantity;
-        viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
-        viewModel.setItemChecked(item.id, true);
+        viewModel.applyItemUnitChange(item.id, newUnit);
       },
       showItemNameInColumn: true,
     );
@@ -664,39 +640,5 @@ class _MasonryLayout extends StatelessWidget {
           ),
       ],
     );
-  }
-}
-
-/// Get icon for each category
-IconData _getCategoryIcon(Category category) {
-  switch (category) {
-    case Category.bbqGrill:
-      return Icons.outdoor_grill;
-    case Category.warehouse:
-      return Icons.warehouse;
-    case Category.essentials:
-      return Icons.inventory_2;
-    case Category.spices:
-      return Icons.set_meal;
-    case Category.rawItems:
-      return Icons.raw_on;
-    case Category.drinks:
-      return Icons.local_drink;
-    case Category.misc:
-      return Icons.category;
-    case Category.asianSupplier:
-      return Icons.store;
-    case Category.produce:
-      return Icons.shopping_basket_outlined;
-    case Category.filipinoSupplier:
-      return Icons.storefront;
-    case Category.colesWoolies:
-      return Icons.shopping_cart;
-    case Category.chemicals:
-      return Icons.science;
-    case Category.dessert:
-      return Icons.cake;
-    case Category.asianGrocer:
-      return Icons.local_grocery_store;
   }
 }

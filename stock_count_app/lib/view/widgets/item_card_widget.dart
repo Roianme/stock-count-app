@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../../model/item_model.dart';
 import '../../data/item_data.dart' as data;
 import '../../utils/index.dart';
-import '../category_view.dart';
 
 /// Reusable item card widget used in both home_view and category_view
 class ItemCardWidget extends StatelessWidget {
@@ -209,124 +208,79 @@ class ItemCardWidget extends StatelessWidget {
       );
     }
 
-    if (item.status == ItemStatus.quantity ||
-        item.status == ItemStatus.urgent) {
-      return Container(
-        width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: context.theme.statusControlDecoration,
-        child: Row(
-          children: [
-            Expanded(
-              child: item.status == ItemStatus.urgent
-                  ? Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          'URGENT',
-                          style: TextStyle(
-                            fontSize: context.responsive.fontSize(18, 16),
-                            fontWeight: FontWeight.w700,
-                            color: context.theme.textPrimary,
-                          ),
-                        ),
-                      ),
-                    )
-                  : TextFormField(
-                      key: ValueKey('quantity_${item.id}_${item.status.name}'),
-                      initialValue: item.quantity == 0
-                          ? ''
-                          : item.quantity.toString(),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: context.responsive.fontSize(18, 16),
-                        fontWeight: FontWeight.w600,
-                        color: context.theme.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        isDense: false,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                        ),
-                        border: InputBorder.none,
-                        hintText: 'Quantity',
-                        hintStyle: TextStyle(
-                          fontSize: context.responsive.fontSize(16, 14),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        if (value.isEmpty) {
-                          onQuantityChanged(0);
-                        } else {
-                          final parsed = int.tryParse(value) ?? 0;
-                          onQuantityChanged(parsed);
-                        }
-                      },
-                    ),
-            ),
-            PopupMenuButton<ItemStatus>(
-              icon: const Icon(Icons.more_vert, size: 22),
-              tooltip: 'Change status',
-              padding: EdgeInsets.zero,
-              onSelected: (newStatus) {
-                onStatusChanged(newStatus);
-              },
-              itemBuilder: (BuildContext context) => const [
-                PopupMenuItem<ItemStatus>(
-                  value: ItemStatus.quantity,
-                  child: Text('Quantity', style: TextStyle(fontSize: 16)),
-                ),
-                PopupMenuItem<ItemStatus>(
-                  value: ItemStatus.urgent,
-                  child: Text('Urgent', style: TextStyle(fontSize: 16)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    } else {
-      return Container(
-        width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: context.theme.statusControlDecoration,
-        child: Row(
-          children: [
-            Expanded(
-              child: Center(
-                child: Text(
-                  item.status.displayName,
-                  style: TextStyle(
-                    fontSize: context.responsive.fontSize(20, 18),
-                    fontWeight: FontWeight.w600,
-                    color: context.theme.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            PopupMenuButton<ItemStatus>(
-              icon: const Icon(Icons.more_vert, size: 20),
-              tooltip: 'Change status',
-              padding: EdgeInsets.zero,
-              onSelected: (newStatus) {
-                onStatusChanged(newStatus);
-              },
-              itemBuilder: (BuildContext context) =>
-                  ItemStatus.values.map((status) {
-                    return PopupMenuItem<ItemStatus>(
-                      value: status,
+    return Container(
+      width: statusControlWidth,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: context.theme.statusControlDecoration,
+      child: Row(
+        children: [
+          Expanded(
+            child: item.status == ItemStatus.urgent
+                ? Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
                       child: Text(
-                        status.displayName,
-                        style: const TextStyle(fontSize: 16),
+                        'URGENT',
+                        style: TextStyle(
+                          fontSize: context.responsive.fontSize(18, 16),
+                          fontWeight: FontWeight.w700,
+                          color: context.theme.textPrimary,
+                        ),
                       ),
-                    );
-                  }).toList(),
-            ),
-          ],
-        ),
-      );
-    }
+                    ),
+                  )
+                : TextFormField(
+                    key: ValueKey('quantity_${item.id}_${item.status.name}'),
+                    initialValue: item.quantity == 0
+                        ? ''
+                        : item.quantity.toString(),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: context.responsive.fontSize(18, 16),
+                      fontWeight: FontWeight.w600,
+                      color: context.theme.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: false,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      border: InputBorder.none,
+                      hintText: 'Quantity',
+                      hintStyle: TextStyle(
+                        fontSize: context.responsive.fontSize(16, 14),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        onQuantityChanged(0);
+                      } else {
+                        final parsed = int.tryParse(value) ?? 0;
+                        onQuantityChanged(parsed);
+                      }
+                    },
+                  ),
+          ),
+          PopupMenuButton<ItemStatus>(
+            icon: const Icon(Icons.more_vert, size: 22),
+            tooltip: 'Change status',
+            padding: EdgeInsets.zero,
+            onSelected: (newStatus) {
+              onStatusChanged(newStatus);
+            },
+            itemBuilder: (BuildContext context) => const [
+              PopupMenuItem<ItemStatus>(
+                value: ItemStatus.quantity,
+                child: Text('Quantity', style: TextStyle(fontSize: 16)),
+              ),
+              PopupMenuItem<ItemStatus>(
+                value: ItemStatus.urgent,
+                child: Text('Urgent', style: TextStyle(fontSize: 16)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

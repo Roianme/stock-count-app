@@ -129,114 +129,15 @@ class _CategoryViewState extends State<CategoryView> {
         viewModel.toggleItemChecked(item.id);
       },
       onQuantityChanged: (quantity) {
-        viewModel.setItemQuantity(item.id, quantity);
-        if (quantity > 0) {
-          viewModel.setItemChecked(item.id, true);
-        } else {
-          viewModel.setItemChecked(item.id, false);
-        }
+        viewModel.applyItemQuantityChange(item.id, quantity);
       },
       onStatusChanged: (newStatus) {
-        viewModel.updateItemStatus(item.id, newStatus);
-        if (newStatus == ItemStatus.urgent) {
-          viewModel.setItemChecked(item.id, true);
-        } else if (newStatus == ItemStatus.quantity) {
-          if (item.quantity > 0) {
-            viewModel.setItemChecked(item.id, true);
-          } else {
-            viewModel.setItemChecked(item.id, false);
-          }
-        } else {
-          viewModel.setItemChecked(item.id, true);
-        }
+        viewModel.applyItemStatusChange(item.id, newStatus);
       },
       onUnitChanged: (data.ItemUnitOption newUnit) {
-        final newStatus = newUnit.isUrgent
-            ? ItemStatus.urgent
-            : ItemStatus.quantity;
-        viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
-        viewModel.setItemChecked(item.id, true);
+        viewModel.applyItemUnitChange(item.id, newUnit);
       },
       showItemNameInColumn: false,
     );
-  }
-}
-
-extension CategoryUI on Category {
-  String get displayName {
-    switch (this) {
-      case Category.bbqGrill:
-        return 'BBQ Grill';
-      case Category.warehouse:
-        return 'Warehouse';
-      case Category.essentials:
-        return 'Essentials';
-      case Category.spices:
-        return 'Spices';
-      case Category.rawItems:
-        return 'Raw Items';
-      case Category.drinks:
-        return 'Drinks';
-      case Category.misc:
-        return 'Misc';
-      case Category.asianSupplier:
-        return 'Asian Supplier';
-      case Category.produce:
-        return 'Produce';
-      case Category.filipinoSupplier:
-        return 'Filipino Supplier';
-      case Category.colesWoolies:
-        return 'Coles/Woolies';
-      case Category.chemicals:
-        return 'Chemicals';
-      case Category.dessert:
-        return 'Dessert';
-      case Category.asianGrocer:
-        return 'Asian Grocer';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case Category.bbqGrill:
-        return Colors.deepOrange;
-      case Category.warehouse:
-        return Colors.blueGrey;
-      case Category.essentials:
-        return Colors.blue;
-      case Category.spices:
-        return Colors.brown;
-      case Category.rawItems:
-        return Colors.grey;
-      case Category.drinks:
-        return Colors.cyan;
-      case Category.misc:
-        return Colors.purple;
-      case Category.asianSupplier:
-        return Colors.yellow;
-      case Category.produce:
-        return Colors.lightGreen;
-      case Category.filipinoSupplier:
-        return Colors.red;
-      case Category.colesWoolies:
-        return Colors.orange;
-      case Category.chemicals:
-        return Colors.teal;
-      case Category.dessert:
-        return Colors.pink;
-      case Category.asianGrocer:
-        return Colors.lime;
-    }
-  }
-}
-
-extension ItemStatusUI on ItemStatus {
-  String get displayName {
-    switch (this) {
-      case ItemStatus.urgent:
-        return 'Urgent';
-      case ItemStatus.quantity:
-        return 'Quantity';
-    }
   }
 }

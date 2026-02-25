@@ -26,30 +26,43 @@ class HomeViewModel extends ChangeNotifier {
   HomeViewModel({required this.allCategories, required this.repository})
     : visibleCategories = List.from(allCategories);
 
-  // Dynamic search: updates matches while typing
-  void setQuery(String q) {
-    _query = q.trim().toLowerCase();
+  void _refreshSearchState() {
     if (_query.isEmpty) {
       isSearching = false;
       matchedItems = [];
       visibleCategories = List.from(allCategories);
-    } else {
-      isSearching = true;
-      matchedItems = data.items
-          .where(
-            (i) =>
-                i.modes.contains(currentLocation) &&
-                i.name.toLowerCase().contains(_query),
-          )
-          .toList();
-      final matchedCategories = matchedItems
-          .map((i) => i.category)
-          .toSet()
-          .toList();
-      visibleCategories = allCategories
-          .where((c) => matchedCategories.contains(c))
-          .toList();
+      return;
     }
+
+    isSearching = true;
+    matchedItems = data.items
+        .where(
+          (i) =>
+              i.modes.contains(currentLocation) &&
+              i.name.toLowerCase().contains(_query),
+        )
+        .toList();
+
+    final matchedCategories = matchedItems.map((i) => i.category).toSet();
+    visibleCategories = allCategories
+        .where((c) => matchedCategories.contains(c))
+        .toList();
+  }
+
+  void _updateItemById(int itemId, model.Item Function(model.Item) transform) {
+    final index = data.items.indexWhere((i) => i.id == itemId);
+    if (index == -1) return;
+
+    final current = data.items[index];
+    data.items[index] = transform(current);
+    _saveItems();
+    notifyListeners();
+  }
+
+  // Dynamic search: updates matches while typing
+  void setQuery(String q) {
+    _query = q.trim().toLowerCase();
+    _refreshSearchState();
     notifyListeners();
   }
 
@@ -93,12 +106,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void setItemChecked(int itemId, bool value) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(isChecked: value);
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(itemId, (item) => item.copyWith(isChecked: value));
   }
 
   List<model.Item> itemsForCategory(model.Category category) {
@@ -131,35 +139,49 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void updateItemStatus(int itemId, model.ItemStatus newStatus) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(status: newStatus);
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(itemId, (item) => item.copyWith(status: newStatus));
   }
 
   void updateItemUnit(int itemId, String unit, model.ItemStatus newStatus) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(
-        unit: unit,
-        status: newStatus,
-      );
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(unit: unit, status: newStatus),
+    );
   }
 
   void setItemQuantity(int itemId, int quantity) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(
-        quantity: quantity,
-      );
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(itemId, (item) => item.copyWith(quantity: quantity));
+  }
+
+  void applyItemQuantityChange(int itemId, int quantity) {
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(quantity: quantity, isChecked: quantity > 0),
+    );
+  }
+
+  void applyItemStatusChange(int itemId, model.ItemStatus newStatus) {
+    _updateItemById(itemId, (item) {
+      final shouldCheck = newStatus == model.ItemStatus.urgent
+          ? true
+          : item.quantity > 0;
+      return item.copyWith(status: newStatus, isChecked: shouldCheck);
+    });
+  }
+
+  void applyItemUnitChange(int itemId, data.ItemUnitOption newUnit) {
+    final newStatus = newUnit.isUrgent
+        ? model.ItemStatus.urgent
+        : model.ItemStatus.quantity;
+
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(
+        unit: newUnit.label,
+        status: newStatus,
+        isChecked: true,
+      ),
+    );
   }
 
   Future<void> resetAllToDefaults() async {
@@ -181,11 +203,7 @@ class HomeViewModel extends ChangeNotifier {
     await _saveItems();
 
     // Refresh search results if searching
-    if (_query.isNotEmpty) {
-      matchedItems = data.items
-          .where((i) => i.name.toLowerCase().contains(_query))
-          .toList();
-    }
+    _refreshSearchState();
 
     setMessage('All items reset to defaults');
     notifyListeners();
@@ -193,25 +211,7 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Reload/refresh the view state without resetting data
   void reload() {
-    // Refresh search results if applicable
-    if (_query.isNotEmpty) {
-      matchedItems = data.items
-          .where(
-            (i) =>
-                i.modes.contains(currentLocation) &&
-                i.name.toLowerCase().contains(_query),
-          )
-          .toList();
-      final matchedCategories = matchedItems
-          .map((i) => i.category)
-          .toSet()
-          .toList();
-      visibleCategories = allCategories
-          .where((c) => matchedCategories.contains(c))
-          .toList();
-    } else {
-      visibleCategories = List.from(allCategories);
-    }
+    _refreshSearchState();
     notifyListeners();
   }
 
