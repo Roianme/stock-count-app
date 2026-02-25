@@ -404,70 +404,71 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, index) {
           final category = categoriesWithItems[index];
           final categoryItems = filteredItemsByCategory[category] ?? [];
-          final foregroundColor =
-              ThemeData.estimateBrightnessForColor(category.color) ==
-                  Brightness.dark
-              ? Colors.white
-              : Colors.black;
 
           return RepaintBoundary(
             key: ValueKey('cat-${category.name}-$index'),
             child: Material(
               elevation: 2,
               borderRadius: BorderRadius.circular(8),
-              color: category.color,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () {
-                  // Navigate to category view
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CategoryView(
-                        category: category,
-                        repository: viewModel.repository,
+              color: Colors.white,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    // Navigate to category view
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => CategoryView(
+                          category: category,
+                          repository: viewModel.repository,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(category.icon, size: 48, color: foregroundColor),
-                      const SizedBox(height: 12),
-                      Text(
-                        category.displayName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${categoryItems.length} items',
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(category.icon, size: 48, color: category.color),
+                        const SizedBox(height: 12),
+                        Text(
+                          category.displayName,
                           style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${categoryItems.length} items',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

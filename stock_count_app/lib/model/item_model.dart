@@ -220,7 +220,7 @@ extension CategoryExtension on Category {
       case Category.essentials:
         return Icons.inventory_2;
       case Category.spices:
-        return Icons.set_meal;
+        return Icons.soup_kitchen_outlined;
       case Category.rawItems:
         return Icons.raw_on;
       case Category.drinks:
