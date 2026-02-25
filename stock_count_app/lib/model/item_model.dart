@@ -143,3 +143,115 @@ class Item {
     );
   }
 }
+
+extension CategoryExtension on Category {
+  String get displayName {
+    switch (this) {
+      case Category.bbqGrill:
+        return 'BBQ Grill';
+      case Category.warehouse:
+        return 'Warehouse';
+      case Category.essentials:
+        return 'Essentials';
+      case Category.spices:
+        return 'Spices';
+      case Category.rawItems:
+        return 'Raw Items';
+      case Category.drinks:
+        return 'Drinks';
+      case Category.misc:
+        return 'Misc';
+      case Category.asianSupplier:
+        return 'Asian Supplier';
+      case Category.produce:
+        return 'Produce';
+      case Category.filipinoSupplier:
+        return 'Filipino Supplier';
+      case Category.colesWoolies:
+        return 'Coles/Woolies';
+      case Category.chemicals:
+        return 'Chemicals';
+      case Category.dessert:
+        return 'Dessert';
+      case Category.asianGrocer:
+        return 'Asian Grocer';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case Category.bbqGrill:
+        return Colors.deepOrange;
+      case Category.warehouse:
+        return Colors.blueGrey;
+      case Category.essentials:
+        return Colors.blue;
+      case Category.spices:
+        return Colors.brown;
+      case Category.rawItems:
+        return Colors.grey;
+      case Category.drinks:
+        return Colors.cyan;
+      case Category.misc:
+        return Colors.purple;
+      case Category.asianSupplier:
+        return Colors.yellow;
+      case Category.produce:
+        return Colors.lightGreen;
+      case Category.filipinoSupplier:
+        return Colors.red;
+      case Category.colesWoolies:
+        return Colors.orange;
+      case Category.chemicals:
+        return Colors.teal;
+      case Category.dessert:
+        return Colors.pink;
+      case Category.asianGrocer:
+        return Colors.lime;
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case Category.bbqGrill:
+        return Icons.outdoor_grill;
+      case Category.warehouse:
+        return Icons.warehouse;
+      case Category.essentials:
+        return Icons.inventory_2;
+      case Category.spices:
+        return Icons.soup_kitchen_outlined;
+      case Category.rawItems:
+        return Icons.raw_on;
+      case Category.drinks:
+        return Icons.local_drink;
+      case Category.misc:
+        return Icons.category;
+      case Category.asianSupplier:
+        return Icons.store;
+      case Category.produce:
+        return Icons.shopping_basket_outlined;
+      case Category.filipinoSupplier:
+        return Icons.storefront;
+      case Category.colesWoolies:
+        return Icons.shopping_cart;
+      case Category.chemicals:
+        return Icons.science;
+      case Category.dessert:
+        return Icons.cake;
+      case Category.asianGrocer:
+        return Icons.local_grocery_store;
+    }
+  }
+}
+
+extension ItemStatusExtension on ItemStatus {
+  String get displayName {
+    switch (this) {
+      case ItemStatus.urgent:
+        return 'Urgent';
+      case ItemStatus.quantity:
+        return 'Quantity';
+    }
+  }
+}

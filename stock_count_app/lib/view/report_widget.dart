@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/item_model.dart';
 import '../data/item_data.dart' as data;
-import 'category_view.dart';
 
 class ReportWidget extends StatelessWidget {
   final List<Item> items;

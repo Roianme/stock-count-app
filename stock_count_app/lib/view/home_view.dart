@@ -11,6 +11,7 @@ import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/item_card_widget.dart';
+import 'widgets/masonry_layout.dart';
 import '../utils/index.dart';
 import 'category_view.dart';
 
@@ -146,6 +147,16 @@ class _HomePageState extends State<HomePage> {
             );
           },
           tooltip: 'Reload view',
+        ),
+        IconButton(
+          icon: Icon(
+            viewModel.isGridView ? Icons.view_list : Icons.grid_view,
+            color: context.theme.textPrimary,
+          ),
+          onPressed: viewModel.toggleViewMode,
+          tooltip: viewModel.isGridView
+              ? 'Switch to list view'
+              : 'Switch to grid view',
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -378,68 +389,110 @@ class _HomePageState extends State<HomePage> {
         ? 130.0
         : statusControlWidth;
 
-    final useMultiColumn = isWide || context.isLandscape;
-
-    final loopLength = categoriesWithItems.length;
-
-    // Single column for mobile/portrait
-    if (!useMultiColumn) {
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+    // Grid View: Categories displayed as square cards in a grid
+    if (viewModel.isGridView) {
+      final gridColumns = context.gridColumns + 1; // +1 for smaller cards
+      return GridView.builder(
+        padding: const EdgeInsets.all(12),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: gridColumns,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.0, // Square cards
+        ),
+        itemCount: categoriesWithItems.length,
         itemBuilder: (context, index) {
-          final category = categoriesWithItems[index % loopLength];
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Category header
-              RepaintBoundary(
-                key: ValueKey('h-${category.name}-$index'),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(color: category.color),
-                  width: double.infinity,
-                  child: Text(
-                    category.displayName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          final category = categoriesWithItems[index];
+          final categoryItems = filteredItemsByCategory[category] ?? [];
+
+          return RepaintBoundary(
+            key: ValueKey('cat-${category.name}-$index'),
+            child: Material(
+              elevation: 2,
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    // Navigate to category view
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => CategoryView(
+                          category: category,
+                          repository: viewModel.repository,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(category.icon, size: 48, color: category.color),
+                        const SizedBox(height: 12),
+                        Text(
+                          category.displayName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${categoryItems.length} items',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              // Single column list
-              ...filteredItemsByCategory[category]!.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: RepaintBoundary(
-                    key: ValueKey('i-${item.id}-$index'),
-                    child: _buildItemCard(item, statusWidth, hideIcon: true),
-                  ),
-                ),
-              ),
-            ],
+            ),
           );
         },
       );
     }
 
-    // Multi-column masonry for wide screens/landscape
+    // List View: 3-column masonry layout
+    final loopLength = categoriesWithItems.length;
+    final shouldLoop = !viewModel.isSearching;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: shouldLoop ? null : loopLength,
       itemBuilder: (context, index) {
-        final category = categoriesWithItems[index % loopLength];
+        final category =
+            categoriesWithItems[shouldLoop ? index % loopLength : index];
+        final categoryItems = filteredItemsByCategory[category] ?? [];
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category header
+            // Category header (not collapsible in list view)
             RepaintBoundary(
               key: ValueKey('h-${category.name}-$index'),
               child: Container(
@@ -463,8 +516,8 @@ class _HomePageState extends State<HomePage> {
             // Masonry layout for items
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: _MasonryLayout(
-                items: filteredItemsByCategory[category]!,
+              child: MasonryLayout(
+                items: categoryItems,
                 statusWidth: statusWidth,
                 buildItemCard: (item) =>
                     _buildItemCard(item, statusWidth, hideIcon: true),
@@ -490,26 +543,13 @@ class _HomePageState extends State<HomePage> {
         viewModel.setItemChecked(item.id, !item.isChecked);
       },
       onQuantityChanged: (quantity) {
-        viewModel.setItemQuantity(item.id, quantity);
+        viewModel.applyItemQuantityChange(item.id, quantity);
       },
       onStatusChanged: (newStatus) {
-        viewModel.updateItemStatus(item.id, newStatus);
-        if (newStatus == ItemStatus.urgent) {
-          viewModel.setItemChecked(item.id, true);
-        } else if (newStatus == ItemStatus.quantity) {
-          if (item.quantity > 0) {
-            viewModel.setItemChecked(item.id, true);
-          }
-        } else {
-          viewModel.setItemChecked(item.id, true);
-        }
+        viewModel.applyItemStatusChange(item.id, newStatus);
       },
       onUnitChanged: (data.ItemUnitOption newUnit) {
-        final newStatus = newUnit.isUrgent
-            ? ItemStatus.urgent
-            : ItemStatus.quantity;
-        viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
-        viewModel.setItemChecked(item.id, true);
+        viewModel.applyItemUnitChange(item.id, newUnit);
       },
       showItemNameInColumn: true,
     );
@@ -556,57 +596,6 @@ class _HomePageState extends State<HomePage> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-  }
-}
-
-/// Masonry layout that distributes items across 3 columns
-class _MasonryLayout extends StatelessWidget {
-  final List<Item> items;
-  final double statusWidth;
-  final Widget Function(Item) buildItemCard;
-
-  const _MasonryLayout({
-    required this.items,
-    required this.statusWidth,
-    required this.buildItemCard,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Distribute items across 3 columns in a round-robin fashion
-    final columns = <List<Item>>[[], [], []];
-
-    for (int i = 0; i < items.length; i++) {
-      columns[i % 3].add(items[i]);
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int colIndex = 0; colIndex < 3; colIndex++)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: colIndex == 0 ? 0 : 2,
-                right: colIndex == 2 ? 0 : 2,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final item in columns[colIndex])
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: RepaintBoundary(
-                        key: ValueKey('i-${item.id}'),
-                        child: buildItemCard(item),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

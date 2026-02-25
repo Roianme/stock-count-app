@@ -4,6 +4,7 @@ import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
 import '../data/item_data.dart' as data;
 import 'widgets/item_card_widget.dart';
+import 'widgets/masonry_layout.dart';
 import '../utils/index.dart';
 
 class CategoryView extends StatefulWidget {
@@ -84,20 +85,21 @@ class _CategoryViewState extends State<CategoryView> {
                               ? const Center(
                                   child: Text('No items in this category'),
                                 )
-                              : ListView.builder(
+                              : SingleChildScrollView(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
+                                    vertical: 8,
                                   ),
-                                  itemCount: viewModel.itemsInCategory.length,
-                                  itemBuilder: (context, index) {
-                                    final item =
-                                        viewModel.itemsInCategory[index];
-                                    return _buildCategoryItemCard(
-                                      item,
-                                      context.statusControlWidth,
-                                      context.isLandscape,
-                                    );
-                                  },
+                                  child: MasonryLayout(
+                                    items: viewModel.itemsInCategory,
+                                    statusWidth: context.statusControlWidth,
+                                    buildItemCard: (item) =>
+                                        _buildCategoryItemCard(
+                                          item,
+                                          context.statusControlWidth,
+                                          context.isLandscape,
+                                        ),
+                                  ),
                                 ),
                         ),
                       ],
@@ -120,111 +122,20 @@ class _CategoryViewState extends State<CategoryView> {
     return ItemCardWidget(
       item: item,
       statusControlWidth: statusControlWidth,
+      hideIcon: true,
       onCheckChanged: () {
         viewModel.toggleItemChecked(item.id);
       },
       onQuantityChanged: (quantity) {
-        viewModel.setItemQuantity(item.id, quantity);
+        viewModel.applyItemQuantityChange(item.id, quantity);
       },
       onStatusChanged: (newStatus) {
-        viewModel.updateItemStatus(item.id, newStatus);
-        if (newStatus == ItemStatus.urgent) {
-          viewModel.toggleItemChecked(item.id);
-        } else if (newStatus == ItemStatus.quantity) {
-          if (item.quantity > 0) {
-            viewModel.toggleItemChecked(item.id);
-          }
-        } else {
-          viewModel.toggleItemChecked(item.id);
-        }
+        viewModel.applyItemStatusChange(item.id, newStatus);
       },
       onUnitChanged: (data.ItemUnitOption newUnit) {
-        final newStatus = newUnit.isUrgent
-            ? ItemStatus.urgent
-            : ItemStatus.quantity;
-        viewModel.updateItemUnit(item.id, newUnit.label, newStatus);
-        viewModel.toggleItemChecked(item.id);
+        viewModel.applyItemUnitChange(item.id, newUnit);
       },
       showItemNameInColumn: false,
     );
-  }
-}
-
-extension CategoryUI on Category {
-  String get displayName {
-    switch (this) {
-      case Category.bbqGrill:
-        return 'BBQ Grill';
-      case Category.warehouse:
-        return 'Warehouse';
-      case Category.essentials:
-        return 'Essentials';
-      case Category.spices:
-        return 'Spices';
-      case Category.rawItems:
-        return 'Raw Items';
-      case Category.drinks:
-        return 'Drinks';
-      case Category.misc:
-        return 'Misc';
-      case Category.asianSupplier:
-        return 'Asian Supplier';
-      case Category.produce:
-        return 'Produce';
-      case Category.filipinoSupplier:
-        return 'Filipino Supplier';
-      case Category.colesWoolies:
-        return 'Coles/Woolies';
-      case Category.chemicals:
-        return 'Chemicals';
-      case Category.dessert:
-        return 'Dessert';
-      case Category.asianGrocer:
-        return 'Asian Grocer';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case Category.bbqGrill:
-        return Colors.deepOrange;
-      case Category.warehouse:
-        return Colors.blueGrey;
-      case Category.essentials:
-        return Colors.blue;
-      case Category.spices:
-        return Colors.brown;
-      case Category.rawItems:
-        return Colors.grey;
-      case Category.drinks:
-        return Colors.cyan;
-      case Category.misc:
-        return Colors.purple;
-      case Category.asianSupplier:
-        return Colors.yellow;
-      case Category.produce:
-        return Colors.lightGreen;
-      case Category.filipinoSupplier:
-        return Colors.red;
-      case Category.colesWoolies:
-        return Colors.orange;
-      case Category.chemicals:
-        return Colors.teal;
-      case Category.dessert:
-        return Colors.pink;
-      case Category.asianGrocer:
-        return Colors.lime;
-    }
-  }
-}
-
-extension ItemStatusUI on ItemStatus {
-  String get displayName {
-    switch (this) {
-      case ItemStatus.urgent:
-        return 'Urgent';
-      case ItemStatus.quantity:
-        return 'Quantity';
-    }
   }
 }

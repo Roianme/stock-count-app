@@ -22,63 +22,76 @@ class CategoryViewModel extends ChangeNotifier {
     load();
   }
 
-  void updateItemStatus(int itemId, model.ItemStatus newStatus) {
+  void _updateItemById(int itemId, model.Item Function(model.Item) transform) {
     final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(status: newStatus);
-      final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-      if (idx != -1) {
-        itemsInCategory[idx] = data.items[mainIndex];
-      }
-      _saveItems();
-      notifyListeners();
+    if (mainIndex == -1) return;
+
+    data.items[mainIndex] = transform(data.items[mainIndex]);
+
+    final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
+    if (idx != -1) {
+      itemsInCategory[idx] = data.items[mainIndex];
     }
+
+    _saveItems();
+    notifyListeners();
+  }
+
+  void updateItemStatus(int itemId, model.ItemStatus newStatus) {
+    _updateItemById(itemId, (item) => item.copyWith(status: newStatus));
   }
 
   void updateItemUnit(int itemId, String unit, model.ItemStatus newStatus) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(
-        unit: unit,
-        status: newStatus,
-      );
-      final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-      if (idx != -1) {
-        itemsInCategory[idx] = data.items[mainIndex];
-      }
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(unit: unit, status: newStatus),
+    );
   }
 
   void setItemQuantity(int itemId, int quantity) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(
-        quantity: quantity,
-      );
-      final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-      if (idx != -1) {
-        itemsInCategory[idx] = data.items[mainIndex];
-      }
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(itemId, (item) => item.copyWith(quantity: quantity));
+  }
+
+  void applyItemQuantityChange(int itemId, int quantity) {
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(quantity: quantity, isChecked: quantity > 0),
+    );
+  }
+
+  void applyItemStatusChange(int itemId, model.ItemStatus newStatus) {
+    _updateItemById(itemId, (item) {
+      final shouldCheck = newStatus == model.ItemStatus.urgent
+          ? true
+          : item.quantity > 0;
+      return item.copyWith(status: newStatus, isChecked: shouldCheck);
+    });
+  }
+
+  void applyItemUnitChange(int itemId, data.ItemUnitOption newUnit) {
+    final newStatus = newUnit.isUrgent
+        ? model.ItemStatus.urgent
+        : model.ItemStatus.quantity;
+
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(
+        unit: newUnit.label,
+        status: newStatus,
+        isChecked: true,
+      ),
+    );
   }
 
   void toggleItemChecked(int itemId) {
-    final mainIndex = data.items.indexWhere((i) => i.id == itemId);
-    if (mainIndex != -1) {
-      data.items[mainIndex] = data.items[mainIndex].copyWith(
-        isChecked: !data.items[mainIndex].isChecked,
-      );
-      final idx = itemsInCategory.indexWhere((i) => i.id == itemId);
-      if (idx != -1) {
-        itemsInCategory[idx] = data.items[mainIndex];
-      }
-      _saveItems();
-      notifyListeners();
-    }
+    _updateItemById(
+      itemId,
+      (item) => item.copyWith(isChecked: !item.isChecked),
+    );
+  }
+
+  void setItemChecked(int itemId, bool value) {
+    _updateItemById(itemId, (item) => item.copyWith(isChecked: value));
   }
 
   void setAllChecked(bool value) {
