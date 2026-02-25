@@ -165,45 +165,35 @@ class ItemCardWidget extends StatelessWidget {
       final selectedOption = data.selectedUnitOption(item);
       final displayLabel = selectedOption?.label ?? 'Select';
 
-      return Container(
-        width: statusControlWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: context.theme.statusControlDecoration,
-        child: Row(
-          children: [
-            Expanded(
-              child: Center(
-                child: Text(
-                  displayLabel,
-                  style: TextStyle(
-                    fontSize: context.responsive.fontSize(18, 16),
-                    fontWeight: FontWeight.w600,
-                    color: context.theme.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
+      return PopupMenuButton<data.ItemUnitOption>(
+        tooltip: 'Change unit',
+        padding: EdgeInsets.zero,
+        onSelected: (newUnit) {
+          onUnitChanged(newUnit);
+        },
+        itemBuilder: (BuildContext context) => unitOptions.map((option) {
+          return PopupMenuItem<data.ItemUnitOption>(
+            value: option,
+            child: Text(option.label, style: const TextStyle(fontSize: 16)),
+          );
+        }).toList(),
+        child: Container(
+          width: statusControlWidth,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: context.theme.statusControlDecoration,
+          child: Center(
+            child: Text(
+              displayLabel,
+              style: TextStyle(
+                fontSize: context.responsive.fontSize(18, 16),
+                fontWeight: FontWeight.w600,
+                color: context.theme.textPrimary,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
-            PopupMenuButton<data.ItemUnitOption>(
-              icon: const Icon(Icons.more_vert, size: 20),
-              tooltip: 'Change unit',
-              padding: EdgeInsets.zero,
-              onSelected: (newUnit) {
-                onUnitChanged(newUnit);
-              },
-              itemBuilder: (BuildContext context) => unitOptions.map((option) {
-                return PopupMenuItem<data.ItemUnitOption>(
-                  value: option,
-                  child: Text(
-                    option.label,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
+          ),
         ),
       );
     }
