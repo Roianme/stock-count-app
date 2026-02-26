@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'responsive_sizes.dart';
 
 /// Centralized responsive design helper for orientation and screen sizing
 class ResponsiveHelper {
@@ -22,10 +23,10 @@ class ResponsiveHelper {
   double get screenHeight => MediaQuery.of(context).size.height;
 
   /// Check if screen is wide (tablet/desktop)
-  bool get isWideScreen => screenWidth >= 900;
+  bool get isWideScreen => screenWidth >= ResponsiveSizes.tabletMaxWidth;
 
   /// Check if screen is extra wide (large tablet)
-  bool get isExtraWideScreen => screenWidth >= 1200;
+  bool get isExtraWideScreen => screenWidth >= ResponsiveSizes.desktopMinWidth;
 
   /// Get responsive font size based on context
   double fontSize(double portraitSize, [double? landscapeSize]) {
@@ -37,9 +38,15 @@ class ResponsiveHelper {
     }
     // Scale font based on screen width in portrait - with smaller sizes for small screens
     if (screenWidth < 400) return portraitSize * 0.85; // Very small phones
-    if (screenWidth < 600) return portraitSize * 0.9; // Small phones
-    if (screenWidth >= 1200) return portraitSize * 1.2; // Large tablets
-    if (screenWidth >= 900) return portraitSize * 1.1; // Medium tablets
+    if (screenWidth < ResponsiveSizes.tabletMinWidth) {
+      return portraitSize * 0.9;
+    }
+    if (screenWidth >= ResponsiveSizes.desktopMinWidth) {
+      return portraitSize * 1.2;
+    }
+    if (screenWidth >= ResponsiveSizes.tabletMaxWidth) {
+      return portraitSize * 1.1;
+    }
     return portraitSize;
   }
 
@@ -73,31 +80,41 @@ class ResponsiveHelper {
   /// Get grid columns based on screen width
   int gridColumns() {
     if (isLandscape) {
-      if (screenWidth >= 1400) return 5;
+      if (screenWidth >= ResponsiveSizes.desktopMaxWidth) return 5;
       if (screenWidth >= 1100) return 4;
-      if (screenWidth >= 900) return 3;
+      if (screenWidth >= ResponsiveSizes.tabletMaxWidth) return 3;
       return 2;
     } else {
-      if (screenWidth >= 1200) return 4;
-      if (screenWidth >= 900) return 3;
+      if (screenWidth >= ResponsiveSizes.desktopMinWidth) return 4;
+      if (screenWidth >= ResponsiveSizes.tabletMaxWidth) return 3;
       return 2;
     }
   }
 
   /// Get status control width for dropdowns based on screen size
   double statusControlWidth() {
-    if (screenWidth >= 1200) return 180.0; // Extra wide screens
-    if (screenWidth >= 900) return 160.0; // Tablets
-    if (screenWidth >= 600) return 140.0; // Large phones
-    if (screenWidth >= 420) return 130.0; // Medium phones
-    if (screenWidth >= 360) return 120.0; // Small phones
-    return 110.0; // Very small screens
+    if (screenWidth >= ResponsiveSizes.desktopMinWidth) {
+      return ResponsiveSizes.statusControlWidthXLarge;
+    }
+    if (screenWidth >= ResponsiveSizes.tabletMaxWidth) {
+      return ResponsiveSizes.statusControlWidthLarge;
+    }
+    if (screenWidth >= ResponsiveSizes.tabletMinWidth) {
+      return ResponsiveSizes.statusControlWidthMedium;
+    }
+    if (screenWidth >= 420) {
+      return ResponsiveSizes.statusControlWidthRegular;
+    }
+    if (screenWidth >= 360) {
+      return ResponsiveSizes.statusControlWidthSmall;
+    }
+    return ResponsiveSizes.statusControlWidthXSmall;
   }
 
   /// Get max content width for centered layouts
   double maxContentWidth({
-    double portraitMax = 900,
-    double landscapeMax = 1200,
+    double portraitMax = ResponsiveSizes.maxContentWidthPortrait,
+    double landscapeMax = ResponsiveSizes.maxContentWidthLandscape,
   }) {
     final max = isLandscape ? landscapeMax : portraitMax;
     return screenWidth > max ? max : screenWidth;
@@ -109,14 +126,20 @@ class ResponsiveHelper {
       return landscapeSize;
     }
     // Scale icons based on screen width
-    if (screenWidth >= 1200) return portraitSize * 0.85;
-    if (screenWidth >= 900) return portraitSize * 0.9;
+    if (screenWidth >= ResponsiveSizes.desktopMinWidth) {
+      return portraitSize * 0.85;
+    }
+    if (screenWidth >= ResponsiveSizes.tabletMaxWidth) {
+      return portraitSize * 0.9;
+    }
     return portraitSize;
   }
 
   /// Get app bar title based on space availability
   String compactTitle(String fullTitle, String compactTitle) {
-    return isLandscape || screenWidth < 500 ? compactTitle : fullTitle;
+    return isLandscape || screenWidth < ResponsiveSizes.mobileMaxWidth
+        ? compactTitle
+        : fullTitle;
   }
 
   /// Get responsive width constraint for list items
@@ -159,10 +182,10 @@ extension ResponsiveContextExtension on BuildContext {
   double get screenHeight => MediaQuery.of(this).size.height;
 
   /// Quick check if wide screen
-  bool get isWideScreen => screenWidth >= 900;
+  bool get isWideScreen => screenWidth >= ResponsiveSizes.tabletMaxWidth;
 
   /// Quick check if extra wide screen
-  bool get isExtraWideScreen => screenWidth >= 1200;
+  bool get isExtraWideScreen => screenWidth >= ResponsiveSizes.desktopMinWidth;
 
   /// Get responsive grid columns
   int get gridColumns => responsive.gridColumns();
@@ -172,8 +195,8 @@ extension ResponsiveContextExtension on BuildContext {
 
   /// Get max content width
   double maxContentWidth({
-    double portraitMax = 900,
-    double landscapeMax = 1200,
+    double portraitMax = ResponsiveSizes.maxContentWidthPortrait,
+    double landscapeMax = ResponsiveSizes.maxContentWidthLandscape,
   }) => responsive.maxContentWidth(
     portraitMax: portraitMax,
     landscapeMax: landscapeMax,
