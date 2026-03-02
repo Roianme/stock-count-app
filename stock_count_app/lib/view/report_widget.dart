@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/item_model.dart';
 import '../data/item_data.dart' as data;
+import '../utils/index.dart';
 
 class ReportWidget extends StatelessWidget {
   final List<Item> items;
@@ -29,6 +30,21 @@ class ReportWidget extends StatelessWidget {
     }
     final categories = groupedItems.keys.toList();
 
+    // Detect orientation and use appropriate layout
+    final isLandscape = context.isLandscape;
+
+    return isLandscape
+        ? _buildLandscapeLayout(context, dateStr, categories, groupedItems)
+        : _buildPortraitLayout(context, dateStr, categories, groupedItems);
+  }
+
+  /// Landscape layout: 6-column grid with smart chunking
+  Widget _buildLandscapeLayout(
+    BuildContext context,
+    String dateStr,
+    List<Category> categories,
+    Map<Category, List<Item>> groupedItems,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Height calculations for overflow awareness
@@ -178,6 +194,310 @@ class ReportWidget extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  /// Portrait layout: 2-column layout with categories distributed
+  Widget _buildPortraitLayout(
+    BuildContext context,
+    String dateStr,
+    List<Category> categories,
+    Map<Category, List<Item>> groupedItems,
+  ) {
+    // Distribute categories across 2 columns (alternating)
+    final leftColumnCategories = <Category>[];
+    final rightColumnCategories = <Category>[];
+    Category? dessertCategory;
+    bool dessertInLeft = false;
+
+    for (int i = 0; i < categories.length; i++) {
+      if (categories[i] == Category.dessert) {
+        dessertCategory = categories[i];
+        dessertInLeft = (i % 2 == 0);
+        leftColumnCategories.add(categories[i]);
+      } else if (i % 2 == 0) {
+        leftColumnCategories.add(categories[i]);
+      } else {
+        rightColumnCategories.add(categories[i]);
+      }
+    }
+
+    // If dessert is in left column and has multiple items, add Part 2 to right column
+    if (dessertCategory != null &&
+        dessertInLeft &&
+        (groupedItems[dessertCategory]?.length ?? 0) > 1) {
+      rightColumnCategories.insert(0, dessertCategory);
+    }
+
+    return Material(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header section
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$location | $dateStr | BY: ${(name ?? 'Not provided').toUpperCase()}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Categories in 2-column layout
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left column
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: leftColumnCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = leftColumnCategories[index];
+                          final categoryItems = groupedItems[category] ?? [];
+                          return _buildPortraitCategorySection(
+                            category,
+                            categoryItems,
+                            isLeftColumn: true,
+                            contextCategory: category,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  // Right column
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: rightColumnCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = rightColumnCategories[index];
+                          final categoryItems = groupedItems[category] ?? [];
+                          return _buildPortraitCategorySection(
+                            category,
+                            categoryItems,
+                            isLeftColumn: false,
+                            isDessertPart2: category == Category.dessert,
+                            contextCategory: category,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build a category section for portrait mode
+  Widget _buildPortraitCategorySection(
+    Category category,
+    List<Item> categoryItems, {
+    required bool isLeftColumn,
+    bool isDessertPart2 = false,
+    required Category contextCategory,
+  }) {
+    // Split dessert category in half
+    if (category == Category.dessert && categoryItems.length > 1) {
+      final midpoint = (categoryItems.length / 2).ceil();
+      final firstHalf = categoryItems.sublist(0, midpoint);
+      final secondHalf = categoryItems.sublist(midpoint);
+
+      // If in right column (part 2), show only second half
+      if (isDessertPart2 && !isLeftColumn) {
+        return _buildCategorySectionContent(
+          category,
+          secondHalf,
+          isFirstHalf: false,
+          isDessertPart2: true,
+        );
+      }
+
+      // If in left column, show only first half
+      if (isLeftColumn) {
+        return _buildCategorySectionContent(
+          category,
+          firstHalf,
+          isFirstHalf: true,
+          isDessertPart2: false,
+        );
+      }
+    }
+
+    // Regular category display
+    return _buildCategorySectionContent(category, categoryItems);
+  }
+
+  /// Build category section content
+  Widget _buildCategorySectionContent(
+    Category category,
+    List<Item> categoryItems, {
+    bool isFirstHalf = false,
+    bool isDessertPart2 = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category header
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.yellow[700],
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                category.displayName.toUpperCase() +
+                    (isDessertPart2
+                        ? ' (Part 2)'
+                        : isFirstHalf && category == Category.dessert
+                        ? ' (Part 1)'
+                        : ''),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Items in 3-column masonry layout
+          _buildPortraitMasonry(categoryItems),
+        ],
+      ),
+    );
+  }
+
+  /// Build masonry layout for portrait mode items
+  Widget _buildPortraitMasonry(List<Item> items) {
+    // Distribute items across 3 columns
+    final columns = <List<Item>>[[], [], []];
+    for (int i = 0; i < items.length; i++) {
+      columns[i % 3].add(items[i]);
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int colIndex = 0; colIndex < 3; colIndex++)
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: colIndex == 0 ? 0 : 4,
+                right: colIndex == 2 ? 0 : 4,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final item in columns[colIndex])
+                    _buildPortraitItemCard(item),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build individual item card for portrait mode
+  Widget _buildPortraitItemCard(Item item) {
+    final isUnchecked = !item.isChecked;
+    final selectedUnit = data.selectedUnitOption(item);
+    String statusMarker = 'OK';
+    Color markerColor = Colors.greenAccent;
+
+    if (isUnchecked) {
+      statusMarker = '';
+      markerColor = Colors.grey;
+    } else if (selectedUnit != null) {
+      if (selectedUnit.isUrgent) {
+        statusMarker = 'URGENT';
+        markerColor = Colors.redAccent;
+      } else {
+        statusMarker = selectedUnit.label;
+        markerColor = Colors.green;
+      }
+    } else if (item.status == ItemStatus.urgent) {
+      statusMarker = 'URGENT';
+      markerColor = Colors.redAccent;
+    } else if (item.status == ItemStatus.quantity) {
+      statusMarker = item.quantity.toString();
+      markerColor = Colors.blueAccent;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              item.name,
+              style: TextStyle(
+                fontSize: 18,
+                height: 1.2,
+                color: isUnchecked ? Colors.black38 : Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: markerColor.withValues(alpha: isUnchecked ? 0.08 : 0.2),
+              borderRadius: BorderRadius.circular(4),
+              border: isUnchecked
+                  ? Border.all(
+                      color: Colors.grey.withValues(alpha: 0.6),
+                      width: 1,
+                    )
+                  : null,
+            ),
+            child: Text(
+              statusMarker,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isUnchecked ? Colors.grey[600] : markerColor,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
