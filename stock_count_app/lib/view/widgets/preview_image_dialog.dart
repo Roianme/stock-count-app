@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
+import '../../utils/index.dart';
 
 class PreviewImageDialog extends StatefulWidget {
   final Uint8List imageBytes;
@@ -32,18 +33,20 @@ class _PreviewImageDialogState extends State<PreviewImageDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Use landscape aspect ratio (2400:1600 = 3:2)
+    final isLandscape = context.isLandscape;
     final screenSize = MediaQuery.of(context).size;
     final maxWidth = screenSize.width - 32;
     final maxHeight = screenSize.height - 100; // Account for close button
 
-    // Calculate constrained dimensions maintaining 3:2 aspect ratio (landscape)
+    // Maintain a 3:2 ratio in landscape and 2:3 in portrait.
+    final aspectRatio = isLandscape ? 3 / 2 : 2 / 3;
+
     double previewWidth = maxWidth;
-    double previewHeight = previewWidth * 2 / 3; // 1600/2400 = 2/3
+    double previewHeight = previewWidth / aspectRatio;
 
     if (previewHeight > maxHeight) {
       previewHeight = maxHeight;
-      previewWidth = previewHeight * 3 / 2;
+      previewWidth = previewHeight * aspectRatio;
     }
 
     return Dialog(

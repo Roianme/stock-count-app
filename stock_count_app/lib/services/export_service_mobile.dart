@@ -128,14 +128,20 @@ class MobileExportService extends ExportServiceBase {
       final boundary = GlobalKey();
       OverlayEntry? overlayEntry;
 
+      // Detect orientation and use appropriate dimensions
+      final isLandscape =
+          MediaQuery.of(context).orientation == Orientation.landscape;
+      final width = isLandscape ? 2400.0 : 1600.0;
+      final height = isLandscape ? 1600.0 : 2400.0;
+
       overlayEntry = OverlayEntry(
         builder: (context) => Positioned(
           left: -10000,
           top: -10000,
           child: Material(
             child: Container(
-              width: 2400,
-              height: 1600,
+              width: width,
+              height: height,
               color: Colors.white,
               child: RepaintBoundary(
                 key: boundary,

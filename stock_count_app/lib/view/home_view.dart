@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -90,9 +89,12 @@ class _HomePageState extends State<HomePage> {
           body: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final maxContentWidth = math.min(constraints.maxWidth, 1100.0);
-                final isWide = constraints.maxWidth >= 900;
-                final statusControlWidth = isWide ? 170.0 : 130.0;
+                final maxContentWidth = context.maxContentWidth(
+                  landscapeMax: 1100,
+                );
+                final isWide =
+                    constraints.maxWidth >= ResponsiveSizes.tabletMaxWidth;
+                final statusControlWidth = context.statusControlWidth;
 
                 return Center(
                   child: ConstrainedBox(
@@ -386,19 +388,25 @@ class _HomePageState extends State<HomePage> {
     }
 
     final statusWidth = (isWide || context.isLandscape)
-        ? 130.0
+        ? ResponsiveSizes.statusControlWidthSmall
         : statusControlWidth;
 
     // Grid View: Categories displayed as square cards in a grid
     if (viewModel.isGridView) {
-      final gridColumns = context.gridColumns + 1; // +1 for smaller cards
+      final baseColumns = context.gridColumns;
+      final gridColumns = context.isLandscape ? baseColumns + 1 : baseColumns;
+      final gridPadding = context.responsive.spacing(
+        portraitValue: 12,
+        landscapeValue: 10,
+      );
+      final gridAspectRatio = context.isLandscape ? 1.0 : 0.85;
       return GridView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(gridPadding),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: gridColumns,
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
-          childAspectRatio: 1.0, // Square cards
+          childAspectRatio: gridAspectRatio,
         ),
         itemCount: categoriesWithItems.length,
         itemBuilder: (context, index) {
@@ -430,17 +438,31 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(
+                      context.responsive.spacing(
+                        portraitValue: 12,
+                        landscapeValue: 10,
+                      ),
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(category.icon, size: 48, color: category.color),
-                        const SizedBox(height: 12),
+                        Icon(
+                          category.icon,
+                          size: context.responsive.iconSize(48, 40),
+                          color: category.color,
+                        ),
+                        SizedBox(
+                          height: context.responsive.spacing(
+                            portraitValue: 10,
+                            landscapeValue: 8,
+                          ),
+                        ),
                         Text(
                           category.displayName,
-                          style: const TextStyle(
-                            fontSize: 16,
+                          style: TextStyle(
+                            fontSize: context.responsive.fontSize(16, 14),
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
@@ -448,7 +470,12 @@ class _HomePageState extends State<HomePage> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: context.responsive.spacing(
+                            portraitValue: 8,
+                            landscapeValue: 6,
+                          ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -460,8 +487,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                           child: Text(
                             '${categoryItems.length} items',
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: TextStyle(
+                              fontSize: context.responsive.fontSize(12, 11),
                               color: Colors.black,
                               fontWeight: FontWeight.w600,
                             ),
@@ -479,6 +506,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     // List View: 3-column masonry layout
+    final masonryColumns = context.isLandscape ? 3 : 1;
     final loopLength = categoriesWithItems.length;
     final shouldLoop = !viewModel.isSearching;
     return ListView.builder(
@@ -519,6 +547,7 @@ class _HomePageState extends State<HomePage> {
               child: MasonryLayout(
                 items: categoryItems,
                 statusWidth: statusWidth,
+                columnCount: masonryColumns,
                 buildItemCard: (item) =>
                     _buildItemCard(item, statusWidth, hideIcon: true),
               ),

@@ -93,11 +93,11 @@ class _CategoryViewState extends State<CategoryView> {
                                   child: MasonryLayout(
                                     items: viewModel.itemsInCategory,
                                     statusWidth: context.statusControlWidth,
+                                    columnCount: context.isLandscape ? 3 : 1,
                                     buildItemCard: (item) =>
                                         _buildCategoryItemCard(
                                           item,
                                           context.statusControlWidth,
-                                          context.isLandscape,
                                         ),
                                   ),
                                 ),
@@ -114,11 +114,7 @@ class _CategoryViewState extends State<CategoryView> {
     );
   }
 
-  Widget _buildCategoryItemCard(
-    Item item,
-    double statusControlWidth,
-    bool isLandscape,
-  ) {
+  Widget _buildCategoryItemCard(Item item, double statusControlWidth) {
     return ItemCardWidget(
       item: item,
       statusControlWidth: statusControlWidth,
