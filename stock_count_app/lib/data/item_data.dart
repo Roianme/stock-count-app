@@ -1042,17 +1042,19 @@ class ItemUnitOption {
 }
 
 const _taktakOptions = [
-  ItemUnitOption('¼ or less', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('¼ or less'),
   ItemUnitOption('½ or less'),
-  ItemUnitOption('<1'),
-  ItemUnitOption('>½'),
+  ItemUnitOption('less than 1'),
+  ItemUnitOption('greater than ½'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
 ];
 
 const _basahanOptions = [
-  ItemUnitOption('<6', isUrgent: true),
-  ItemUnitOption('>6'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 6'),
+  ItemUnitOption('greater than 6'),
   ItemUnitOption('Unopened'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
@@ -1060,13 +1062,15 @@ const _basahanOptions = [
 ];
 
 const _spiceOptions = [
-  ItemUnitOption('<½', isUrgent: true),
-  ItemUnitOption('<1'),
-  ItemUnitOption('>1'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than ½'),
+  ItemUnitOption('less than 1'),
+  ItemUnitOption('greater than 1'),
 ];
 
 const _drinkBoxOptions = [
-  ItemUnitOption('<1', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 1'),
   ItemUnitOption('1 (unopened)'),
   ItemUnitOption('2 (unopened)'),
   ItemUnitOption('3 (unopened)'),
@@ -1080,7 +1084,8 @@ const _drinkBoxOptions = [
 ];
 
 const _sauceCupOptions = [
-  ItemUnitOption('¼', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('¼'),
   ItemUnitOption('½'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
@@ -1101,14 +1106,16 @@ const _etaOptions = [
 ];
 
 const _veganOptions = [
-  ItemUnitOption('<1', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 1'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
   ItemUnitOption('3'),
 ];
 
 const _garlicOilOptions = [
-  ItemUnitOption('½ jar', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('½ jar'),
   ItemUnitOption('1 jar'),
   ItemUnitOption('2 jars'),
   ItemUnitOption('3 jars'),
@@ -1117,8 +1124,9 @@ const _garlicOilOptions = [
 ];
 
 const _quailOptions = [
-  ItemUnitOption('<½ box', isUrgent: true),
-  ItemUnitOption('<1 box'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than ½ box'),
+  ItemUnitOption('less than 1 box'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
   ItemUnitOption('3 boxes'),
@@ -1128,16 +1136,18 @@ const _quailOptions = [
 ];
 
 const _jackOptions = [
-  ItemUnitOption('<½ box', isUrgent: true),
-  ItemUnitOption('<1 box'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than ½ box'),
+  ItemUnitOption('less than 1 box'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
   ItemUnitOption('3 boxes'),
 ];
 
 const _saladOptions = [
-  ItemUnitOption('½ box', isUrgent: true),
-  ItemUnitOption('<1'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('½ box'),
+  ItemUnitOption('less than 1'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
   ItemUnitOption('3 boxes'),
@@ -1146,69 +1156,79 @@ const _saladOptions = [
 ];
 
 const _tomatoOptions = [
-  ItemUnitOption('<10 pcs', isUrgent: true),
-  ItemUnitOption('>10 pcs'),
-  ItemUnitOption('>20 pcs'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 10 pcs'),
+  ItemUnitOption('greater than 10 pcs'),
+  ItemUnitOption('greater than 20 pcs'),
 ];
 
 const _lemonOptions = [
-  ItemUnitOption('<6 pcs', isUrgent: true),
-  ItemUnitOption('>6 pcs'),
-  ItemUnitOption('>12 pcs'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 6 pcs'),
+  ItemUnitOption('greater than 6 pcs'),
+  ItemUnitOption('greater than 12 pcs'),
 ];
 
 const _garlicBagOptions = [
-  ItemUnitOption('<½ bag', isUrgent: true),
-  ItemUnitOption('>½ bag'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than ½ bag'),
+  ItemUnitOption('greater than ½ bag'),
   ItemUnitOption('1 bag'),
   ItemUnitOption('2 bags'),
   ItemUnitOption('3 bags'),
 ];
 
 const _freshGingerOptions = [
-  ItemUnitOption('<6 pcs', isUrgent: true),
-  ItemUnitOption('>6 pcs'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 6 pcs'),
+  ItemUnitOption('greater than 6 pcs'),
 ];
 
 const _tubGingerOptions = [
-  ItemUnitOption('<½', isUrgent: true),
-  ItemUnitOption('>½'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than ½'),
+  ItemUnitOption('greater than ½'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
 ];
 
 const _onionSackOptions = [
-  ItemUnitOption('¼ or less', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('¼ or less'),
   ItemUnitOption('½ or less'),
-  ItemUnitOption('<1'),
-  ItemUnitOption('>½'),
+  ItemUnitOption('less than 1'),
+  ItemUnitOption('greater than ½'),
   ItemUnitOption('1'),
-  ItemUnitOption('>1'),
+  ItemUnitOption('greater than 1'),
 ];
 
 const _greenChiliOptions = [
-  ItemUnitOption('<10 pcs', isUrgent: true),
-  ItemUnitOption('>10 pcs'),
-  ItemUnitOption('>15 pcs'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 10 pcs'),
+  ItemUnitOption('greater than 10 pcs'),
+  ItemUnitOption('greater than 15 pcs'),
 ];
 
 const _redChiliOptions = [
-  ItemUnitOption('<5 pcs', isUrgent: true),
-  ItemUnitOption('>5 pcs'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 5 pcs'),
+  ItemUnitOption('greater than 5 pcs'),
 ];
 
 const _eggsOptions = [
-  ItemUnitOption('<12 pcs', isUrgent: true),
-  ItemUnitOption('>12'),
-  ItemUnitOption('>30'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 12 pcs'),
+  ItemUnitOption('greater than 12'),
+  ItemUnitOption('greater than 30'),
   ItemUnitOption('2 trays'),
-  ItemUnitOption('≤6 trays'),
+  ItemUnitOption('less than or equal to 6 trays'),
 ];
 
 const _beefCubesOptions = [
-  ItemUnitOption('<10 pcs', isUrgent: true),
-  ItemUnitOption('>10 pcs'),
-  ItemUnitOption('<1 box'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 10 pcs'),
+  ItemUnitOption('greater than 10 pcs'),
+  ItemUnitOption('less than 1 box'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
   ItemUnitOption('3 boxes'),
@@ -1216,32 +1236,36 @@ const _beefCubesOptions = [
 ];
 
 const _liverSpreadOptions = [
-  ItemUnitOption('<5', isUrgent: true),
-  ItemUnitOption('>5'),
-  ItemUnitOption('>10'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 5'),
+  ItemUnitOption('greater than 5'),
+  ItemUnitOption('greater than 10'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
 ];
 
 const _glutinousOptions = [
-  ItemUnitOption('¼ or less', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('¼ or less'),
   ItemUnitOption('½ or less'),
-  ItemUnitOption('<1'),
-  ItemUnitOption('>½'),
+  ItemUnitOption('less than 1'),
+  ItemUnitOption('greater than ½'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
 ];
 
 const _mangTomasOptions = [
-  ItemUnitOption('<2', isUrgent: true),
-  ItemUnitOption('>2'),
-  ItemUnitOption('>9'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 2'),
+  ItemUnitOption('greater than 2'),
+  ItemUnitOption('greater than 9'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
 ];
 
 const _knorrOptions = [
-  ItemUnitOption('<2 pcs', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 2 pcs'),
   ItemUnitOption('3 pcs'),
   ItemUnitOption('4 pcs'),
   ItemUnitOption('5 pcs'),
@@ -1251,14 +1275,16 @@ const _knorrOptions = [
 ];
 
 const _beansOptions = [
-  ItemUnitOption('<6', isUrgent: true),
-  ItemUnitOption('>6'),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 6'),
+  ItemUnitOption('greater than 6'),
   ItemUnitOption('1 box'),
   ItemUnitOption('2 boxes'),
 ];
 
 const _scrambleOptions = [
-  ItemUnitOption('<1 bag', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 1 bag'),
   ItemUnitOption('1 bag'),
   ItemUnitOption('2 bags'),
   ItemUnitOption('3 bags'),
@@ -1270,7 +1296,8 @@ const _scrambleOptions = [
 ];
 
 const _nutellaJarOptions = [
-  ItemUnitOption('less than half jar', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than half jar'),
   ItemUnitOption('half jar'),
   ItemUnitOption('more half'),
   ItemUnitOption('1'),
@@ -1278,13 +1305,15 @@ const _nutellaJarOptions = [
 ];
 
 const _pcsOptions = [
-  ItemUnitOption('<2 pcs', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 2 pcs'),
   ItemUnitOption('2-5 pcs'),
-  ItemUnitOption('>5 pcs'),
+  ItemUnitOption('greater than 5 pcs'),
 ];
 
 const _lecheFlanOptions = [
-  ItemUnitOption('less than 1', isUrgent: true),
+  ItemUnitOption('0', isUrgent: true),
+  ItemUnitOption('less than 1'),
   ItemUnitOption('1'),
   ItemUnitOption('2'),
   ItemUnitOption('3'),
