@@ -149,7 +149,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '© 2025 Stock Count App',
+                  '© 2026 Stock Count App',
                   style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                 ),
               ],
