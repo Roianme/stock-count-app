@@ -37,6 +37,17 @@ class HiveItemRepository implements ItemRepository {
       await saveItems(seedItems);
       return seedItems;
     }
+
+    // Upsert: add any new seed items that don't exist in the box yet
+    final existingIds = _box.keys.toSet();
+    final newItems = items
+        .where((item) => !existingIds.contains(item.id))
+        .toList();
+    if (newItems.isNotEmpty) {
+      final newItemsMap = {for (var item in newItems) item.id: item};
+      await _box.putAll(newItemsMap);
+    }
+
     return _box.values.toList();
   }
 
