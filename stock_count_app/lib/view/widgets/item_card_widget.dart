@@ -5,7 +5,7 @@ import '../../data/item_data.dart' as data;
 import '../../utils/index.dart';
 
 /// Reusable item card widget used in both home_view and category_view
-class ItemCardWidget extends StatelessWidget {
+class ItemCardWidget extends StatefulWidget {
   final Item item;
   final double statusControlWidth;
   final VoidCallback onCheckChanged;
@@ -30,11 +30,61 @@ class ItemCardWidget extends StatelessWidget {
   });
 
   @override
+  State<ItemCardWidget> createState() => _ItemCardWidgetState();
+}
+
+class _ItemCardWidgetState extends State<ItemCardWidget> {
+  late final TextEditingController _quantityController;
+  late final FocusNode _quantityFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantityController = TextEditingController(
+      text: widget.item.quantity == 0 ? '' : widget.item.quantity.toString(),
+    );
+
+    _quantityFocusNode = FocusNode();
+
+    // Fires when the user taps away or moves focus elsewhere — i.e. they are
+    // done entering the value. This is more intentional than debounce because
+    // it does not depend on timing at all.
+    _quantityFocusNode.addListener(() {
+      if (!_quantityFocusNode.hasFocus) {
+        final parsed = int.tryParse(_quantityController.text) ?? 0;
+        widget.onQuantityChanged(parsed);
+      }
+    });
+  }
+
+  /// Syncs the controller if quantity is updated externally (e.g. ViewModel sync).
+  @override
+  void didUpdateWidget(ItemCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item.quantity != widget.item.quantity) {
+      final newText = widget.item.quantity == 0
+          ? ''
+          : widget.item.quantity.toString();
+      // Guard against unnecessary updates that would reset the cursor position
+      if (_quantityController.text != newText) {
+        _quantityController.text = newText;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _quantityFocusNode.dispose();
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final bool isCompact = context.screenWidth < 420;
     final bool showIcon =
-        !hideIcon && (context.isWideScreen || context.isLandscape);
-    final bool useColumnLayout = showItemNameInColumn || isCompact;
+        !widget.hideIcon && (context.isWideScreen || context.isLandscape);
+    final bool useColumnLayout = widget.showItemNameInColumn || isCompact;
     final double avatarRadius = isCompact ? 22 : 32;
     return GestureDetector(
       child: Card(
@@ -69,17 +119,17 @@ class ItemCardWidget extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: (isListView && item.isChecked)
+                            color: (widget.isListView && widget.item.isChecked)
                                 ? Colors.green.withValues(alpha: 0.12)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: (isListView && (isCompact || !showIcon))
+                          child: (widget.isListView && (isCompact || !showIcon))
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item.name,
+                                      widget.item.name,
                                       style: TextStyle(
                                         fontSize: context.responsive.fontSize(
                                           18,
@@ -92,7 +142,7 @@ class ItemCardWidget extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      item.category.displayName,
+                                      widget.item.category.displayName,
                                       style: context.theme.subtitle.copyWith(
                                         fontSize: context.responsive.fontSize(
                                           13,
@@ -106,7 +156,7 @@ class ItemCardWidget extends StatelessWidget {
                                 )
                               : (useColumnLayout
                                     ? Text(
-                                        item.name,
+                                        widget.item.name,
                                         style: TextStyle(
                                           fontSize: context.responsive.fontSize(
                                             18,
@@ -118,7 +168,7 @@ class ItemCardWidget extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       )
                                     : Text(
-                                        item.name,
+                                        widget.item.name,
                                         style: context.theme.itemName.copyWith(
                                           fontSize: context.responsive.fontSize(
                                             18,
@@ -135,18 +185,17 @@ class ItemCardWidget extends StatelessWidget {
                       _buildStatusOrQuantityWidget(context),
                     ],
                   ),
-                  if (showItemNameInColumn && !isCompact)
+                  if (widget.showItemNameInColumn && !isCompact)
                     const SizedBox(height: 6),
                   if (showIcon)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: GestureDetector(
-                        onTap: onCheckChanged,
+                        onTap: widget.onCheckChanged,
                         child: CircleAvatar(
                           radius: avatarRadius,
-                          backgroundColor: item.category.color.withValues(
-                            alpha: 0.12,
-                          ),
+                          backgroundColor: widget.item.category.color
+                              .withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -160,16 +209,16 @@ class ItemCardWidget extends StatelessWidget {
   }
 
   Widget _buildStatusOrQuantityWidget(BuildContext context) {
-    final unitOptions = data.unitOptionsForItem(item);
+    final unitOptions = data.unitOptionsForItem(widget.item);
     if (unitOptions.isNotEmpty) {
-      final selectedOption = data.selectedUnitOption(item);
+      final selectedOption = data.selectedUnitOption(widget.item);
       final displayLabel = selectedOption?.label ?? 'Select';
 
       return PopupMenuButton<data.ItemUnitOption>(
         tooltip: 'Change unit',
         padding: EdgeInsets.zero,
         onSelected: (newUnit) {
-          onUnitChanged(newUnit);
+          widget.onUnitChanged(newUnit);
         },
         itemBuilder: (BuildContext context) => unitOptions.map((option) {
           return PopupMenuItem<data.ItemUnitOption>(
@@ -178,7 +227,7 @@ class ItemCardWidget extends StatelessWidget {
           );
         }).toList(),
         child: Container(
-          width: statusControlWidth,
+          width: widget.statusControlWidth,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: context.theme.statusControlDecoration,
           child: Center(
@@ -199,13 +248,13 @@ class ItemCardWidget extends StatelessWidget {
     }
 
     return Container(
-      width: statusControlWidth,
+      width: widget.statusControlWidth,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: context.theme.statusControlDecoration,
       child: Row(
         children: [
           Expanded(
-            child: item.status == ItemStatus.urgent
+            child: widget.item.status == ItemStatus.urgent
                 ? Center(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -219,13 +268,14 @@ class ItemCardWidget extends StatelessWidget {
                       ),
                     ),
                   )
-                : TextFormField(
-                    key: ValueKey('quantity_${item.id}_${item.status.name}'),
-                    initialValue: item.quantity == 0
-                        ? ''
-                        : item.quantity.toString(),
+                : TextField(
+                    controller: _quantityController,
+                    focusNode: _quantityFocusNode,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(3),
+                    ],
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: context.responsive.fontSize(18, 16),
@@ -241,13 +291,13 @@ class ItemCardWidget extends StatelessWidget {
                         fontSize: context.responsive.fontSize(16, 14),
                       ),
                     ),
-                    onChanged: (value) {
-                      if (value.isEmpty) {
-                        onQuantityChanged(0);
-                      } else {
-                        final parsed = int.tryParse(value) ?? 0;
-                        onQuantityChanged(parsed);
-                      }
+                    onSubmitted: (value) {
+                      // Covers the Done button on the keyboard — focus may not
+                      // always change on submit depending on the platform, so
+                      // we handle it explicitly here as a complement to the
+                      // FocusNode listener.
+                      final parsed = int.tryParse(value) ?? 0;
+                      widget.onQuantityChanged(parsed);
                     },
                   ),
           ),
@@ -256,7 +306,7 @@ class ItemCardWidget extends StatelessWidget {
             tooltip: 'Change status',
             padding: EdgeInsets.zero,
             onSelected: (newStatus) {
-              onStatusChanged(newStatus);
+              widget.onStatusChanged(newStatus);
             },
             itemBuilder: (BuildContext context) => const [
               PopupMenuItem<ItemStatus>(
