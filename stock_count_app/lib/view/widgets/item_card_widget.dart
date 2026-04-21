@@ -9,7 +9,7 @@ class ItemCardWidget extends StatefulWidget {
   final Item item;
   final double statusControlWidth;
   final VoidCallback onCheckChanged;
-  final Function(int) onQuantityChanged;
+  final Function(int?) onQuantityChanged;
   final Function(ItemStatus) onStatusChanged;
   final Function(data.ItemUnitOption) onUnitChanged;
   final bool showItemNameInColumn;
@@ -41,7 +41,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
   void initState() {
     super.initState();
     _quantityController = TextEditingController(
-      text: widget.item.quantity == 0 ? '' : widget.item.quantity.toString(),
+      text: widget.item.quantity == null ? '' : widget.item.quantity.toString(),
     );
 
     _quantityFocusNode = FocusNode();
@@ -51,7 +51,8 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
     // it does not depend on timing at all.
     _quantityFocusNode.addListener(() {
       if (!_quantityFocusNode.hasFocus) {
-        final parsed = int.tryParse(_quantityController.text) ?? 0;
+        final text = _quantityController.text;
+        final parsed = text.isEmpty ? null : int.tryParse(text);
         widget.onQuantityChanged(parsed);
       }
     });
@@ -62,9 +63,9 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
   void didUpdateWidget(ItemCardWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.item.quantity != widget.item.quantity) {
-      final newText = widget.item.quantity == 0
+      final newText = widget.item.quantity == null
           ? ''
-          : widget.item.quantity.toString();
+          : widget.item.quantity.toString(); // 0 → "0", 5 → "5"
       // Guard against unnecessary updates that would reset the cursor position
       if (_quantityController.text != newText) {
         _quantityController.text = newText;
@@ -292,11 +293,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                       ),
                     ),
                     onSubmitted: (value) {
-                      // Covers the Done button on the keyboard — focus may not
-                      // always change on submit depending on the platform, so
-                      // we handle it explicitly here as a complement to the
-                      // FocusNode listener.
-                      final parsed = int.tryParse(value) ?? 0;
+                      final parsed = value.isEmpty ? null : int.tryParse(value);
                       widget.onQuantityChanged(parsed);
                     },
                   ),

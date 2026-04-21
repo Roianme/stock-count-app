@@ -97,7 +97,7 @@ class Item {
   final bool isChecked;
 
   @HiveField(5)
-  final int quantity;
+  final int? quantity;
 
   @HiveField(6)
   final Set<Mode> modes;
@@ -111,7 +111,7 @@ class Item {
     Category? category,
     ItemStatus? status,
     this.isChecked = false,
-    this.quantity = 0,
+    this.quantity,
     this.modes = const {Mode.city},
     this.unit,
   }) : id = id ?? _nextId++,
@@ -137,7 +137,7 @@ class Item {
       category: category ?? this.category,
       status: status ?? this.status,
       isChecked: isChecked ?? this.isChecked,
-      quantity: quantity ?? this.quantity,
+      quantity: quantity,
       modes: modes ?? this.modes,
       unit: unit ?? this.unit,
     );

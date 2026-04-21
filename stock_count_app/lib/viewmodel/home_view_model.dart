@@ -153,10 +153,10 @@ class HomeViewModel extends ChangeNotifier {
     _updateItemById(itemId, (item) => item.copyWith(quantity: quantity));
   }
 
-  void applyItemQuantityChange(int itemId, int quantity) {
+  void applyItemQuantityChange(int itemId, int? quantity) {
     _updateItemById(
       itemId,
-      (item) => item.copyWith(quantity: quantity, isChecked: quantity > 0),
+      (item) => item.copyWith(quantity: quantity, isChecked: quantity != null),
     );
   }
 
@@ -164,7 +164,7 @@ class HomeViewModel extends ChangeNotifier {
     _updateItemById(itemId, (item) {
       final shouldCheck = newStatus == model.ItemStatus.urgent
           ? true
-          : item.quantity > 0;
+          : item.quantity != null;
       return item.copyWith(status: newStatus, isChecked: shouldCheck);
     });
   }
