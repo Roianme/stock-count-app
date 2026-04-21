@@ -1032,6 +1032,12 @@ final List<Item> items = [
     category: Category.dessert,
     status: ItemStatus.quantity,
   ),
+  Item(
+    id: 170,
+    name: 'chicken liver',
+    category: Category.rawItems,
+    status: ItemStatus.quantity,
+  ),
 ];
 
 class ItemUnitOption {
