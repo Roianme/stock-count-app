@@ -22,6 +22,9 @@ class HiveItemRepository implements ItemRepository {
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(CategoryAdapter());
     }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(ModeAdapter());
+    }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(ItemAdapter());
     }

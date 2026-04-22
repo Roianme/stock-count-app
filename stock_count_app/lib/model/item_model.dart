@@ -43,7 +43,19 @@ enum Category {
   asianGrocer,
 }
 
-enum Mode { city, cafe, hp, warehouse, manager }
+@HiveType(typeId: 3)
+enum Mode {
+  @HiveField(0)
+  city,
+  @HiveField(1)
+  cafe,
+  @HiveField(2)
+  hp,
+  @HiveField(3)
+  warehouse,
+  @HiveField(4)
+  manager,
+}
 
 extension ModeExtension on Mode {
   String get displayName {

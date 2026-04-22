@@ -22,7 +22,8 @@ class ItemAdapter extends TypeAdapter<Item> {
       category: fields[2] as Category?,
       status: fields[3] as ItemStatus?,
       isChecked: fields[4] as bool,
-      quantity: fields[5] as int,
+      quantity: fields[5] as int?,
+      modes: (fields[6] as List).cast<Mode>().toSet(),
       unit: fields[7] as String?,
     );
   }
@@ -30,7 +31,7 @@ class ItemAdapter extends TypeAdapter<Item> {
   @override
   void write(BinaryWriter writer, Item obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -43,6 +44,8 @@ class ItemAdapter extends TypeAdapter<Item> {
       ..write(obj.isChecked)
       ..writeByte(5)
       ..write(obj.quantity)
+      ..writeByte(6)
+      ..write(obj.modes.toList())
       ..writeByte(7)
       ..write(obj.unit);
   }
@@ -66,17 +69,11 @@ class ItemStatusAdapter extends TypeAdapter<ItemStatus> {
   ItemStatus read(BinaryReader reader) {
     switch (reader.readByte()) {
       case 0:
-        return ItemStatus.quantity;
+        return ItemStatus.urgent;
       case 1:
         return ItemStatus.quantity;
-      case 2:
-        return ItemStatus.quantity;
-      case 3:
-        return ItemStatus.urgent;
-      case 4:
-        return ItemStatus.quantity;
       default:
-        return ItemStatus.quantity;
+        return ItemStatus.urgent;
     }
   }
 
@@ -84,10 +81,10 @@ class ItemStatusAdapter extends TypeAdapter<ItemStatus> {
   void write(BinaryWriter writer, ItemStatus obj) {
     switch (obj) {
       case ItemStatus.urgent:
-        writer.writeByte(3);
+        writer.writeByte(0);
         break;
       case ItemStatus.quantity:
-        writer.writeByte(4);
+        writer.writeByte(1);
         break;
     }
   }
@@ -136,6 +133,8 @@ class CategoryAdapter extends TypeAdapter<Category> {
         return Category.chemicals;
       case 12:
         return Category.dessert;
+      case 13:
+        return Category.asianGrocer;
       default:
         return Category.bbqGrill;
     }
@@ -196,6 +195,60 @@ class CategoryAdapter extends TypeAdapter<Category> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CategoryAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class ModeAdapter extends TypeAdapter<Mode> {
+  @override
+  final int typeId = 3;
+
+  @override
+  Mode read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return Mode.city;
+      case 1:
+        return Mode.cafe;
+      case 2:
+        return Mode.hp;
+      case 3:
+        return Mode.warehouse;
+      case 4:
+        return Mode.manager;
+      default:
+        return Mode.city;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, Mode obj) {
+    switch (obj) {
+      case Mode.city:
+        writer.writeByte(0);
+        break;
+      case Mode.cafe:
+        writer.writeByte(1);
+        break;
+      case Mode.hp:
+        writer.writeByte(2);
+        break;
+      case Mode.warehouse:
+        writer.writeByte(3);
+        break;
+      case Mode.manager:
+        writer.writeByte(4);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModeAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

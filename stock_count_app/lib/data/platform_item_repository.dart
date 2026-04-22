@@ -33,6 +33,9 @@ class PlatformItemRepository implements ItemRepository {
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(CategoryAdapter());
     }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(ModeAdapter());
+    }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(ItemAdapter());
     }
@@ -173,7 +176,7 @@ class PlatformItemRepository implements ItemRepository {
       category: Category.values[json['category'] as int],
       status: ItemStatus.values[json['status'] as int],
       isChecked: json['isChecked'] as bool,
-      quantity: json['quantity'] as int,
+      quantity: json['quantity'] as int?,
     );
   }
 }
