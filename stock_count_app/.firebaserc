@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "stock-count-app-c381c"
+    "default": "stock-count-app-c381c",
+    "staging": "stock-count-app-staging"
   }
 }
