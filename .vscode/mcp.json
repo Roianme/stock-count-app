@@ -1,0 +1,29 @@
+{
+  "servers": {
+    "vecfs": {
+      "command": "C:\\Program Files\\nodejs\\vecfs.cmd",
+      "args": [],
+      "env": {
+        "VECFS_FILE": "C:\\Users\\Bogie\\.vecfs\\memory.jsonl"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\xampp\\htdocs\\stock-count-app\\stock_count_app"
+      ]
+    }
+  }
+}
