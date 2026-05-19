@@ -10,3 +10,6 @@ stock_count_app/.firebase/hosting.YnVpbGRcd2Vi.cache
 .env
 stock_count_app/.env
 .atp_safehouse
+
+.atp_safehouse
+.cursor/mcp.json
