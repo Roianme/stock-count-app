@@ -6,6 +6,7 @@ import '../model/item_model.dart';
 import '../model/category_model.dart';
 import 'item_data.dart';
 import 'item_repository.dart';
+import 'migrations.dart';
 
 /// Platform-aware repository.
 ///
@@ -70,9 +71,20 @@ class PlatformItemRepository implements ItemRepository {
       // First run: load seed data and save
       final seedItems = List<Item>.from(items);
       await saveItems(seedItems);
+      await _setStoredDataVersion(DataMigrations.CURRENT_VERSION);
       return seedItems;
     }
-    return _hiveBox.values.toList();
+    
+    var loadedItems = _hiveBox.values.toList();
+    
+    final storedVersion = await _getStoredDataVersion();
+    if (storedVersion < DataMigrations.CURRENT_VERSION) {
+      loadedItems = await DataMigrations.migrateData(loadedItems, storedVersion);
+      await saveItems(loadedItems);
+      await _setStoredDataVersion(DataMigrations.CURRENT_VERSION);
+    }
+    
+    return loadedItems;
   }
 
   @override
@@ -197,5 +209,23 @@ class PlatformItemRepository implements ItemRepository {
       isChecked: json['isChecked'] as bool,
       quantity: json['quantity'] as int?,
     );
+  }
+
+  Future<int> _getStoredDataVersion() async {
+    try {
+      final version = _metaBox.get('data_version', defaultValue: 1);
+      return version as int;
+    } catch (e) {
+      debugPrint('Error reading data version: $e');
+      return 1;
+    }
+  }
+
+  Future<void> _setStoredDataVersion(int version) async {
+    try {
+      await _metaBox.put('data_version', version);
+    } catch (e) {
+      debugPrint('Error storing data version: $e');
+    }
   }
 }
