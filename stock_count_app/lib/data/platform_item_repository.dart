@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' hide Category;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/item_model.dart';
+import '../model/category_model.dart';
 import 'item_data.dart';
 import 'item_repository.dart';
 
@@ -19,6 +20,8 @@ class PlatformItemRepository implements ItemRepository {
   static const String sharedPrefsKey = 'stock_count_items';
 
   late Box<Item> _hiveBox;
+  late Box<CategoryRecord> _categoriesBox;
+  late Box _metaBox;
   bool _closed = false;
 
   /// Initialize based on platform
@@ -39,6 +42,16 @@ class PlatformItemRepository implements ItemRepository {
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(ItemAdapter());
     }
+    if (!Hive.isAdapterRegistered(4)) {
+      Hive.registerAdapter(ItemUnitOptionRecordAdapter());
+    }
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(CategoryRecordAdapter());
+    }
+
+    _categoriesBox = await Hive.openBox<CategoryRecord>('categories_box');
+    await ensureDefaultCategoriesSeeded(_categoriesBox);
+    _metaBox = await Hive.openBox('meta_box');
 
     _hiveBox = await Hive.openBox<Item>(boxName);
 
@@ -137,6 +150,12 @@ class PlatformItemRepository implements ItemRepository {
     _closed = true;
     if (_hiveBox.isOpen) {
       await _hiveBox.close();
+    }
+    if (_categoriesBox.isOpen) {
+      await _categoriesBox.close();
+    }
+    if (_metaBox.isOpen) {
+      await _metaBox.close();
     }
   }
 
