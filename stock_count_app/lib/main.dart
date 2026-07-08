@@ -19,7 +19,7 @@ void main() async {
   // This ensures seedItemsById has the true defaults to reset to
   initializeSeedData();
 
-  // Initialize platform-aware repository (uses Hive on mobile, SharedPreferences on web)
+  // Initialize platform-aware repository (uses Hive on all platforms)
   final repository = PlatformItemRepository();
   await repository.initialize();
 
