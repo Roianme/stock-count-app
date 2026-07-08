@@ -25,13 +25,15 @@ class ItemAdapter extends TypeAdapter<Item> {
       quantity: fields[5] as int?,
       modes: (fields[6] as List).cast<Mode>().toSet(),
       unit: fields[7] as String?,
+      unitOptions: fields[8] == null ? const [] : (fields[8] as List).cast<ItemUnitOptionRecord>(),
+      categoryId: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Item obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +49,11 @@ class ItemAdapter extends TypeAdapter<Item> {
       ..writeByte(6)
       ..write(obj.modes.toList())
       ..writeByte(7)
-      ..write(obj.unit);
+      ..write(obj.unit)
+      ..writeByte(8)
+      ..write(obj.unitOptions)
+      ..writeByte(9)
+      ..write(obj.categoryId);
   }
 
   @override
@@ -249,6 +255,43 @@ class ModeAdapter extends TypeAdapter<Mode> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ModeAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class ItemUnitOptionRecordAdapter extends TypeAdapter<ItemUnitOptionRecord> {
+  @override
+  final int typeId = 4;
+
+  @override
+  ItemUnitOptionRecord read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return ItemUnitOptionRecord(
+      label: fields[0] as String,
+      isUrgent: fields[1] as bool? ?? false,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ItemUnitOptionRecord obj) {
+    writer
+      ..writeByte(2)
+      ..writeByte(0)
+      ..write(obj.label)
+      ..writeByte(1)
+      ..write(obj.isUrgent);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ItemUnitOptionRecordAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

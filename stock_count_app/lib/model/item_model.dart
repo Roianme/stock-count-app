@@ -89,6 +89,16 @@ extension ModeExtension on Mode {
   }
 }
 
+class ItemUnitOptionRecord {
+  final String label;
+  final bool isUrgent;
+
+  const ItemUnitOptionRecord({
+    required this.label,
+    this.isUrgent = false,
+  });
+}
+
 @HiveType(typeId: 2)
 class Item {
   static int _nextId = 1;
@@ -117,6 +127,12 @@ class Item {
   @HiveField(7)
   final String? unit;
 
+  @HiveField(8)
+  final List<ItemUnitOptionRecord> unitOptions;
+
+  @HiveField(9)
+  final String? categoryId;
+
   Item({
     int? id,
     String? name,
@@ -126,6 +142,8 @@ class Item {
     this.quantity,
     this.modes = const {Mode.city},
     this.unit,
+    this.unitOptions = const [],
+    this.categoryId,
   }) : id = id ?? _nextId++,
        name = name ?? 'Unnamed Item',
        category = category ?? Category.misc,
@@ -142,6 +160,8 @@ class Item {
     int? quantity,
     Set<Mode>? modes,
     String? unit,
+    List<ItemUnitOptionRecord>? unitOptions,
+    String? categoryId,
   }) {
     return Item(
       id: id ?? this.id,
@@ -152,6 +172,8 @@ class Item {
       quantity: quantity,
       modes: modes ?? this.modes,
       unit: unit ?? this.unit,
+      unitOptions: unitOptions ?? this.unitOptions,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 }
