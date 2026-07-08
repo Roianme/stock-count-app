@@ -84,6 +84,16 @@ class PlatformItemRepository implements ItemRepository {
       await _setStoredDataVersion(DataMigrations.CURRENT_VERSION);
     }
     
+    // Upsert: add any new seed items that don't exist in the box yet
+    final existingIds = loadedItems.map((e) => e.id).toSet();
+    final newItems = items
+        .where((item) => !existingIds.contains(item.id))
+        .toList();
+    if (newItems.isNotEmpty) {
+      loadedItems.addAll(newItems);
+      await saveItems(loadedItems);
+    }
+    
     return loadedItems;
   }
 
