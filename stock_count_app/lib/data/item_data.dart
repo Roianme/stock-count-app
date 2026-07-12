@@ -1,4 +1,7 @@
 import '../model/item_model.dart';
+import '../model/category_model.dart';
+
+final List<CategoryRecord> categories = [];
 
 final List<Item> items = [
   // BBQ GRILL

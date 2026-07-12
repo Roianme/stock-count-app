@@ -1,6 +1,24 @@
 import '../model/item_model.dart';
+import '../model/category_model.dart';
 
 abstract class ItemRepository {
+  /// Load all categories from storage, sorted by sortOrder
+  Future<List<CategoryRecord>> loadCategories();
+
+  /// Save all categories to storage
+  Future<void> saveCategories(List<CategoryRecord> categories);
+
+  /// Add a new category
+  Future<void> addCategory(CategoryRecord category);
+
+  /// Update an existing category
+  Future<void> updateCategory(CategoryRecord category);
+
+  /// Delete a category by id
+  Future<void> deleteCategory(String id);
+
+  /// Check if a category is used by any item
+  bool isCategoryInUse(String categoryId);
   /// Load all items from storage
   Future<List<Item>> loadItems();
 

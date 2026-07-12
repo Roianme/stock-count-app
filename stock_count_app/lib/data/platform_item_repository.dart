@@ -66,6 +66,62 @@ class PlatformItemRepository implements ItemRepository {
     return _loadItemsHive();
   }
 
+  @override
+  Future<List<CategoryRecord>> loadCategories() async {
+    final categoriesList = _categoriesBox.values.toList();
+    categoriesList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    
+    categories
+      ..clear()
+      ..addAll(categoriesList);
+      
+    return categories;
+  }
+
+  @override
+  Future<void> saveCategories(List<CategoryRecord> categoriesToSave) async {
+    final desired = <String, CategoryRecord>{for (final cat in categoriesToSave) cat.id: cat};
+    final existingKeys = _categoriesBox.keys.whereType<String>().toSet();
+    final desiredKeys = desired.keys.toSet();
+    final keysToDelete = existingKeys.difference(desiredKeys);
+    if (keysToDelete.isNotEmpty) {
+      await _categoriesBox.deleteAll(keysToDelete);
+    }
+    await _categoriesBox.putAll(desired);
+  }
+
+  @override
+  Future<void> addCategory(CategoryRecord category) async {
+    if (categories.any((c) => c.id == category.id)) {
+      throw StateError(
+        'Category with id "${category.id}" already exists. '
+        'Use updateCategory() to modify an existing category.',
+      );
+    }
+    categories.add(category);
+    await saveCategories(categories);
+  }
+
+  @override
+  Future<void> updateCategory(CategoryRecord category) async {
+    final index = categories.indexWhere((c) => c.id == category.id);
+    if (index != -1) {
+      categories[index] = category;
+      await saveCategories(categories);
+    }
+  }
+
+  @override
+  Future<void> deleteCategory(String id) async {
+    categories.removeWhere((c) => c.id == id);
+    await saveCategories(categories);
+  }
+
+  @override
+  bool isCategoryInUse(String categoryId) {
+    return items.any((item) => item.categoryId == categoryId);
+  }
+
   Future<List<Item>> _loadItemsHive() async {
     if (_hiveBox.isEmpty) {
       // First run: load seed data and save
