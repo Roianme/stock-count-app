@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../model/category_model.dart';
+
 import '../model/item_model.dart';
 import '../data/item_data.dart' as data;
 import '../utils/index.dart';
@@ -23,12 +25,20 @@ class ReportWidget extends StatelessWidget {
     final now = DateTime.now();
     final dateStr = DateFormat('EEEE, dd MMM yyyy').format(now);
 
-    // Group items by category
-    final groupedItems = <Category, List<Item>>{};
+    // Group items by category (resolve CategoryRecord from categoryId)
+    final groupedItems = <CategoryRecord, List<Item>>{};
     for (final item in items) {
-      groupedItems.putIfAbsent(item.category, () => []).add(item);
+      final cat = item.categoryId != null
+          ? data.categories.cast<CategoryRecord?>().firstWhere(
+                (c) => c?.id == item.categoryId,
+                orElse: () => null,
+              )
+          : null;
+      final key = cat ?? _legacyCategoryForItem(item);
+      groupedItems.putIfAbsent(key, () => []).add(item);
     }
-    final categories = groupedItems.keys.toList();
+    final categories = groupedItems.keys.toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     // Detect orientation and use appropriate layout
     final isLandscape = context.isLandscape;
@@ -42,8 +52,8 @@ class ReportWidget extends StatelessWidget {
   Widget _buildLandscapeLayout(
     BuildContext context,
     String dateStr,
-    List<Category> categories,
-    Map<Category, List<Item>> groupedItems,
+    List<CategoryRecord> categories,
+    Map<CategoryRecord, List<Item>> groupedItems,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -201,32 +211,18 @@ class ReportWidget extends StatelessWidget {
   Widget _buildPortraitLayout(
     BuildContext context,
     String dateStr,
-    List<Category> categories,
-    Map<Category, List<Item>> groupedItems,
+    List<CategoryRecord> categories,
+    Map<CategoryRecord, List<Item>> groupedItems,
   ) {
     // Distribute categories across 2 columns (alternating)
-    final leftColumnCategories = <Category>[];
-    final rightColumnCategories = <Category>[];
-    Category? dessertCategory;
-    bool dessertInLeft = false;
-
+    final leftColumnCategories = <CategoryRecord>[];
+    final rightColumnCategories = <CategoryRecord>[];
     for (int i = 0; i < categories.length; i++) {
-      if (categories[i] == Category.dessert) {
-        dessertCategory = categories[i];
-        dessertInLeft = (i % 2 == 0);
-        leftColumnCategories.add(categories[i]);
-      } else if (i % 2 == 0) {
+      if (i % 2 == 0) {
         leftColumnCategories.add(categories[i]);
       } else {
         rightColumnCategories.add(categories[i]);
       }
-    }
-
-    // If dessert is in left column and has multiple items, add Part 2 to right column
-    if (dessertCategory != null &&
-        dessertInLeft &&
-        (groupedItems[dessertCategory]?.length ?? 0) > 1) {
-      rightColumnCategories.insert(0, dessertCategory);
     }
 
     return Material(
@@ -275,7 +271,6 @@ class ReportWidget extends StatelessWidget {
                             category,
                             categoryItems,
                             isLeftColumn: true,
-                            contextCategory: category,
                           );
                         },
                       ),
@@ -295,8 +290,7 @@ class ReportWidget extends StatelessWidget {
                             category,
                             categoryItems,
                             isLeftColumn: false,
-                            isDessertPart2: category == Category.dessert,
-                            contextCategory: category,
+
                           );
                         },
                       ),
@@ -313,50 +307,17 @@ class ReportWidget extends StatelessWidget {
 
   /// Build a category section for portrait mode
   Widget _buildPortraitCategorySection(
-    Category category,
+    CategoryRecord category,
     List<Item> categoryItems, {
     required bool isLeftColumn,
-    bool isDessertPart2 = false,
-    required Category contextCategory,
   }) {
-    // Split dessert category in half
-    if (category == Category.dessert && categoryItems.length > 1) {
-      final midpoint = (categoryItems.length / 2).ceil();
-      final firstHalf = categoryItems.sublist(0, midpoint);
-      final secondHalf = categoryItems.sublist(midpoint);
-
-      // If in right column (part 2), show only second half
-      if (isDessertPart2 && !isLeftColumn) {
-        return _buildCategorySectionContent(
-          category,
-          secondHalf,
-          isFirstHalf: false,
-          isDessertPart2: true,
-        );
-      }
-
-      // If in left column, show only first half
-      if (isLeftColumn) {
-        return _buildCategorySectionContent(
-          category,
-          firstHalf,
-          isFirstHalf: true,
-          isDessertPart2: false,
-        );
-      }
-    }
-
-    // Regular category display
     return _buildCategorySectionContent(category, categoryItems);
   }
 
   /// Build category section content
   Widget _buildCategorySectionContent(
-    Category category,
-    List<Item> categoryItems, {
-    bool isFirstHalf = false,
-    bool isDessertPart2 = false,
-  }) {
+    CategoryRecord category,
+    List<Item> categoryItems) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -371,12 +332,7 @@ class ReportWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                category.displayName.toUpperCase() +
-                    (isDessertPart2
-                        ? ' (Part 2)'
-                        : isFirstHalf && category == Category.dessert
-                        ? ' (Part 1)'
-                        : ''),
+                category.name.toUpperCase(),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -502,7 +458,7 @@ class ReportWidget extends StatelessWidget {
   }
 
   Widget _buildCategoryColumn(
-    Category category,
+    CategoryRecord category,
     List<Item> items, {
     bool isFirstChunk = true,
   }) {
@@ -523,7 +479,7 @@ class ReportWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(5),
               ),
               child: Text(
-                category.displayName.toUpperCase(),
+                category.name.toUpperCase(),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -615,9 +571,25 @@ class ReportWidget extends StatelessWidget {
   }
 }
 
+  /// Fallback: creates a CategoryRecord from the legacy Category enum when categoryId is null.
+  CategoryRecord _legacyCategoryForItem(Item item) {
+    final id = categoryRecordIdFor(item.category);
+    return data.categories.firstWhere(
+      (c) => c.id == id,
+      orElse: () => CategoryRecord(
+        id: id,
+        name: item.category.displayName,
+        colorValue: item.category.color.toARGB32(),
+        iconCodePoint: item.category.icon.codePoint,
+        iconFontFamily: item.category.icon.fontFamily ?? 'MaterialIcons',
+        sortOrder: item.category.index,
+      ),
+    );
+  }
+
 /// Helper class to represent a chunk of a category (for overflow handling)
 class CategoryChunk {
-  final Category category;
+  final CategoryRecord category;
   final List<Item> items;
   final bool isFirstChunk;
   final double estimatedHeight;
