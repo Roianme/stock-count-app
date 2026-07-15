@@ -17,6 +17,15 @@ class CategoryRecord {
     this.iconFontFamily = 'MaterialIcons',
     required this.sortOrder,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CategoryRecord && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+
 }
 
 class CategoryRecordAdapter extends TypeAdapter<CategoryRecord> {

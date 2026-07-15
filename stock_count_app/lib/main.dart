@@ -29,7 +29,13 @@ void main() async {
     ..clear()
     ..addAll(loadedItems);
 
+  // Load persisted categories into memory
+  await repository.loadCategories();
+
   runApp(MyApp(repository: repository));
+
+
+
 }
 
 class MyApp extends StatefulWidget {
