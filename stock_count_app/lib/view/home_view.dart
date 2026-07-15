@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/item_model.dart';
+import '../model/category_model.dart';
 import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
 import '../data/item_data.dart' as data;
@@ -32,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     viewModel = HomeViewModel(
-      allCategories: Category.values,
+      allCategories: data.categories,
       repository: widget.repository,
     );
     viewModel.addListener(_handleViewModelChanges);
@@ -354,14 +355,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildListView(
-    List<Category> categories,
+    List<CategoryRecord> categories,
     double statusControlWidth, {
     required bool isWide,
   }) {
     final itemsByCategory = viewModel.groupedItems(categories);
 
     // Filter items based on search query
-    final filteredItemsByCategory = <Category, List<Item>>{};
+    final filteredItemsByCategory = <CategoryRecord, List<Item>>{};
     if (viewModel.isSearching) {
       // Only show items that match the search
       final matchedIds = viewModel.matchedItems.map((i) => i.id).toSet();
@@ -449,9 +450,9 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Icon(
-                          category.icon,
+                          IconData(category.iconCodePoint, fontFamily: category.iconFontFamily),
                           size: context.responsive.iconSize(48, 40),
-                          color: category.color,
+                          color: Color(category.colorValue),
                         ),
                         SizedBox(
                           height: context.responsive.spacing(
@@ -460,7 +461,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         Text(
-                          category.displayName,
+                          category.name,
                           style: TextStyle(
                             fontSize: context.responsive.fontSize(16, 14),
                             fontWeight: FontWeight.bold,
@@ -529,10 +530,10 @@ class _HomePageState extends State<HomePage> {
                   horizontal: 16,
                   vertical: 8,
                 ),
-                decoration: BoxDecoration(color: category.color),
+                decoration: BoxDecoration(color: Color(category.colorValue)),
                 width: double.infinity,
                 child: Text(
-                  category.displayName,
+                  category.name,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

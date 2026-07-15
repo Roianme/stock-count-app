@@ -2,20 +2,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../model/item_model.dart' as model;
 import '../data/item_data.dart' as data;
+import '../model/category_model.dart';
 import '../data/item_repository.dart';
 import '../services/export_service_factory.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  final List<model.Category> allCategories;
+  final List<CategoryRecord> allCategories;
   final ItemRepository repository;
-  List<model.Category> visibleCategories;
+  List<CategoryRecord> visibleCategories;
   bool isSearching = false;
   String _query = '';
   List<model.Item> matchedItems = [];
   model.Mode currentLocation = model.Mode.city;
 
   // Category expansion and view mode
-  Set<model.Category> expandedCategories = {};
+  Set<String> expandedCategories = {};
   bool isGridView = false;
 
   // UI state for dialogs and messages
@@ -43,9 +44,9 @@ class HomeViewModel extends ChangeNotifier {
         )
         .toList();
 
-    final matchedCategories = matchedItems.map((i) => i.category).toSet();
+    final matchedCategoryIds = matchedItems.map((i) => i.categoryId).toSet();
     visibleCategories = allCategories
-        .where((c) => matchedCategories.contains(c))
+        .where((c) => matchedCategoryIds.contains(c.id))
         .toList();
   }
 
@@ -77,17 +78,17 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  void toggleCategoryExpanded(model.Category category) {
-    if (expandedCategories.contains(category)) {
-      expandedCategories.remove(category);
+  void toggleCategoryExpanded(CategoryRecord category) {
+    if (expandedCategories.contains(category.id)) {
+      expandedCategories.remove(category.id);
     } else {
-      expandedCategories.add(category);
+      expandedCategories.add(category.id);
     }
     notifyListeners();
   }
 
-  bool isCategoryExpanded(model.Category category) {
-    return expandedCategories.contains(category);
+  bool isCategoryExpanded(CategoryRecord category) {
+    return expandedCategories.contains(category.id);
   }
 
   void toggleViewMode() {
@@ -95,8 +96,8 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void expandAllCategories(List<model.Category> categories) {
-    expandedCategories.addAll(categories);
+  void expandAllCategories(List<CategoryRecord> categories) {
+    expandedCategories.addAll(categories.map((c) => c.id));
     notifyListeners();
   }
 
@@ -109,21 +110,21 @@ class HomeViewModel extends ChangeNotifier {
     _updateItemById(itemId, (item) => item.copyWith(isChecked: value));
   }
 
-  List<model.Item> itemsForCategory(model.Category category) {
+  List<model.Item> itemsForCategory(CategoryRecord category) {
     return data.items
         .where(
-          (i) => i.category == category && i.modes.contains(currentLocation),
+          (i) => i.categoryId == category.id && i.modes.contains(currentLocation),
         )
         .toList();
   }
 
-  Map<model.Category, List<model.Item>> groupedItems(
-    List<model.Category> categories,
+  Map<CategoryRecord, List<model.Item>> groupedItems(
+    List<CategoryRecord> categories,
   ) {
     return {for (final c in categories) c: itemsForCategory(c)};
   }
 
-  String categoryProgress(model.Category category) {
+  String categoryProgress(CategoryRecord category) {
     final list = itemsForCategory(category);
     final checked = list.where((i) => i.isChecked).length;
     final total = list.length;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
+import '../model/category_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
 import '../data/item_data.dart' as data;
@@ -13,7 +14,7 @@ class CategoryView extends StatefulWidget {
     required this.category,
     required this.repository,
   });
-  final Category category;
+  final CategoryRecord category;
   final ItemRepository repository;
 
   @override
@@ -46,7 +47,7 @@ class _CategoryViewState extends State<CategoryView> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: Text(widget.category.displayName),
+            title: Text(widget.category.name),
             elevation: 0,
             actions: [
               IconButton(

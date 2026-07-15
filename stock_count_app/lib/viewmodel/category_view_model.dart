@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../model/item_model.dart' as model;
+import '../model/category_model.dart';
 import '../data/item_data.dart' as data;
 import '../data/item_repository.dart';
 
 class CategoryViewModel extends ChangeNotifier {
-  final model.Category category;
+  final CategoryRecord category;
   final ItemRepository repository;
   List<model.Item> itemsInCategory = [];
 
@@ -13,7 +14,7 @@ class CategoryViewModel extends ChangeNotifier {
   }
 
   void load() {
-    itemsInCategory = data.items.where((i) => i.category == category).toList();
+    itemsInCategory = data.items.where((i) => i.categoryId == category.id).toList();
     notifyListeners();
   }
 
@@ -96,11 +97,11 @@ class CategoryViewModel extends ChangeNotifier {
 
   void setAllChecked(bool value) {
     for (var i = 0; i < data.items.length; i++) {
-      if (data.items[i].category == category) {
+      if (data.items[i].categoryId == category.id) {
         data.items[i] = data.items[i].copyWith(isChecked: value);
       }
     }
-    itemsInCategory = data.items.where((i) => i.category == category).toList();
+    itemsInCategory = data.items.where((i) => i.categoryId == category.id).toList();
     _saveItems();
     notifyListeners();
   }
