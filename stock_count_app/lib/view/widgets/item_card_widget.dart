@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../model/category_model.dart';
+
 import '../../model/item_model.dart';
 import '../../data/item_data.dart' as data;
 import '../../utils/index.dart';
@@ -143,7 +145,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      widget.item.category.displayName,
+                                      (data.categories.cast<CategoryRecord?>().firstWhere((c) => c?.id == widget.item.categoryId, orElse: () => null)?.name) ?? widget.item.category.displayName,
                                       style: context.theme.subtitle.copyWith(
                                         fontSize: context.responsive.fontSize(
                                           13,
@@ -195,7 +197,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                         onTap: widget.onCheckChanged,
                         child: CircleAvatar(
                           radius: avatarRadius,
-                          backgroundColor: widget.item.category.color
+                          backgroundColor: Color(data.categories.cast<CategoryRecord?>().firstWhere((c) => c?.id == widget.item.categoryId, orElse: () => null)?.colorValue ?? widget.item.category.color.toARGB32())
                               .withValues(alpha: 0.12),
                         ),
                       ),
