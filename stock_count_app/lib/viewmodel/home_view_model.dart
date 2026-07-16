@@ -191,7 +191,14 @@ class HomeViewModel extends ChangeNotifier {
       final seed = data.seedItemsById[current.id];
 
       if (seed != null) {
-        data.items[i] = seed.copyWith(isChecked: false);
+        // Restore interactive state (status/quantity/checked) to seed defaults,
+        // but preserve categoryId and unitOptions (item configuration from Phase 2 backfill/editing).
+        data.items[i] = current.copyWith(
+          status: seed.status,
+          quantity: seed.quantity,
+          unit: seed.unit,
+          isChecked: false,
+        );
       } else {
         data.items[i] = current.copyWith(
           status: model.ItemStatus.quantity,
