@@ -129,7 +129,7 @@ class _CategoryViewState extends State<CategoryView> {
       onStatusChanged: (newStatus) {
         viewModel.applyItemStatusChange(item.id, newStatus);
       },
-      onUnitChanged: (data.ItemUnitOption newUnit) {
+      onUnitChanged: (ItemUnitOptionRecord newUnit) {
         viewModel.applyItemUnitChange(item.id, newUnit);
       },
       showItemNameInColumn: false,

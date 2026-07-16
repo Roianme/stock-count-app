@@ -13,7 +13,7 @@ class ItemCardWidget extends StatefulWidget {
   final VoidCallback onCheckChanged;
   final Function(int?) onQuantityChanged;
   final Function(ItemStatus) onStatusChanged;
-  final Function(data.ItemUnitOption) onUnitChanged;
+  final Function(ItemUnitOptionRecord) onUnitChanged;
   final bool showItemNameInColumn;
   final bool hideIcon;
   final bool isListView;
@@ -217,14 +217,14 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       final selectedOption = data.selectedUnitOption(widget.item);
       final displayLabel = selectedOption?.label ?? 'Select';
 
-      return PopupMenuButton<data.ItemUnitOption>(
+      return PopupMenuButton<ItemUnitOptionRecord>(
         tooltip: 'Change unit',
         padding: EdgeInsets.zero,
         onSelected: (newUnit) {
           widget.onUnitChanged(newUnit);
         },
         itemBuilder: (BuildContext context) => unitOptions.map((option) {
-          return PopupMenuItem<data.ItemUnitOption>(
+          return PopupMenuItem<ItemUnitOptionRecord>(
             value: option,
             child: Text(option.label, style: const TextStyle(fontSize: 16)),
           );

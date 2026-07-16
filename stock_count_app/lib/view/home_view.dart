@@ -578,7 +578,7 @@ class _HomePageState extends State<HomePage> {
       onStatusChanged: (newStatus) {
         viewModel.applyItemStatusChange(item.id, newStatus);
       },
-      onUnitChanged: (data.ItemUnitOption newUnit) {
+      onUnitChanged: (ItemUnitOptionRecord newUnit) {
         viewModel.applyItemUnitChange(item.id, newUnit);
       },
       showItemNameInColumn: true,

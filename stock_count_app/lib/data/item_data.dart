@@ -1408,13 +1408,13 @@ final Map<int, List<ItemUnitOption>> itemUnitOptionsById = {
   163: _lecheFlanOptions, // leche flan (pcs)
 };
 
-List<ItemUnitOption> unitOptionsForItem(Item item) {
-  return itemUnitOptionsById[item.id] ?? const [];
+List<ItemUnitOptionRecord> unitOptionsForItem(Item item) {
+  return item.unitOptions;
 }
 
-ItemUnitOption? selectedUnitOption(Item item) {
-  final options = itemUnitOptionsById[item.id];
-  if (options == null || options.isEmpty) return null;
+ItemUnitOptionRecord? selectedUnitOption(Item item) {
+  final options = item.unitOptions;
+  if (options.isEmpty) return null;
   final unit = item.unit;
   if (unit == null || unit.isEmpty) return null;
   for (final option in options) {

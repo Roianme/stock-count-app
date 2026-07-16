@@ -170,7 +170,7 @@ class HomeViewModel extends ChangeNotifier {
     });
   }
 
-  void applyItemUnitChange(int itemId, data.ItemUnitOption newUnit) {
+  void applyItemUnitChange(int itemId, model.ItemUnitOptionRecord newUnit) {
     final newStatus = newUnit.isUrgent
         ? model.ItemStatus.urgent
         : model.ItemStatus.quantity;
