@@ -5,11 +5,15 @@ import '../../model/item_model.dart';
 class AppDrawer extends StatefulWidget {
   final Mode currentLocation;
   final ValueChanged<Mode> onLocationChanged;
+  final VoidCallback? onManageItems;
+  final VoidCallback? onManageCategories;
 
   const AppDrawer({
     super.key,
     required this.currentLocation,
     required this.onLocationChanged,
+    this.onManageItems,
+    this.onManageCategories,
   });
 
   @override
@@ -123,7 +127,39 @@ class _AppDrawerState extends State<AppDrawer> {
                   );
                 }),
                 const Divider(height: 32),
-                // Additional menu items can go here
+                // Manage menu items
+                if (widget.onManageCategories != null)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.category, color: Colors.green, size: 24),
+                    ),
+                    title: const Text('Manage Categories'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onManageCategories!();
+                    },
+                  ),
+                if (widget.onManageItems != null)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.list_alt, color: Colors.orange, size: 24),
+                    ),
+                    title: const Text('Manage Items'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onManageItems!();
+                    },
+                  ),
               ],
             ),
           ),

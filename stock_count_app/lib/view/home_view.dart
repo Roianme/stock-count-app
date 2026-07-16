@@ -14,6 +14,8 @@ import 'widgets/item_card_widget.dart';
 import 'widgets/masonry_layout.dart';
 import '../utils/index.dart';
 import 'category_view.dart';
+import 'manage_items_view.dart';
+import 'manage_categories_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.repository});
@@ -86,6 +88,8 @@ class _HomePageState extends State<HomePage> {
           drawer: AppDrawer(
             currentLocation: viewModel.currentLocation,
             onLocationChanged: viewModel.setLocation,
+            onManageItems: () => _navigateTo(context, ManageItemsView(repository: widget.repository)),
+            onManageCategories: () => _navigateTo(context, ManageCategoriesView(repository: widget.repository)),
           ),
           body: SafeArea(
             child: LayoutBuilder(
@@ -336,6 +340,13 @@ class _HomePageState extends State<HomePage> {
 
     if (confirmed != true) return;
     await viewModel.resetAllToDefaults();
+  }
+
+  void _navigateTo(BuildContext context, Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
   }
 
   void _handlePreviewAction() {
