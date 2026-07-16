@@ -1442,6 +1442,8 @@ void initializeSeedData() {
           item.quantity, // Capture the ORIGINAL quantity from the defined seed
       modes: item.modes, // Capture the ORIGINAL modes from the defined seed
       unit: item.unit, // Capture the ORIGINAL unit from the defined seed
+      categoryId: categoryRecordIdFor(item.category),
+      unitOptions: const [],
     );
   }
 }
