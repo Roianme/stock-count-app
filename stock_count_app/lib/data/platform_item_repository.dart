@@ -124,8 +124,12 @@ class PlatformItemRepository implements ItemRepository {
 
   Future<List<Item>> _loadItemsHive() async {
     if (_hiveBox.isEmpty) {
-      // First run: load seed data and save
-      final seedItems = List<Item>.from(items);
+      // First run: load seed data, backfill categoryId, and save
+      final seedItems = items.map((item) {
+        return item.copyWith(
+          categoryId: categoryRecordIdFor(item.category),
+        );
+      }).toList();
       await saveItems(seedItems);
       await _setStoredDataVersion(DataMigrations.CURRENT_VERSION);
       return seedItems;
@@ -140,10 +144,13 @@ class PlatformItemRepository implements ItemRepository {
       await _setStoredDataVersion(DataMigrations.CURRENT_VERSION);
     }
     
-    // Upsert: add any new seed items that don't exist in the box yet
+    // Upsert: add any new seed items (with backfilled categoryId) that don't exist in the box yet
     final existingIds = loadedItems.map((e) => e.id).toSet();
     final newItems = items
         .where((item) => !existingIds.contains(item.id))
+        .map((item) => item.copyWith(
+          categoryId: categoryRecordIdFor(item.category),
+        ))
         .toList();
     if (newItems.isNotEmpty) {
       loadedItems.addAll(newItems);
