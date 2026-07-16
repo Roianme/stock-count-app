@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/item_model.dart';
 import '../model/category_model.dart';
-import '../data/item_data.dart' as data;
+
 import '../data/item_repository.dart';
 import '../viewmodel/manage_items_view_model.dart';
 
@@ -170,8 +170,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
     Set<Mode> selectedModes = Set.from(existing?.modes ?? {Mode.city});
     List<ItemUnitOptionRecord> unitOptions =
         List.from(existing?.unitOptions ?? []);
-    String? newOptionText;
-
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) {
@@ -318,7 +316,7 @@ class _ManageItemsViewState extends State<ManageItemsView> {
     bool success;
     if (isEditing) {
       success = await viewModel.updateItem(
-        itemId: existing!.id,
+        itemId: existing.id,
         name: name,
         categoryId: catId,
         modes: modes,
