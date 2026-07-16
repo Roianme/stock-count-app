@@ -126,8 +126,17 @@ class PlatformItemRepository implements ItemRepository {
     if (_hiveBox.isEmpty) {
       // First run: load seed data, backfill categoryId, and save
       final seedItems = items.map((item) {
+        final legacyOpts = itemUnitOptionsById[item.id];
         return item.copyWith(
           categoryId: categoryRecordIdFor(item.category),
+          unitOptions: (legacyOpts != null && legacyOpts.isNotEmpty)
+              ? legacyOpts
+                  .map((opt) => ItemUnitOptionRecord(
+                        label: opt.label,
+                        isUrgent: opt.isUrgent,
+                      ))
+                  .toList()
+              : null,
         );
       }).toList();
       await saveItems(seedItems);
@@ -148,9 +157,20 @@ class PlatformItemRepository implements ItemRepository {
     final existingIds = loadedItems.map((e) => e.id).toSet();
     final newItems = items
         .where((item) => !existingIds.contains(item.id))
-        .map((item) => item.copyWith(
-          categoryId: categoryRecordIdFor(item.category),
-        ))
+        .map((item) {
+          final legacyOpts = itemUnitOptionsById[item.id];
+          return item.copyWith(
+            categoryId: categoryRecordIdFor(item.category),
+            unitOptions: (legacyOpts != null && legacyOpts.isNotEmpty)
+                ? legacyOpts
+                    .map((opt) => ItemUnitOptionRecord(
+                          label: opt.label,
+                          isUrgent: opt.isUrgent,
+                        ))
+                    .toList()
+                : null,
+          );
+        })
         .toList();
     if (newItems.isNotEmpty) {
       loadedItems.addAll(newItems);
