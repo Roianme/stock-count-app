@@ -293,8 +293,8 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                     Navigator.pop(ctx, {
                       'name': nameController.text.trim(),
                       'categoryId': selectedCategoryId,
-                      'modes': Set.from(selectedModes),
-                      'unitOptions': List.from(unitOptions),
+                      'modes': Set<Mode>.from(selectedModes),
+                      'unitOptions': List<ItemUnitOptionRecord>.from(unitOptions),
                     });
                   },
                   child: Text(isEditing ? 'Save' : 'Add'),
