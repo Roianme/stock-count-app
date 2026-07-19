@@ -3,7 +3,6 @@ import '../model/item_model.dart';
 import '../model/category_model.dart';
 import '../viewmodel/category_view_model.dart';
 import '../data/item_repository.dart';
-import '../data/item_data.dart' as data;
 import 'widgets/item_card_widget.dart';
 import 'widgets/masonry_layout.dart';
 import '../utils/index.dart';

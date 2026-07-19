@@ -192,7 +192,7 @@ class _ManageCategoriesViewState extends State<ManageCategoriesView> {
   }) async {
     final isEditing = existing != null;
     final nameController = TextEditingController(text: existing?.name ?? '');
-    int selectedColor = existing?.colorValue ?? Colors.blue.value;
+    int selectedColor = existing?.colorValue ?? Colors.blue.toARGB32();
     int selectedIcon = existing?.iconCodePoint ?? Icons.category.codePoint;
 
     final result = await showDialog<Map<String, dynamic>>(
@@ -225,10 +225,10 @@ class _ManageCategoriesViewState extends State<ManageCategoriesView> {
                       spacing: 8,
                       runSpacing: 8,
                       children: _kCategoryColors.map((color) {
-                        final isSelected = color.value == selectedColor;
+                        final isSelected = color.toARGB32() == selectedColor;
                         return GestureDetector(
                           onTap: () => setDialogState(() {
-                            selectedColor = color.value;
+                            selectedColor = color.toARGB32();
                           }),
                           child: Container(
                             width: 36,
@@ -371,7 +371,7 @@ class _ManageCategoriesViewState extends State<ManageCategoriesView> {
     bool success;
     if (isEditing) {
       success = await viewModel.updateCategory(
-        id: existing!.id,
+        id: existing.id,
         name: name,
         colorValue: colorValue,
         iconCodePoint: iconCodePoint,
