@@ -64,7 +64,9 @@ class ManageItemsViewModel extends ChangeNotifier {
   }
 
   void _load() {
+    debugPrint('_load: data.items has ${data.items.length} items');
     _items = List<Item>.from(data.items);
+    debugPrint('_load: _items now has ${_items.length} items');
     notifyListeners();
   }
 
@@ -95,11 +97,17 @@ class ManageItemsViewModel extends ChangeNotifier {
     );
 
     try {
+      debugPrint('addItem: adding "${trimmedName}" categoryId=$categoryId legacyCat=$legacyCat');
+      final before = data.items.length;
       data.items.add(item);
+      debugPrint('addItem: data.items grew from $before to ${data.items.length}');
       await repository.saveItems(data.items);
+      debugPrint('addItem: saved OK');
       _load();
+      debugPrint('addItem: _load done, _items has ${_items.length}');
       return true;
     } catch (e) {
+      debugPrint('addItem ERROR: $e');
       _errorMessage = 'Failed to add item: $e';
       notifyListeners();
       return false;
