@@ -73,6 +73,8 @@ class ManageItemsViewModel extends ChangeNotifier {
     required String categoryId,
     required Set<Mode> modes,
     required List<ItemUnitOptionRecord> unitOptions,
+    int? quantity,
+    ItemStatus status = ItemStatus.quantity,
   }) async {
     _errorMessage = null;
 
@@ -88,7 +90,8 @@ class ManageItemsViewModel extends ChangeNotifier {
     final item = Item(
       name: trimmedName,
       category: legacyCat,
-      status: ItemStatus.quantity,
+      status: status,
+      quantity: quantity,
       modes: modes,
       unitOptions: unitOptions,
       categoryId: categoryId,
@@ -112,6 +115,8 @@ class ManageItemsViewModel extends ChangeNotifier {
     required String categoryId,
     required Set<Mode> modes,
     required List<ItemUnitOptionRecord> unitOptions,
+    int? quantity,
+    ItemStatus status = ItemStatus.quantity,
   }) async {
     _errorMessage = null;
 
@@ -134,7 +139,9 @@ class ManageItemsViewModel extends ChangeNotifier {
     data.items[index] = data.items[index].copyWith(
       name: trimmedName,
       category: legacyCat,
+      status: status,
       modes: modes,
+      quantity: quantity,
       unitOptions: unitOptions,
       categoryId: categoryId,
     );
