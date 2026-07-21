@@ -220,15 +220,20 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
     // Urgent badge
     if (enabled.contains(ItemStatus.urgent)) {
       controls.add(
-        Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              'URGENT',
-              style: TextStyle(
-                fontSize: context.responsive.fontSize(18, 16),
-                fontWeight: FontWeight.w700,
-                color: Colors.red,
+        GestureDetector(
+          onTap: () {
+            widget.onCheckChanged();
+          },
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'URGENT',
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(18, 16),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
               ),
             ),
           ),

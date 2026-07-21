@@ -324,8 +324,9 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Unit options editor
-                      _buildUnitOptionsEditor(
+                      // Unit options editor (only shown when Dropdown is enabled)
+                      if (enabledStatuses.contains(ItemStatus.dropdown))
+                        _buildUnitOptionsEditor(
                         context,
                         unitOptions,
                         setDialogState,
