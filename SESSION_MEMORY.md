@@ -27,7 +27,6 @@ Execution steps: `stock_count_phase_two_execution_steps.md`
 | 8 | `3967b93` | Navigation wiring — both screens reachable from app drawer |
 | 9 | (deferred) | Seed list trim — deferred, noted in PR |
 | 10 | (verified) | Full rollout checklist passed code review |
-| **11** | **(current)** | **Add quantity & status fields to Manage Items add/edit dialog** |
 
 ### Bugs Discovered & Fixed During Phase Two
 

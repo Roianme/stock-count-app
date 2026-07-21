@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../model/item_model.dart';
 import '../model/category_model.dart';
 
@@ -171,10 +170,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
     Set<Mode> selectedModes = Set.from(existing?.modes ?? {Mode.city});
     List<ItemUnitOptionRecord> unitOptions =
         List.from(existing?.unitOptions ?? []);
-    ItemStatus selectedStatus = existing?.status ?? ItemStatus.quantity;
-    final quantityController = TextEditingController(
-      text: existing?.quantity?.toString() ?? '',
-    );
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) {
@@ -269,54 +264,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Quantity
-                      const Text('Quantity',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: quantityController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter quantity',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Status
-                      const Text('Status',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<ItemStatus>(
-                        value: selectedStatus,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: ItemStatus.quantity,
-                            child: Text('Quantity'),
-                          ),
-                          DropdownMenuItem(
-                            value: ItemStatus.urgent,
-                            child: Text('Urgent'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setDialogState(() {
-                              selectedStatus = val;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
                       // Unit options editor
                       _buildUnitOptionsEditor(
                         context,
@@ -348,8 +295,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                       'categoryId': selectedCategoryId,
                       'modes': Set<Mode>.from(selectedModes),
                       'unitOptions': List<ItemUnitOptionRecord>.from(unitOptions),
-                      'status': selectedStatus,
-                      'quantity': int.tryParse(quantityController.text),
                     });
                   },
                   child: Text(isEditing ? 'Save' : 'Add'),
@@ -367,8 +312,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
     final catId = result['categoryId'] as String;
     final modes = result['modes'] as Set<Mode>;
     final opts = result['unitOptions'] as List<ItemUnitOptionRecord>;
-    final status = result['status'] as ItemStatus;
-    final quantity = result['quantity'] as int?;
 
     bool success;
     if (isEditing) {
@@ -378,8 +321,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
         categoryId: catId,
         modes: modes,
         unitOptions: opts,
-        status: status,
-        quantity: quantity,
       );
     } else {
       success = await viewModel.addItem(
@@ -387,8 +328,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
         categoryId: catId,
         modes: modes,
         unitOptions: opts,
-        status: status,
-        quantity: quantity,
       );
     }
 
@@ -400,7 +339,6 @@ class _ManageItemsViewState extends State<ManageItemsView> {
         ),
       );
     }
-    quantityController.dispose();
   }
   Widget _buildUnitOptionsEditor(
     BuildContext context,
