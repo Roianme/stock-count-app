@@ -56,7 +56,11 @@ class CategoryViewModel extends ChangeNotifier {
   void applyItemQuantityChange(int itemId, int? quantity) {
     _updateItemById(
       itemId,
-      (item) => item.copyWith(quantity: quantity, isChecked: quantity != null),
+      (item) => item.copyWith(
+        quantity: quantity,
+        isChecked: quantity != null,
+        status: model.ItemStatus.quantity,
+      ),
     );
   }
 
@@ -92,7 +96,15 @@ class CategoryViewModel extends ChangeNotifier {
   }
 
   void setItemChecked(int itemId, bool value) {
-    _updateItemById(itemId, (item) => item.copyWith(isChecked: value));
+    _updateItemById(itemId, (item) {
+      if (item.enabledStatuses.contains(model.ItemStatus.urgent)) {
+        return item.copyWith(
+          isChecked: value,
+          status: model.ItemStatus.urgent,
+        );
+      }
+      return item.copyWith(isChecked: value);
+    });
   }
 
   void setAllChecked(bool value) {
