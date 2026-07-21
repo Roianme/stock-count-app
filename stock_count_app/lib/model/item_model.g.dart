@@ -27,13 +27,16 @@ class ItemAdapter extends TypeAdapter<Item> {
       unit: fields[7] as String?,
       unitOptions: fields[8] == null ? const [] : (fields[8] as List).cast<ItemUnitOptionRecord>(),
       categoryId: fields[9] as String?,
+      enabledStatuses: fields[10] == null
+          ? const {ItemStatus.quantity}
+          : (fields[10] as List).cast<ItemStatus>().toSet(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Item obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +56,9 @@ class ItemAdapter extends TypeAdapter<Item> {
       ..writeByte(8)
       ..write(obj.unitOptions)
       ..writeByte(9)
-      ..write(obj.categoryId);
+      ..write(obj.categoryId)
+      ..writeByte(10)
+      ..write(obj.enabledStatuses.toList());
   }
 
   @override
@@ -78,6 +83,8 @@ class ItemStatusAdapter extends TypeAdapter<ItemStatus> {
         return ItemStatus.urgent;
       case 1:
         return ItemStatus.quantity;
+      case 2:
+        return ItemStatus.dropdown;
       default:
         return ItemStatus.urgent;
     }
@@ -91,6 +98,9 @@ class ItemStatusAdapter extends TypeAdapter<ItemStatus> {
         break;
       case ItemStatus.quantity:
         writer.writeByte(1);
+        break;
+      case ItemStatus.dropdown:
+        writer.writeByte(2);
         break;
     }
   }

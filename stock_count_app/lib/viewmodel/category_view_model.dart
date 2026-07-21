@@ -56,7 +56,11 @@ class CategoryViewModel extends ChangeNotifier {
   void applyItemQuantityChange(int itemId, int? quantity) {
     _updateItemById(
       itemId,
-      (item) => item.copyWith(quantity: quantity, isChecked: quantity != null),
+      (item) => item.copyWith(
+        quantity: quantity,
+        isChecked: quantity != null,
+        status: model.ItemStatus.quantity,
+      ),
     );
   }
 
@@ -70,15 +74,11 @@ class CategoryViewModel extends ChangeNotifier {
   }
 
   void applyItemUnitChange(int itemId, model.ItemUnitOptionRecord newUnit) {
-    final newStatus = newUnit.isUrgent
-        ? model.ItemStatus.urgent
-        : model.ItemStatus.quantity;
-
     _updateItemById(
       itemId,
       (item) => item.copyWith(
         unit: newUnit.label,
-        status: newStatus,
+        status: model.ItemStatus.dropdown,
         isChecked: true,
       ),
     );

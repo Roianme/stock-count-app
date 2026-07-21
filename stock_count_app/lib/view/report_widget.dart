@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/category_model.dart';
 
@@ -511,6 +511,10 @@ class ReportWidget extends StatelessWidget {
               } else if (item.status == ItemStatus.quantity) {
                 statusMarker = item.quantity.toString();
                 markerColor = Colors.blueAccent;
+              } else if (item.status == ItemStatus.dropdown) {
+                final unit = item.unit;
+                statusMarker = (unit != null && unit.isNotEmpty) ? unit : '-';
+                markerColor = Colors.green;
               }
 
               return Padding(

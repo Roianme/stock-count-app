@@ -212,42 +212,119 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
   }
 
   Widget _buildStatusOrQuantityWidget(BuildContext context) {
+    final enabled = widget.item.enabledStatuses;
     final unitOptions = data.unitOptionsForItem(widget.item);
-    if (unitOptions.isNotEmpty) {
-      final selectedOption = data.selectedUnitOption(widget.item);
-      final displayLabel = selectedOption?.label ?? 'Select';
+    final selectedOption = data.selectedUnitOption(widget.item);
 
-      return PopupMenuButton<ItemUnitOptionRecord>(
-        tooltip: 'Change unit',
-        padding: EdgeInsets.zero,
-        onSelected: (newUnit) {
-          widget.onUnitChanged(newUnit);
-        },
-        itemBuilder: (BuildContext context) => unitOptions.map((option) {
-          return PopupMenuItem<ItemUnitOptionRecord>(
-            value: option,
-            child: Text(option.label, style: const TextStyle(fontSize: 16)),
-          );
-        }).toList(),
-        child: Container(
-          width: widget.statusControlWidth,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          decoration: context.theme.statusControlDecoration,
-          child: Center(
-            child: Text(
-              displayLabel,
-              style: TextStyle(
-                fontSize: context.responsive.fontSize(18, 16),
-                fontWeight: FontWeight.w600,
-                color: context.theme.textPrimary,
+    // Determine the active status type. Default to item.status if it's
+    // still in the enabled set, otherwise pick the first enabled status.
+    final activeStatus =
+        enabled.contains(widget.item.status) ? widget.item.status : enabled.first;
+    final numEnabled = enabled.length;
+
+    // Build the primary control for the active status
+    Widget buildControl() {
+      switch (activeStatus) {
+        case ItemStatus.urgent:
+          return Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'URGENT',
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(18, 16),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             ),
-          ),
-        ),
-      );
+          );
+
+        case ItemStatus.quantity:
+          return TextField(
+            controller: _quantityController,
+            focusNode: _quantityFocusNode,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: context.responsive.fontSize(18, 16),
+              fontWeight: FontWeight.w600,
+              color: context.theme.textPrimary,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              border: InputBorder.none,
+              hintText: 'Qty',
+              hintStyle: TextStyle(
+                fontSize: context.responsive.fontSize(16, 14),
+              ),
+            ),
+            onSubmitted: (value) {
+              final parsed = value.isEmpty ? null : int.tryParse(value);
+              widget.onQuantityChanged(parsed);
+            },
+          );
+
+        case ItemStatus.dropdown:
+          if (unitOptions.isEmpty) {
+            return Center(
+              child: Text(
+                'No options',
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(12, 11),
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            );
+          }
+          final displayLabel = selectedOption?.label ?? 'Select';
+          return PopupMenuButton<ItemUnitOptionRecord>(
+            tooltip: 'Change unit',
+            padding: EdgeInsets.zero,
+            onSelected: (newUnit) {
+              widget.onUnitChanged(newUnit);
+            },
+            itemBuilder: (BuildContext context) => unitOptions.map((option) {
+              return PopupMenuItem<ItemUnitOptionRecord>(
+                value: option,
+                child: Text(option.label, style: const TextStyle(fontSize: 16)),
+              );
+            }).toList(),
+            child: Center(
+              child: Text(
+                displayLabel,
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(18, 16),
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+      }
+    }
+
+    // Build the status switch menu (only if 2+ controls are enabled)
+    final menuItems = <PopupMenuItem<ItemStatus>>[];
+    if (numEnabled >= 2) {
+      for (final s in ItemStatus.values) {
+        if (s != activeStatus && enabled.contains(s)) {
+          menuItems.add(
+            PopupMenuItem<ItemStatus>(
+              value: s,
+              child: Text(s.displayName, style: const TextStyle(fontSize: 16)),
+            ),
+          );
+        }
+      }
     }
 
     return Container(
@@ -256,68 +333,17 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       decoration: context.theme.statusControlDecoration,
       child: Row(
         children: [
-          Expanded(
-            child: widget.item.status == ItemStatus.urgent
-                ? Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'URGENT',
-                        style: TextStyle(
-                          fontSize: context.responsive.fontSize(18, 16),
-                          fontWeight: FontWeight.w700,
-                          color: context.theme.textPrimary,
-                        ),
-                      ),
-                    ),
-                  )
-                : TextField(
-                    controller: _quantityController,
-                    focusNode: _quantityFocusNode,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(3),
-                    ],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: context.responsive.fontSize(18, 16),
-                      fontWeight: FontWeight.w600,
-                      color: context.theme.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      isDense: false,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      border: InputBorder.none,
-                      hintText: 'Quantity',
-                      hintStyle: TextStyle(
-                        fontSize: context.responsive.fontSize(16, 14),
-                      ),
-                    ),
-                    onSubmitted: (value) {
-                      final parsed = value.isEmpty ? null : int.tryParse(value);
-                      widget.onQuantityChanged(parsed);
-                    },
-                  ),
-          ),
-          PopupMenuButton<ItemStatus>(
-            icon: const Icon(Icons.more_vert, size: 22),
-            tooltip: 'Change status',
-            padding: EdgeInsets.zero,
-            onSelected: (newStatus) {
-              widget.onStatusChanged(newStatus);
-            },
-            itemBuilder: (BuildContext context) => const [
-              PopupMenuItem<ItemStatus>(
-                value: ItemStatus.quantity,
-                child: Text('Quantity', style: TextStyle(fontSize: 16)),
-              ),
-              PopupMenuItem<ItemStatus>(
-                value: ItemStatus.urgent,
-                child: Text('Urgent', style: TextStyle(fontSize: 16)),
-              ),
-            ],
-          ),
+          Expanded(child: buildControl()),
+          if (menuItems.isNotEmpty)
+            PopupMenuButton<ItemStatus>(
+              icon: const Icon(Icons.more_vert, size: 22),
+              tooltip: 'Change status',
+              padding: EdgeInsets.zero,
+              onSelected: (newStatus) {
+                widget.onStatusChanged(newStatus);
+              },
+              itemBuilder: (BuildContext context) => menuItems,
+            ),
         ],
       ),
     );

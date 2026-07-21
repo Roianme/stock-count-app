@@ -170,6 +170,8 @@ class _ManageItemsViewState extends State<ManageItemsView> {
     Set<Mode> selectedModes = Set.from(existing?.modes ?? {Mode.city});
     List<ItemUnitOptionRecord> unitOptions =
         List.from(existing?.unitOptions ?? []);
+    Set<ItemStatus> enabledStatuses =
+        Set.from(existing?.enabledStatuses ?? {ItemStatus.quantity});
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) {
@@ -264,8 +266,67 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Unit options editor
-                      _buildUnitOptionsEditor(
+                      // Status Controls (checkboxes)
+                      const Text('Status Controls',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      CheckboxListTile(
+                        value: enabledStatuses.contains(ItemStatus.quantity),
+                        title: const Text('Quantity (0-999)',
+                            style: TextStyle(fontSize: 13)),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              enabledStatuses.add(ItemStatus.quantity);
+                            } else {
+                              enabledStatuses.remove(ItemStatus.quantity);
+                            }
+                          });
+                        },
+                      ),
+                      CheckboxListTile(
+                        value: enabledStatuses.contains(ItemStatus.dropdown),
+                        title: const Text('Dropdown of predefined options',
+                            style: TextStyle(fontSize: 13)),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              enabledStatuses.add(ItemStatus.dropdown);
+                            } else {
+                              enabledStatuses.remove(ItemStatus.dropdown);
+                            }
+                          });
+                        },
+                      ),
+                      CheckboxListTile(
+                        value: enabledStatuses.contains(ItemStatus.urgent),
+                        title: const Text('Urgent',
+                            style: TextStyle(fontSize: 13)),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              enabledStatuses.add(ItemStatus.urgent);
+                            } else {
+                              enabledStatuses.remove(ItemStatus.urgent);
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Unit options editor (only shown when Dropdown is enabled)
+                      if (enabledStatuses.contains(ItemStatus.dropdown))
+                        _buildUnitOptionsEditor(
                         context,
                         unitOptions,
                         setDialogState,
@@ -295,6 +356,7 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                       'categoryId': selectedCategoryId,
                       'modes': Set<Mode>.from(selectedModes),
                       'unitOptions': List<ItemUnitOptionRecord>.from(unitOptions),
+                      'enabledStatuses': Set<ItemStatus>.from(enabledStatuses),
                     });
                   },
                   child: Text(isEditing ? 'Save' : 'Add'),
@@ -312,6 +374,8 @@ class _ManageItemsViewState extends State<ManageItemsView> {
     final catId = result['categoryId'] as String;
     final modes = result['modes'] as Set<Mode>;
     final opts = result['unitOptions'] as List<ItemUnitOptionRecord>;
+    final selectedEnabledStatuses =
+        result['enabledStatuses'] as Set<ItemStatus>;
 
     bool success;
     if (isEditing) {
@@ -321,6 +385,7 @@ class _ManageItemsViewState extends State<ManageItemsView> {
         categoryId: catId,
         modes: modes,
         unitOptions: opts,
+        enabledStatuses: selectedEnabledStatuses,
       );
     } else {
       success = await viewModel.addItem(
@@ -328,6 +393,7 @@ class _ManageItemsViewState extends State<ManageItemsView> {
         categoryId: catId,
         modes: modes,
         unitOptions: opts,
+        enabledStatuses: selectedEnabledStatuses,
       );
     }
 

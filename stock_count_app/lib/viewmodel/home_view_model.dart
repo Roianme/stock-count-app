@@ -157,7 +157,11 @@ class HomeViewModel extends ChangeNotifier {
   void applyItemQuantityChange(int itemId, int? quantity) {
     _updateItemById(
       itemId,
-      (item) => item.copyWith(quantity: quantity, isChecked: quantity != null),
+      (item) => item.copyWith(
+        quantity: quantity,
+        isChecked: quantity != null,
+        status: model.ItemStatus.quantity,
+      ),
     );
   }
 
@@ -171,15 +175,11 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void applyItemUnitChange(int itemId, model.ItemUnitOptionRecord newUnit) {
-    final newStatus = newUnit.isUrgent
-        ? model.ItemStatus.urgent
-        : model.ItemStatus.quantity;
-
     _updateItemById(
       itemId,
       (item) => item.copyWith(
         unit: newUnit.label,
-        status: newStatus,
+        status: model.ItemStatus.dropdown,
         isChecked: true,
       ),
     );
@@ -205,12 +205,14 @@ class HomeViewModel extends ChangeNotifier {
           modes: current.modes,
           unitOptions: current.unitOptions,
           categoryId: current.categoryId,
+          enabledStatuses: current.enabledStatuses,
         );
       } else {
         data.items[i] = current.copyWith(
           status: model.ItemStatus.quantity,
           quantity: 0,
           isChecked: false,
+          enabledStatuses: const {model.ItemStatus.quantity},
         );
       }
     }
