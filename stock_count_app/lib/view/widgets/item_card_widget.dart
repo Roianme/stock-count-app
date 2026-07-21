@@ -217,22 +217,50 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
     // Build a list of status control widgets
     final List<Widget> controls = [];
 
-    // Urgent badge
+    // Urgent badge — tappable chip/button
     if (enabled.contains(ItemStatus.urgent)) {
+      final isChecked = widget.item.isChecked;
       controls.add(
-        GestureDetector(
-          onTap: () {
-            widget.onCheckChanged();
-          },
-          child: Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                'URGENT',
-                style: TextStyle(
-                  fontSize: context.responsive.fontSize(18, 16),
-                  fontWeight: FontWeight.w700,
-                  color: Colors.red,
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: SizedBox(
+            width: widget.statusControlWidth,
+            child: Material(
+              color: isChecked ? Colors.green.shade50 : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  widget.onCheckChanged();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isChecked
+                            ? Icons.check_circle
+                            : Icons.warning_amber_rounded,
+                        size: 18,
+                        color:
+                            isChecked ? Colors.green.shade700 : Colors.red.shade700,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'URGENT',
+                        style: TextStyle(
+                          fontSize: context.responsive.fontSize(16, 14),
+                          fontWeight: FontWeight.w700,
+                          color: isChecked
+                              ? Colors.green.shade700
+                              : Colors.red.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -279,23 +307,12 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
     }
 
     // Dropdown of predefined options
-    if (enabled.contains(ItemStatus.dropdown) && unitOptions.isNotEmpty) {
-      final displayLabel = selectedOption?.label ?? 'Select';
-      controls.add(
-        PopupMenuButton<ItemUnitOptionRecord>(
-          tooltip: 'Change unit',
-          padding: EdgeInsets.zero,
-          onSelected: (newUnit) {
-            widget.onUnitChanged(newUnit);
-          },
-          itemBuilder: (BuildContext context) => unitOptions.map((option) {
-            return PopupMenuItem<ItemUnitOptionRecord>(
-              value: option,
-              child: Text(option.label, style: const TextStyle(fontSize: 16)),
-            );
-          }).toList(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    if (enabled.contains(ItemStatus.dropdown)) {
+      if (unitOptions.isEmpty) {
+        // Show placeholder when no options are defined
+        controls.add(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(4),
@@ -303,23 +320,62 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Text(
-                    displayLabel,
-                    style: TextStyle(
-                      fontSize: context.responsive.fontSize(14, 13),
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                Icon(Icons.info_outline,
+                    size: 14, color: Colors.grey.shade500),
+                const SizedBox(width: 4),
+                Text(
+                  'No options',
+                  style: TextStyle(
+                    fontSize: context.responsive.fontSize(12, 11),
+                    color: Colors.grey.shade500,
                   ),
                 ),
-                const Icon(Icons.arrow_drop_down, size: 18),
               ],
             ),
           ),
-        ),
-      );
+        );
+      } else {
+        final displayLabel = selectedOption?.label ?? 'Select';
+        controls.add(
+          PopupMenuButton<ItemUnitOptionRecord>(
+            tooltip: 'Change unit',
+            padding: EdgeInsets.zero,
+            onSelected: (newUnit) {
+              widget.onUnitChanged(newUnit);
+            },
+            itemBuilder: (BuildContext context) => unitOptions.map((option) {
+              return PopupMenuItem<ItemUnitOptionRecord>(
+                value: option,
+                child: Text(option.label, style: const TextStyle(fontSize: 16)),
+              );
+            }).toList(),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      displayLabel,
+                      style: TextStyle(
+                        fontSize: context.responsive.fontSize(14, 13),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, size: 18),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     // If no controls enabled, show nothing

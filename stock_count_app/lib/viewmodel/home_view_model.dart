@@ -218,7 +218,7 @@ class HomeViewModel extends ChangeNotifier {
           modes: current.modes,
           unitOptions: current.unitOptions,
           categoryId: current.categoryId,
-          enabledStatuses: seed.enabledStatuses,
+          enabledStatuses: current.enabledStatuses,
         );
       } else {
         data.items[i] = current.copyWith(
