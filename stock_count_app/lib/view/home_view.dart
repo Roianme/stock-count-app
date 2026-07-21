@@ -586,6 +586,9 @@ class _HomePageState extends State<HomePage> {
       onQuantityChanged: (quantity) {
         viewModel.applyItemQuantityChange(item.id, quantity);
       },
+      onStatusChanged: (newStatus) {
+        viewModel.applyItemStatusChange(item.id, newStatus);
+      },
       onUnitChanged: (ItemUnitOptionRecord newUnit) {
         viewModel.applyItemUnitChange(item.id, newUnit);
       },

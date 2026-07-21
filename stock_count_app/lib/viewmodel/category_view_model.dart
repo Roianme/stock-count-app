@@ -96,15 +96,7 @@ class CategoryViewModel extends ChangeNotifier {
   }
 
   void setItemChecked(int itemId, bool value) {
-    _updateItemById(itemId, (item) {
-      if (item.enabledStatuses.contains(model.ItemStatus.urgent)) {
-        return item.copyWith(
-          isChecked: value,
-          status: model.ItemStatus.urgent,
-        );
-      }
-      return item.copyWith(isChecked: value);
-    });
+    _updateItemById(itemId, (item) => item.copyWith(isChecked: value));
   }
 
   void setAllChecked(bool value) {

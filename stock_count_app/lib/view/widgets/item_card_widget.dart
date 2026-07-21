@@ -12,6 +12,7 @@ class ItemCardWidget extends StatefulWidget {
   final double statusControlWidth;
   final VoidCallback onCheckChanged;
   final Function(int?) onQuantityChanged;
+  final Function(ItemStatus) onStatusChanged;
   final Function(ItemUnitOptionRecord) onUnitChanged;
   final bool showItemNameInColumn;
   final bool hideIcon;
@@ -23,6 +24,7 @@ class ItemCardWidget extends StatefulWidget {
     required this.statusControlWidth,
     required this.onCheckChanged,
     required this.onQuantityChanged,
+    required this.onStatusChanged,
     required this.onUnitChanged,
     this.showItemNameInColumn = false,
     this.hideIcon = false,
@@ -214,67 +216,32 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
     final unitOptions = data.unitOptionsForItem(widget.item);
     final selectedOption = data.selectedUnitOption(widget.item);
 
-    // Build a list of status control widgets
-    final List<Widget> controls = [];
+    // Determine the active status type. Default to item.status if it's
+    // still in the enabled set, otherwise pick the first enabled status.
+    final activeStatus =
+        enabled.contains(widget.item.status) ? widget.item.status : enabled.first;
+    final numEnabled = enabled.length;
 
-    // Urgent badge — tappable chip/button
-    if (enabled.contains(ItemStatus.urgent)) {
-      final isChecked = widget.item.isChecked;
-      controls.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: SizedBox(
-            width: widget.statusControlWidth,
-            child: Material(
-              color: isChecked ? Colors.green.shade50 : Colors.red.shade50,
-              borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () {
-                  widget.onCheckChanged();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isChecked
-                            ? Icons.check_circle
-                            : Icons.warning_amber_rounded,
-                        size: 18,
-                        color:
-                            isChecked ? Colors.green.shade700 : Colors.red.shade700,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'URGENT',
-                        style: TextStyle(
-                          fontSize: context.responsive.fontSize(16, 14),
-                          fontWeight: FontWeight.w700,
-                          color: isChecked
-                              ? Colors.green.shade700
-                              : Colors.red.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
+    // Build the primary control for the active status
+    Widget buildControl() {
+      switch (activeStatus) {
+        case ItemStatus.urgent:
+          return Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'URGENT',
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(18, 16),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
                 ),
               ),
             ),
-          ),
-        ),
-      );
-    }
+          );
 
-    // Quantity input
-    if (enabled.contains(ItemStatus.quantity)) {
-      controls.add(
-        SizedBox(
-          height: 36,
-          child: TextField(
+        case ItemStatus.quantity:
+          return TextField(
             controller: _quantityController,
             focusNode: _quantityFocusNode,
             keyboardType: TextInputType.number,
@@ -301,43 +268,22 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
               final parsed = value.isEmpty ? null : int.tryParse(value);
               widget.onQuantityChanged(parsed);
             },
-          ),
-        ),
-      );
-    }
+          );
 
-    // Dropdown of predefined options
-    if (enabled.contains(ItemStatus.dropdown)) {
-      if (unitOptions.isEmpty) {
-        // Show placeholder when no options are defined
-        controls.add(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.info_outline,
-                    size: 14, color: Colors.grey.shade500),
-                const SizedBox(width: 4),
-                Text(
-                  'No options',
-                  style: TextStyle(
-                    fontSize: context.responsive.fontSize(12, 11),
-                    color: Colors.grey.shade500,
-                  ),
+        case ItemStatus.dropdown:
+          if (unitOptions.isEmpty) {
+            return Center(
+              child: Text(
+                'No options',
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(12, 11),
+                  color: Colors.grey.shade500,
                 ),
-              ],
-            ),
-          ),
-        );
-      } else {
-        final displayLabel = selectedOption?.label ?? 'Select';
-        controls.add(
-          PopupMenuButton<ItemUnitOptionRecord>(
+              ),
+            );
+          }
+          final displayLabel = selectedOption?.label ?? 'Select';
+          return PopupMenuButton<ItemUnitOptionRecord>(
             tooltip: 'Change unit',
             padding: EdgeInsets.zero,
             onSelected: (newUnit) {
@@ -349,52 +295,57 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                 child: Text(option.label, style: const TextStyle(fontSize: 16)),
               );
             }).toList(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      displayLabel,
-                      style: TextStyle(
-                        fontSize: context.responsive.fontSize(14, 13),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const Icon(Icons.arrow_drop_down, size: 18),
-                ],
+            child: Center(
+              child: Text(
+                displayLabel,
+                style: TextStyle(
+                  fontSize: context.responsive.fontSize(18, 16),
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
-          ),
-        );
+          );
       }
     }
 
-    // If no controls enabled, show nothing
-    if (controls.isEmpty) {
-      return const SizedBox.shrink();
+    // Build the status switch menu (only if 2+ controls are enabled)
+    final menuItems = <PopupMenuItem<ItemStatus>>[];
+    if (numEnabled >= 2) {
+      for (final s in ItemStatus.values) {
+        if (s != activeStatus && enabled.contains(s)) {
+          menuItems.add(
+            PopupMenuItem<ItemStatus>(
+              value: s,
+              child: Text(s.displayName, style: const TextStyle(fontSize: 16)),
+            ),
+          );
+        }
+      }
     }
 
-    // Wrap in status control container
     return Container(
       width: widget.statusControlWidth,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: context.theme.statusControlDecoration,
-      child: controls.length == 1
-          ? controls.first
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: controls,
+      child: Row(
+        children: [
+          Expanded(child: buildControl()),
+          if (menuItems.isNotEmpty)
+            PopupMenuButton<ItemStatus>(
+              icon: const Icon(Icons.more_vert, size: 22),
+              tooltip: 'Change status',
+              padding: EdgeInsets.zero,
+              onSelected: (newStatus) {
+                widget.onStatusChanged(newStatus);
+              },
+              itemBuilder: (BuildContext context) => menuItems,
             ),
+        ],
+      ),
     );
   }
 }

@@ -107,16 +107,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void setItemChecked(int itemId, bool value) {
-    _updateItemById(itemId, (item) {
-      // When Urgent is enabled, set status so the report shows URGENT
-      if (item.enabledStatuses.contains(model.ItemStatus.urgent)) {
-        return item.copyWith(
-          isChecked: value,
-          status: model.ItemStatus.urgent,
-        );
-      }
-      return item.copyWith(isChecked: value);
-    });
+    _updateItemById(itemId, (item) => item.copyWith(isChecked: value));
   }
 
   List<model.Item> itemsForCategory(CategoryRecord category) {
