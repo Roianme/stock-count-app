@@ -73,6 +73,7 @@ class ManageItemsViewModel extends ChangeNotifier {
     required String categoryId,
     required Set<Mode> modes,
     required List<ItemUnitOptionRecord> unitOptions,
+    Set<ItemStatus> enabledStatuses = const {ItemStatus.quantity},
   }) async {
     _errorMessage = null;
 
@@ -88,10 +89,10 @@ class ManageItemsViewModel extends ChangeNotifier {
     final item = Item(
       name: trimmedName,
       category: legacyCat,
-      status: ItemStatus.quantity,
       modes: modes,
       unitOptions: unitOptions,
       categoryId: categoryId,
+      enabledStatuses: enabledStatuses,
     );
 
     try {
@@ -112,6 +113,7 @@ class ManageItemsViewModel extends ChangeNotifier {
     required String categoryId,
     required Set<Mode> modes,
     required List<ItemUnitOptionRecord> unitOptions,
+    Set<ItemStatus> enabledStatuses = const {ItemStatus.quantity},
   }) async {
     _errorMessage = null;
 
@@ -137,6 +139,7 @@ class ManageItemsViewModel extends ChangeNotifier {
       modes: modes,
       unitOptions: unitOptions,
       categoryId: categoryId,
+      enabledStatuses: enabledStatuses,
     );
 
     try {

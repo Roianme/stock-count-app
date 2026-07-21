@@ -1444,6 +1444,7 @@ void initializeSeedData() {
       unit: item.unit, // Capture the ORIGINAL unit from the defined seed
       categoryId: categoryRecordIdFor(item.category),
       unitOptions: const [],
+      enabledStatuses: {item.status},
     );
   }
 }

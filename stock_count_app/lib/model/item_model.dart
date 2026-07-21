@@ -9,6 +9,8 @@ enum ItemStatus {
   urgent,
   @HiveField(1)
   quantity,
+  @HiveField(2)
+  dropdown,
 }
 
 @HiveType(typeId: 1)
@@ -133,6 +135,9 @@ class Item {
   @HiveField(9)
   final String? categoryId;
 
+  @HiveField(10)
+  final Set<ItemStatus> enabledStatuses;
+
   Item({
     int? id,
     String? name,
@@ -144,6 +149,7 @@ class Item {
     this.unit,
     this.unitOptions = const [],
     this.categoryId,
+    this.enabledStatuses = const {ItemStatus.quantity},
   }) : id = id ?? _nextId++,
        name = name ?? 'Unnamed Item',
        category = category ?? Category.misc,
@@ -162,6 +168,7 @@ class Item {
     String? unit,
     List<ItemUnitOptionRecord>? unitOptions,
     String? categoryId,
+    Set<ItemStatus>? enabledStatuses,
   }) {
     return Item(
       id: id ?? this.id,
@@ -174,6 +181,7 @@ class Item {
       unit: unit ?? this.unit,
       unitOptions: unitOptions ?? this.unitOptions,
       categoryId: categoryId ?? this.categoryId,
+      enabledStatuses: enabledStatuses ?? this.enabledStatuses,
     );
   }
 }
@@ -286,6 +294,8 @@ extension ItemStatusExtension on ItemStatus {
         return 'Urgent';
       case ItemStatus.quantity:
         return 'Quantity';
+      case ItemStatus.dropdown:
+        return 'Dropdown';
     }
   }
 }

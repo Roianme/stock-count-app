@@ -205,12 +205,14 @@ class HomeViewModel extends ChangeNotifier {
           modes: current.modes,
           unitOptions: current.unitOptions,
           categoryId: current.categoryId,
+          enabledStatuses: seed.enabledStatuses,
         );
       } else {
         data.items[i] = current.copyWith(
           status: model.ItemStatus.quantity,
           quantity: 0,
           isChecked: false,
+          enabledStatuses: const {model.ItemStatus.quantity},
         );
       }
     }

@@ -12,7 +12,6 @@ class ItemCardWidget extends StatefulWidget {
   final double statusControlWidth;
   final VoidCallback onCheckChanged;
   final Function(int?) onQuantityChanged;
-  final Function(ItemStatus) onStatusChanged;
   final Function(ItemUnitOptionRecord) onUnitChanged;
   final bool showItemNameInColumn;
   final bool hideIcon;
@@ -24,7 +23,6 @@ class ItemCardWidget extends StatefulWidget {
     required this.statusControlWidth,
     required this.onCheckChanged,
     required this.onQuantityChanged,
-    required this.onStatusChanged,
     required this.onUnitChanged,
     this.showItemNameInColumn = false,
     this.hideIcon = false,
@@ -212,114 +210,130 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
   }
 
   Widget _buildStatusOrQuantityWidget(BuildContext context) {
+    final enabled = widget.item.enabledStatuses;
     final unitOptions = data.unitOptionsForItem(widget.item);
-    if (unitOptions.isNotEmpty) {
-      final selectedOption = data.selectedUnitOption(widget.item);
-      final displayLabel = selectedOption?.label ?? 'Select';
+    final selectedOption = data.selectedUnitOption(widget.item);
 
-      return PopupMenuButton<ItemUnitOptionRecord>(
-        tooltip: 'Change unit',
-        padding: EdgeInsets.zero,
-        onSelected: (newUnit) {
-          widget.onUnitChanged(newUnit);
-        },
-        itemBuilder: (BuildContext context) => unitOptions.map((option) {
-          return PopupMenuItem<ItemUnitOptionRecord>(
-            value: option,
-            child: Text(option.label, style: const TextStyle(fontSize: 16)),
-          );
-        }).toList(),
-        child: Container(
-          width: widget.statusControlWidth,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          decoration: context.theme.statusControlDecoration,
-          child: Center(
+    // Build a list of status control widgets
+    final List<Widget> controls = [];
+
+    // Urgent badge
+    if (enabled.contains(ItemStatus.urgent)) {
+      controls.add(
+        Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
             child: Text(
-              displayLabel,
+              'URGENT',
               style: TextStyle(
                 fontSize: context.responsive.fontSize(18, 16),
-                fontWeight: FontWeight.w600,
-                color: context.theme.textPrimary,
+                fontWeight: FontWeight.w700,
+                color: Colors.red,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             ),
           ),
         ),
       );
     }
 
+    // Quantity input
+    if (enabled.contains(ItemStatus.quantity)) {
+      controls.add(
+        SizedBox(
+          height: 36,
+          child: TextField(
+            controller: _quantityController,
+            focusNode: _quantityFocusNode,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: context.responsive.fontSize(18, 16),
+              fontWeight: FontWeight.w600,
+              color: context.theme.textPrimary,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              border: InputBorder.none,
+              hintText: 'Qty',
+              hintStyle: TextStyle(
+                fontSize: context.responsive.fontSize(16, 14),
+              ),
+            ),
+            onSubmitted: (value) {
+              final parsed = value.isEmpty ? null : int.tryParse(value);
+              widget.onQuantityChanged(parsed);
+            },
+          ),
+        ),
+      );
+    }
+
+    // Dropdown of predefined options
+    if (enabled.contains(ItemStatus.dropdown) && unitOptions.isNotEmpty) {
+      final displayLabel = selectedOption?.label ?? 'Select';
+      controls.add(
+        PopupMenuButton<ItemUnitOptionRecord>(
+          tooltip: 'Change unit',
+          padding: EdgeInsets.zero,
+          onSelected: (newUnit) {
+            widget.onUnitChanged(newUnit);
+          },
+          itemBuilder: (BuildContext context) => unitOptions.map((option) {
+            return PopupMenuItem<ItemUnitOptionRecord>(
+              value: option,
+              child: Text(option.label, style: const TextStyle(fontSize: 16)),
+            );
+          }).toList(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    displayLabel,
+                    style: TextStyle(
+                      fontSize: context.responsive.fontSize(14, 13),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Icon(Icons.arrow_drop_down, size: 18),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // If no controls enabled, show nothing
+    if (controls.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Wrap in status control container
     return Container(
       width: widget.statusControlWidth,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: context.theme.statusControlDecoration,
-      child: Row(
-        children: [
-          Expanded(
-            child: widget.item.status == ItemStatus.urgent
-                ? Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'URGENT',
-                        style: TextStyle(
-                          fontSize: context.responsive.fontSize(18, 16),
-                          fontWeight: FontWeight.w700,
-                          color: context.theme.textPrimary,
-                        ),
-                      ),
-                    ),
-                  )
-                : TextField(
-                    controller: _quantityController,
-                    focusNode: _quantityFocusNode,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(3),
-                    ],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: context.responsive.fontSize(18, 16),
-                      fontWeight: FontWeight.w600,
-                      color: context.theme.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      isDense: false,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      border: InputBorder.none,
-                      hintText: 'Quantity',
-                      hintStyle: TextStyle(
-                        fontSize: context.responsive.fontSize(16, 14),
-                      ),
-                    ),
-                    onSubmitted: (value) {
-                      final parsed = value.isEmpty ? null : int.tryParse(value);
-                      widget.onQuantityChanged(parsed);
-                    },
-                  ),
-          ),
-          PopupMenuButton<ItemStatus>(
-            icon: const Icon(Icons.more_vert, size: 22),
-            tooltip: 'Change status',
-            padding: EdgeInsets.zero,
-            onSelected: (newStatus) {
-              widget.onStatusChanged(newStatus);
-            },
-            itemBuilder: (BuildContext context) => const [
-              PopupMenuItem<ItemStatus>(
-                value: ItemStatus.quantity,
-                child: Text('Quantity', style: TextStyle(fontSize: 16)),
-              ),
-              PopupMenuItem<ItemStatus>(
-                value: ItemStatus.urgent,
-                child: Text('Urgent', style: TextStyle(fontSize: 16)),
-              ),
-            ],
-          ),
-        ],
-      ),
+      child: controls.length == 1
+          ? controls.first
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: controls,
+            ),
     );
   }
 }
