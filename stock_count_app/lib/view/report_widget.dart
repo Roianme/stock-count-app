@@ -25,17 +25,17 @@ class ReportWidget extends StatelessWidget {
     final now = DateTime.now();
     final dateStr = DateFormat('EEEE, dd MMM yyyy').format(now);
 
-    // Group items by category (resolve CategoryRecord from categoryId)
+    // Step 1: Extract urgent items (only checked ones qualify)
+    final extracted = _extractUrgentItems(items);
+    final urgentItems = extracted.items;
+    final urgentIds = urgentItems.map((i) => i.id).toSet();
+
+    // Step 2: Group NON-urgent items by category
     final groupedItems = <CategoryRecord, List<Item>>{};
     for (final item in items) {
-      final cat = item.categoryId != null
-          ? data.categories.cast<CategoryRecord?>().firstWhere(
-                (c) => c?.id == item.categoryId,
-                orElse: () => null,
-              )
-          : null;
-      final key = cat ?? _legacyCategoryForItem(item);
-      groupedItems.putIfAbsent(key, () => []).add(item);
+      if (urgentIds.contains(item.id)) continue;
+      final cat = _resolveCategory(item);
+      groupedItems.putIfAbsent(cat, () => []).add(item);
     }
     final categories = groupedItems.keys.toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -44,8 +44,8 @@ class ReportWidget extends StatelessWidget {
     final isLandscape = context.isLandscape;
 
     return isLandscape
-        ? _buildLandscapeLayout(context, dateStr, categories, groupedItems)
-        : _buildPortraitLayout(context, dateStr, categories, groupedItems);
+        ? _buildLandscapeLayout(context, dateStr, categories, groupedItems, urgentItems)
+        : _buildPortraitLayout(context, dateStr, categories, groupedItems, urgentItems);
   }
 
   /// Landscape layout: 6-column grid with smart chunking
@@ -54,6 +54,7 @@ class ReportWidget extends StatelessWidget {
     String dateStr,
     List<CategoryRecord> categories,
     Map<CategoryRecord, List<Item>> groupedItems,
+    List<Item> urgentItems,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -213,6 +214,7 @@ class ReportWidget extends StatelessWidget {
     String dateStr,
     List<CategoryRecord> categories,
     Map<CategoryRecord, List<Item>> groupedItems,
+    List<Item> urgentItems,
   ) {
     // Distribute categories across 2 columns (alternating)
     final leftColumnCategories = <CategoryRecord>[];
@@ -573,7 +575,152 @@ class ReportWidget extends StatelessWidget {
       ),
     );
   }
+/// Synthetic CategoryRecord used as an identity marker for the URGENT chunk.
+/// Never rendered as a real category - detected by identity check (==).
+static final _urgentSyntheticCategory = CategoryRecord(
+  id: '__urgent__',
+  name: 'URGENT',
+  colorValue: Colors.red.toARGB32(),
+  iconCodePoint: Icons.warning.codePoint,
+  iconFontFamily: 'MaterialIcons',
+  sortOrder: -1,
+);
+
+/// Extracts checked urgent items from all items.
+/// Returns the urgent items list and a map of itemId to category name.
+({List<Item> items, Map<int, String> categories}) _extractUrgentItems(
+  List<Item> allItems,
+) {
+  final urgent = <Item>[];
+  final categories = <int, String>{};
+  for (final item in allItems) {
+    if (!item.isChecked) continue;
+    bool isUrgent = item.status == ItemStatus.urgent;
+    if (!isUrgent && item.status == ItemStatus.dropdown) {
+      final unit = data.selectedUnitOption(item);
+      isUrgent = unit?.isUrgent == true;
+    }
+    if (isUrgent) {
+      urgent.add(item);
+      final cat = _resolveCategory(item);
+      categories[item.id] = cat.name;
+    }
+  }
+  return (items: urgent, categories: categories);
 }
+
+/// Landscape URGENT block with red header and items (name + category subtitle).
+Widget _buildUrgentColumn(List<Item> items) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.all(8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Red header badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.red[700],
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('‼ ', style: TextStyle(fontSize: 18, color: Colors.white)),
+              Text(
+                'URGENT',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        // Items - name + category subtitle, NO URGENT badge
+        ...items.map((item) => _buildUrgentItemRow(item)),
+      ],
+    ),
+  );
+}
+
+/// Portrait variant of URGENT block - same rendering, wrapped for portrait context.
+Widget _buildUrgentSection(List<Item> items) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.all(8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Red header badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.red[700],
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('‼ ', style: TextStyle(fontSize: 18, color: Colors.white)),
+              Text(
+                'URGENT',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        ...items.map((item) => _buildUrgentItemRow(item)),
+      ],
+    ),
+  );
+}
+
+/// Single item row for URGENT section: name (19pt) + category subtitle (11pt grey).
+Widget _buildUrgentItemRow(Item item) {
+  final catName = _resolveCategory(item).name;
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.name,
+          style: const TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        if (catName.isNotEmpty)
+          Text(
+            catName,
+            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+          ),
+      ],
+    ),
+  );
+}
+}
+
+  /// Resolves the CategoryRecord for an item by matching categoryId, falling back to legacy enum.
+  CategoryRecord _resolveCategory(Item item) {
+    final cat = item.categoryId != null
+        ? data.categories.cast<CategoryRecord?>().firstWhere(
+              (c) => c?.id == item.categoryId,
+              orElse: () => null,
+            )
+        : null;
+    return cat ?? _legacyCategoryForItem(item);
+  }
 
   /// Fallback: creates a CategoryRecord from the legacy Category enum when categoryId is null.
   CategoryRecord _legacyCategoryForItem(Item item) {
