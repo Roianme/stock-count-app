@@ -126,6 +126,20 @@ class ReportWidget extends StatelessWidget {
         }
         final columnHeights = List<double>.filled(numColumns, 0);
 
+        // Pre-place URGENT chunk at top of column 0
+        if (urgentItems.isNotEmpty) {
+          const urgentHeaderHeight = 22.0 + 6.0;
+          final urgentEstimatedHeight = urgentHeaderHeight +
+              (urgentItems.length * itemHeight) + chunkVerticalOverhead;
+          columns[0].add(CategoryChunk(
+            category: _urgentSyntheticCategory,
+            items: urgentItems,
+            isFirstChunk: true,
+            estimatedHeight: urgentEstimatedHeight,
+          ));
+          columnHeights[0] = urgentEstimatedHeight;
+        }
+
         // Sort chunks by height (largest first) for better bin packing
         final sortedChunks = List<CategoryChunk>.from(categoryChunks);
         sortedChunks.sort(
@@ -189,6 +203,9 @@ class ReportWidget extends StatelessWidget {
                             final category = chunk.category;
                             final isFirstChunk = chunk.isFirstChunk;
 
+                            if (chunk.category == _urgentSyntheticCategory) {
+                              return _buildUrgentColumn(chunk.items);
+                            }
                             return _buildCategoryColumn(
                               category,
                               items,
@@ -263,18 +280,20 @@ class ReportWidget extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: ListView.builder(
+                      child: ListView(
                         padding: EdgeInsets.zero,
-                        itemCount: leftColumnCategories.length,
-                        itemBuilder: (context, index) {
-                          final category = leftColumnCategories[index];
-                          final categoryItems = groupedItems[category] ?? [];
-                          return _buildPortraitCategorySection(
-                            category,
-                            categoryItems,
-                            isLeftColumn: true,
-                          );
-                        },
+                        children: [
+                          if (urgentItems.isNotEmpty)
+                            _buildUrgentSection(urgentItems),
+                          ...leftColumnCategories.map((category) {
+                            final categoryItems = groupedItems[category] ?? [];
+                            return _buildPortraitCategorySection(
+                              category,
+                              categoryItems,
+                              isLeftColumn: true,
+                            );
+                          }),
+                        ],
                       ),
                     ),
                   ),
