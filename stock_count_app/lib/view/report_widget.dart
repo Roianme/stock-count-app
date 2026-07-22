@@ -27,7 +27,13 @@ class ReportWidget extends StatelessWidget {
 
     // Step 1: Extract urgent items (only checked ones qualify)
     final extracted = _extractUrgentItems(items);
-    final urgentItems = extracted.items;
+    // Sort urgent items by category sortOrder so they group by category
+    final urgentItems = extracted.items
+      ..sort((a, b) {
+        final catA = _resolveCategory(a);
+        final catB = _resolveCategory(b);
+        return catA.sortOrder.compareTo(catB.sortOrder);
+      });
     final urgentIds = urgentItems.map((i) => i.id).toSet();
 
     // Step 2: Group NON-urgent items by category
@@ -628,102 +634,112 @@ static final _urgentSyntheticCategory = CategoryRecord(
   return (items: urgent, categories: categories);
 }
 
-/// Landscape URGENT block with red header and items (name + category subtitle).
+/// Landscape URGENT block: gray-background block with red header, items sorted by category.
 Widget _buildUrgentColumn(List<Item> items) {
   return Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    padding: const EdgeInsets.all(8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Red header badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.red[700],
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('‼ ', style: TextStyle(fontSize: 18, color: Colors.white)),
-              Text(
-                'URGENT',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
+    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+    padding: const EdgeInsets.all(10),
+    color: Colors.grey[100],
+    child: Padding(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Red URGENT header (matches category header shape)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.red[700],
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: const Text(
+              '‼ URGENT',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        // Items - name + category subtitle, NO URGENT badge
-        ...items.map((item) => _buildUrgentItemRow(item)),
-      ],
+          const SizedBox(height: 6),
+          // Items - name + category name, NO status badge
+          ...items.map((item) => _buildUrgentItemRow(item)),
+        ],
+      ),
     ),
   );
 }
 
-/// Portrait variant of URGENT block - same rendering, wrapped for portrait context.
+/// Portrait variant of URGENT block - same gray-background, red header, category-sorted items.
 Widget _buildUrgentSection(List<Item> items) {
   return Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    padding: const EdgeInsets.all(8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Red header badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.red[700],
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('‼ ', style: TextStyle(fontSize: 18, color: Colors.white)),
-              Text(
-                'URGENT',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
+    margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+    padding: const EdgeInsets.all(10),
+    color: Colors.grey[100],
+    child: Padding(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Red URGENT header (matches category header shape)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.red[700],
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: const Text(
+              '‼ URGENT',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        ...items.map((item) => _buildUrgentItemRow(item)),
-      ],
+          const SizedBox(height: 6),
+          ...items.map((item) => _buildUrgentItemRow(item)),
+        ],
+      ),
     ),
   );
 }
 
-/// Single item row for URGENT section: name (19pt) + category subtitle (11pt grey).
+/// Single item row for URGENT section: item name (left) + category name (right), no badge.
 Widget _buildUrgentItemRow(Item item) {
   final catName = _resolveCategory(item).name;
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          item.name,
-          style: const TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
+        Expanded(
+          child: Text(
+            item.name,
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
           ),
         ),
-        if (catName.isNotEmpty)
-          Text(
-            catName,
-            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(4),
           ),
+          child: Text(
+            catName,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
       ],
     ),
   );
