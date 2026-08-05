@@ -430,7 +430,8 @@ class ReportWidget extends StatelessWidget {
       markerColor = Colors.redAccent;
     } else if (item.status == ItemStatus.quantity) {
       statusMarker = item.quantity.toString();
-      markerColor = Colors.blueAccent;
+      markerColor =
+          item.quantity == 0 ? Colors.redAccent : Colors.blueAccent;
     }
 
     return Container(
@@ -537,7 +538,8 @@ class ReportWidget extends StatelessWidget {
                 markerColor = Colors.redAccent;
               } else if (item.status == ItemStatus.quantity) {
                 statusMarker = item.quantity.toString();
-                markerColor = Colors.blueAccent;
+                markerColor =
+                    item.quantity == 0 ? Colors.redAccent : Colors.blueAccent;
               } else if (item.status == ItemStatus.dropdown) {
                 final unit = item.unit;
                 statusMarker = (unit != null && unit.isNotEmpty) ? unit : '-';
