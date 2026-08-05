@@ -50,8 +50,20 @@ class ReportWidget extends StatelessWidget {
     final isLandscape = context.isLandscape;
 
     return isLandscape
-        ? _buildLandscapeLayout(context, dateStr, categories, groupedItems, urgentItems)
-        : _buildPortraitLayout(context, dateStr, categories, groupedItems, urgentItems);
+        ? _buildLandscapeLayout(
+            context,
+            dateStr,
+            categories,
+            groupedItems,
+            urgentItems,
+          )
+        : _buildPortraitLayout(
+            context,
+            dateStr,
+            categories,
+            groupedItems,
+            urgentItems,
+          );
   }
 
   /// Landscape layout: 6-column grid with smart chunking
@@ -135,14 +147,18 @@ class ReportWidget extends StatelessWidget {
         // Pre-place URGENT chunk at top of column 0
         if (urgentItems.isNotEmpty) {
           const urgentHeaderHeight = 22.0 + 6.0;
-          final urgentEstimatedHeight = urgentHeaderHeight +
-              (urgentItems.length * itemHeight) + chunkVerticalOverhead;
-          columns[0].add(CategoryChunk(
-            category: _urgentSyntheticCategory,
-            items: urgentItems,
-            isFirstChunk: true,
-            estimatedHeight: urgentEstimatedHeight,
-          ));
+          final urgentEstimatedHeight =
+              urgentHeaderHeight +
+              (urgentItems.length * itemHeight) +
+              chunkVerticalOverhead;
+          columns[0].add(
+            CategoryChunk(
+              category: _urgentSyntheticCategory,
+              items: urgentItems,
+              isFirstChunk: true,
+              estimatedHeight: urgentEstimatedHeight,
+            ),
+          );
           columnHeights[0] = urgentEstimatedHeight;
         }
 
@@ -317,7 +333,6 @@ class ReportWidget extends StatelessWidget {
                             category,
                             categoryItems,
                             isLeftColumn: false,
-
                           );
                         },
                       ),
@@ -344,7 +359,8 @@ class ReportWidget extends StatelessWidget {
   /// Build category section content
   Widget _buildCategorySectionContent(
     CategoryRecord category,
-    List<Item> categoryItems) {
+    List<Item> categoryItems,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -430,7 +446,8 @@ class ReportWidget extends StatelessWidget {
       markerColor = Colors.redAccent;
     } else if (item.status == ItemStatus.quantity) {
       statusMarker = item.quantity.toString();
-      markerColor = Colors.blueAccent;
+      markerColor =
+          item.quantity == 0 ? Colors.redAccent : Colors.blueAccent;
     }
 
     return Container(
@@ -508,7 +525,7 @@ class ReportWidget extends StatelessWidget {
               child: Text(
                 category.name.toUpperCase(),
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: Colors.black87,
                 ),
@@ -537,7 +554,8 @@ class ReportWidget extends StatelessWidget {
                 markerColor = Colors.redAccent;
               } else if (item.status == ItemStatus.quantity) {
                 statusMarker = item.quantity.toString();
-                markerColor = Colors.blueAccent;
+                markerColor =
+                    item.quantity == 0 ? Colors.redAccent : Colors.blueAccent;
               } else if (item.status == ItemStatus.dropdown) {
                 final unit = item.unit;
                 statusMarker = (unit != null && unit.isNotEmpty) ? unit : '-';
@@ -600,178 +618,179 @@ class ReportWidget extends StatelessWidget {
       ),
     );
   }
-/// Synthetic CategoryRecord used as an identity marker for the URGENT chunk.
-/// Never rendered as a real category - detected by identity check (==).
-static final _urgentSyntheticCategory = CategoryRecord(
-  id: '__urgent__',
-  name: 'URGENT',
-  colorValue: Colors.red.toARGB32(),
-  iconCodePoint: Icons.warning.codePoint,
-  iconFontFamily: 'MaterialIcons',
-  sortOrder: -1,
-);
 
-/// Extracts checked urgent items from all items.
-/// Returns the urgent items list and a map of itemId to category name.
-({List<Item> items, Map<int, String> categories}) _extractUrgentItems(
-  List<Item> allItems,
-) {
-  final urgent = <Item>[];
-  final categories = <int, String>{};
-  for (final item in allItems) {
-    if (!item.isChecked) continue;
-    bool isUrgent = item.status == ItemStatus.urgent;
-    if (!isUrgent && item.status == ItemStatus.dropdown) {
-      final unit = data.selectedUnitOption(item);
-      isUrgent = unit?.isUrgent == true;
+  /// Synthetic CategoryRecord used as an identity marker for the URGENT chunk.
+  /// Never rendered as a real category - detected by identity check (==).
+  static final _urgentSyntheticCategory = CategoryRecord(
+    id: '__urgent__',
+    name: 'URGENT',
+    colorValue: Colors.red.toARGB32(),
+    iconCodePoint: Icons.warning.codePoint,
+    iconFontFamily: 'MaterialIcons',
+    sortOrder: -1,
+  );
+
+  /// Extracts checked urgent items from all items.
+  /// Returns the urgent items list and a map of itemId to category name.
+  ({List<Item> items, Map<int, String> categories}) _extractUrgentItems(
+    List<Item> allItems,
+  ) {
+    final urgent = <Item>[];
+    final categories = <int, String>{};
+    for (final item in allItems) {
+      if (!item.isChecked) continue;
+      bool isUrgent = item.status == ItemStatus.urgent;
+      if (!isUrgent && item.status == ItemStatus.dropdown) {
+        final unit = data.selectedUnitOption(item);
+        isUrgent = unit?.isUrgent == true;
+      }
+      if (isUrgent) {
+        urgent.add(item);
+        final cat = _resolveCategory(item);
+        categories[item.id] = cat.name;
+      }
     }
-    if (isUrgent) {
-      urgent.add(item);
-      final cat = _resolveCategory(item);
-      categories[item.id] = cat.name;
-    }
-  }
-  return (items: urgent, categories: categories);
-}
-
-/// Landscape URGENT block: gray-background block with red header, items sorted by category.
-Widget _buildUrgentColumn(List<Item> items) {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-    padding: const EdgeInsets.all(10),
-    color: Colors.grey[100],
-    child: Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Red URGENT header (matches category header shape)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.red[700],
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: const Text(
-              '‼ URGENT',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Items - name + category name, NO status badge
-          ...items.map((item) => _buildUrgentItemRow(item)),
-        ],
-      ),
-    ),
-  );
-}
-
-/// Portrait variant of URGENT block - same gray-background, red header, category-sorted items.
-Widget _buildUrgentSection(List<Item> items) {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-    padding: const EdgeInsets.all(10),
-    color: Colors.grey[100],
-    child: Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Red URGENT header (matches category header shape)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.red[700],
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: const Text(
-              '‼ URGENT',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          ...items.map((item) => _buildUrgentItemRow(item)),
-        ],
-      ),
-    ),
-  );
-}
-
-/// Single item row for URGENT section: item name (left) + category name (right), no badge.
-Widget _buildUrgentItemRow(Item item) {
-  final catName = _resolveCategory(item).name;
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Text(
-            item.name,
-            style: const TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            catName,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-}
-
-  /// Resolves the CategoryRecord for an item by matching categoryId, falling back to legacy enum.
-  CategoryRecord _resolveCategory(Item item) {
-    final cat = item.categoryId != null
-        ? data.categories.cast<CategoryRecord?>().firstWhere(
-              (c) => c?.id == item.categoryId,
-              orElse: () => null,
-            )
-        : null;
-    return cat ?? _legacyCategoryForItem(item);
+    return (items: urgent, categories: categories);
   }
 
-  /// Fallback: creates a CategoryRecord from the legacy Category enum when categoryId is null.
-  CategoryRecord _legacyCategoryForItem(Item item) {
-    final id = categoryRecordIdFor(item.category);
-    return data.categories.firstWhere(
-      (c) => c.id == id,
-      orElse: () => CategoryRecord(
-        id: id,
-        name: item.category.displayName,
-        colorValue: item.category.color.toARGB32(),
-        iconCodePoint: item.category.icon.codePoint,
-        iconFontFamily: item.category.icon.fontFamily ?? 'MaterialIcons',
-        sortOrder: item.category.index,
+  /// Landscape URGENT block: gray-background block with red header, items sorted by category.
+  Widget _buildUrgentColumn(List<Item> items) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.all(10),
+      color: Colors.grey[100],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Red URGENT header (matches category header shape)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.red[700],
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: const Text(
+                'URGENT',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Items - name + category name, NO status badge
+            ...items.map((item) => _buildUrgentItemRow(item)),
+          ],
+        ),
       ),
     );
   }
+
+  /// Portrait variant of URGENT block - same gray-background, red header, category-sorted items.
+  Widget _buildUrgentSection(List<Item> items) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      padding: const EdgeInsets.all(10),
+      color: Colors.grey[100],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Red URGENT header (matches category header shape)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.red[700],
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: const Text(
+                '‼ URGENT',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...items.map((item) => _buildUrgentItemRow(item)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Single item row for URGENT section: item name (left) + category name (right), no badge.
+  Widget _buildUrgentItemRow(Item item) {
+    final catName = _resolveCategory(item).name;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              item.name,
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              catName,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Resolves the CategoryRecord for an item by matching categoryId, falling back to legacy enum.
+CategoryRecord _resolveCategory(Item item) {
+  final cat = item.categoryId != null
+      ? data.categories.cast<CategoryRecord?>().firstWhere(
+          (c) => c?.id == item.categoryId,
+          orElse: () => null,
+        )
+      : null;
+  return cat ?? _legacyCategoryForItem(item);
+}
+
+/// Fallback: creates a CategoryRecord from the legacy Category enum when categoryId is null.
+CategoryRecord _legacyCategoryForItem(Item item) {
+  final id = categoryRecordIdFor(item.category);
+  return data.categories.firstWhere(
+    (c) => c.id == id,
+    orElse: () => CategoryRecord(
+      id: id,
+      name: item.category.displayName,
+      colorValue: item.category.color.toARGB32(),
+      iconCodePoint: item.category.icon.codePoint,
+      iconFontFamily: item.category.icon.fontFamily ?? 'MaterialIcons',
+      sortOrder: item.category.index,
+    ),
+  );
+}
 
 /// Helper class to represent a chunk of a category (for overflow handling)
 class CategoryChunk {
