@@ -128,3 +128,15 @@ When continuing work:
 3. Check `git status` for uncommitted changes
 4. Read the relevant PRD section for context (`stock_count_phase_two_prd.md`)
 5. Read the execution steps doc for any remaining steps (`stock_count_phase_two_execution_steps.md`)
+
+---
+
+## Release & Deployment Practices (2026-08-05)
+
+- **Versioning**: semver `major.minor.patch+build` in stock_count_app/pubspec.yaml; bump + tag `v<version>` before building for prod. Current: 1.7.0+0 (bump committed with this release).
+- **Environments**: staging = `stock-count-app-staging` (project # 978100062413, site exists, https://stock-count-app-staging.web.app); prod = `stock-count-app-c381c` (live build v1.6.6+8 since 2026-04-22, backed up 2026-08-05 -> C:\xampp\htdocs\stock-count-app-prod-backup-2026-08-05 + zip).
+- **Backup**: `scripts\backup-live-build.ps1` - downloads live build, double-fetch verify (web.app + firebaseapp.com), zips, keeps 5. Run before every prod deploy.
+- **Deploy**: `npx firebase-tools@15.25.1 deploy --only hosting --project <id> --message "..."` - never bare `firebase deploy`. Firebase CLI is NOT on PATH; use npx firebase-tools@15.25.1.
+- **Log**: every deploy recorded in `DEPLOYMENTS.md` (repo root).
+- **Gotchas learned**: (1) tracked `.firebase/hosting.*.cache` can be STALE vs live - verify live content directly; (2) Firebase Hosting SPA rewrite serves index.html for ANY URL with a query string - never use query-string cache busters; (3) Flutter builds are not byte-reproducible - `flutter clean` destroys the only copy unless archived.
+- **Pending**: staging deploy of main (1.7.0+0); GitHub Actions staging workflow created - needs `FIREBASE_SERVICE_ACCOUNT_STOCK_COUNT_APP_STAGING` secret; push commits + tag to origin.

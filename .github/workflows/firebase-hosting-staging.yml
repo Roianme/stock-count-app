@@ -1,0 +1,38 @@
+﻿# Deploy the latest main build to the STAGING Firebase project.
+# Required repo secret (Settings -> Secrets and variables -> Actions):
+#   FIREBASE_SERVICE_ACCOUNT_STOCK_COUNT_APP_STAGING
+# Generate the JSON in Firebase Console -> Project settings -> Service accounts
+# -> Generate new private key (project: stock-count-app-staging).
+name: Deploy to Firebase Hosting (Staging)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build_and_deploy_staging:
+    runs-on: ubuntu-latest
+    env:
+      HAS_STAGING_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STOCK_COUNT_APP_STAGING != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.2
+      - run: flutter pub get
+      - run: flutter build web --release
+      - name: Archive web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+      - name: Deploy to staging
+        if: ${{ env.HAS_STAGING_SA == 'true' }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STOCK_COUNT_APP_STAGING }}
+          projectId: stock-count-app-staging
+          channelId: live

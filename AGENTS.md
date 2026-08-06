@@ -60,3 +60,28 @@
 - Stay strictly within the scope of what was asked. Do not
   investigate tangential issues (encoding, byte-level inspection,
   etc.) unless they directly block completing the current task.
+## Release, Build & Deployment Rules (MANDATORY)
+
+Applies to all build / deploy / backup / versioning work. Procedures live in DEPLOYMENTS.md, CHANGELOG.md, scripts\backup-live-build.ps1.
+
+### Versioning
+- Keep `pubspec.yaml` version as semver `major.minor.patch+build` (currently 1.7.0+0).
+- Bump the build number on every build intended for prod; bump patch/minor for fixes/features.
+- Commit the version bump BEFORE building, and tag it: `git tag v1.7.0+0` (push the tag too).
+
+### Building
+- Build once, archive immediately: after `flutter build web --release`, zip `build/web` into the gitignored `releases/` folder. `flutter clean` is safe ONLY after archiving.
+- `build/web/version.json` is the build fingerprint - compare it against the deployed URL to confirm what is live.
+
+### Deploying
+- NEVER run bare `firebase deploy`. Always: `npx firebase-tools@15.25.1 deploy --only hosting --project <id> --message "vX.Y.Z+N <short-hash>"`.
+- Staging project: `stock-count-app-staging` (https://stock-count-app-staging.web.app). Prod: `stock-count-app-c381c` (https://stock-count-app-c381c.web.app).
+- Flow: merge to main -> deploy staging -> test -> tag + deploy prod.
+
+### Backups & rollback
+- Run `scripts\backup-live-build.ps1` BEFORE every prod deploy (downloads live build to timestamped folder, double-fetch SHA-256 verifies, zips, keeps last 5).
+- Log every deployment in `DEPLOYMENTS.md` (date, env, version, commit, URL, verified).
+- Rollback = Firebase console release history, or restore the backup zip into `build/web` and re-deploy.
+
+### Git hygiene
+- Push to origin after every merge. Do not let local main grow far ahead of origin (a 19-commit backlog once accumulated).
