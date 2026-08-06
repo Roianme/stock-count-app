@@ -7,3 +7,8 @@ PERSISTENCE_SETUP.md
 stock_count_app/linux/flutter/generated_plugin_registrant.cc
 *.md
 stock_count_app/.firebase/hosting.YnVpbGRcd2Vi.cache
+# Release/project docs (override the *.md blanket ignore)
+!AGENTS.md
+!SESSION_MEMORY.md
+!DEPLOYMENTS.md
+!stock_count_app/CHANGELOG.md
