@@ -461,7 +461,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Icon(
-                          IconData(category.iconCodePoint, fontFamily: category.iconFontFamily),
+                          categoryIcon(category.iconCodePoint),
                           size: context.responsive.iconSize(48, 40),
                           color: Color(category.colorValue),
                         ),

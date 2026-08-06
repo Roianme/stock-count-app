@@ -4,6 +4,7 @@ import '../model/category_model.dart';
 
 import '../data/item_repository.dart';
 import '../viewmodel/manage_items_view_model.dart';
+import '../utils/category_icons.dart';
 
 class ManageItemsView extends StatefulWidget {
   final ItemRepository repository;
@@ -101,7 +102,7 @@ class _ManageItemsViewState extends State<ManageItemsView> {
             child: Row(
               children: [
                 Icon(
-                  IconData(cat.iconCodePoint, fontFamily: cat.iconFontFamily),
+                  categoryIcon(cat.iconCodePoint),
                   color: Color(cat.colorValue),
                   size: 20,
                 ),
@@ -219,8 +220,7 @@ class _ManageItemsViewState extends State<ManageItemsView> {
                             child: Row(
                               children: [
                                 Icon(
-                                  IconData(cat.iconCodePoint,
-                                      fontFamily: cat.iconFontFamily),
+                                  categoryIcon(cat.iconCodePoint),
                                   size: 18,
                                   color: Color(cat.colorValue),
                                 ),
