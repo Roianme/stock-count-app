@@ -336,7 +336,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
           Expanded(child: buildControl()),
           if (menuItems.isNotEmpty)
             PopupMenuButton<ItemStatus>(
-              icon: const Icon(Icons.more_vert, size: 22),
+              icon: const Icon(Icons.arrow_drop_down, size: 22),
               tooltip: 'Change status',
               padding: EdgeInsets.zero,
               onSelected: (newStatus) {
