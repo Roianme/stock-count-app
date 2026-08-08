@@ -7,6 +7,8 @@ class AppDrawer extends StatefulWidget {
   final ValueChanged<Mode> onLocationChanged;
   final VoidCallback? onManageItems;
   final VoidCallback? onManageCategories;
+  final VoidCallback? onBackup;
+  final VoidCallback? onRestore;
 
   const AppDrawer({
     super.key,
@@ -14,6 +16,8 @@ class AppDrawer extends StatefulWidget {
     required this.onLocationChanged,
     this.onManageItems,
     this.onManageCategories,
+    this.onBackup,
+    this.onRestore,
   });
 
   @override
@@ -158,6 +162,54 @@ class _AppDrawerState extends State<AppDrawer> {
                     onTap: () {
                       Navigator.pop(context);
                       widget.onManageItems!();
+                    },
+                  ),
+                const Divider(height: 32),
+                // Data Backup & Restore
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    'DATA',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                if (widget.onBackup != null)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.download, color: Colors.teal, size: 24),
+                    ),
+                    title: const Text('Backup Data'),
+                    subtitle: const Text('Download a backup file'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onBackup!();
+                    },
+                  ),
+                if (widget.onRestore != null)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.upload, color: Colors.red, size: 24),
+                    ),
+                    title: const Text('Restore Data'),
+                    subtitle: const Text('Replace all data from a backup file'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onRestore!();
                     },
                   ),
               ],

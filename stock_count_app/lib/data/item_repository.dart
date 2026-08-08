@@ -39,4 +39,17 @@ abstract class ItemRepository {
 
   /// Close any resources (Hive boxes, etc.). Safe to call multiple times.
   Future<void> close();
+
+  /// Reset tracking of deleted seed items so defaults are restored on next load.
+  Future<void> resetDeletedSeedItems();
+
+  /// Export all data (items, categories, metadata) as a JSON backup string.
+  Future<String> exportBackup();
+
+  /// Restore all data from a parsed backup, replacing current state.
+  Future<void> restoreBackup(
+    List<Item> items,
+    List<CategoryRecord> categories,
+    Map<String, dynamic> metadata,
+  );
 }

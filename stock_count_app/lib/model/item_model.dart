@@ -103,7 +103,7 @@ class ItemUnitOptionRecord {
 
 @HiveType(typeId: 2)
 class Item {
-  static int _nextId = 1;
+  static int _nextId = 10000;
 
   @HiveField(0)
   final int id;

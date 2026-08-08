@@ -7,6 +7,7 @@ import '../model/category_model.dart';
 import 'item_data.dart';
 import 'item_repository.dart';
 import 'migrations.dart';
+import '../services/backup_service.dart';
 
 /// Platform-aware repository.
 ///
@@ -19,6 +20,7 @@ import 'migrations.dart';
 class PlatformItemRepository implements ItemRepository {
   static const String boxName = 'items_box';
   static const String sharedPrefsKey = 'stock_count_items';
+  static const String _deletedSeedIdsKey = 'deleted_seed_ids';
 
   late Box<Item> _hiveBox;
   late Box<CategoryRecord> _categoriesBox;
@@ -153,10 +155,12 @@ class PlatformItemRepository implements ItemRepository {
       await _setStoredDataVersion(DataMigrations.CURRENT_VERSION);
     }
     
-    // Upsert: add any new seed items (with backfilled categoryId) that don't exist in the box yet
+    // Upsert: add any new seed items (with backfilled categoryId) that don't exist in the box yet,
+    // but skip seed items the user has intentionally deleted.
+    final deletedIds = _getDeletedSeedIds();
     final existingIds = loadedItems.map((e) => e.id).toSet();
     final newItems = items
-        .where((item) => !existingIds.contains(item.id))
+        .where((item) => !existingIds.contains(item.id) && !deletedIds.contains(item.id))
         .map((item) {
           final legacyOpts = itemUnitOptionsById[item.id];
           return item.copyWith(
@@ -201,6 +205,16 @@ class PlatformItemRepository implements ItemRepository {
     final keysToDelete = existingKeys.difference(desiredKeys);
     if (keysToDelete.isNotEmpty) {
       await _hiveBox.deleteAll(keysToDelete);
+
+      // Track deleted seed item IDs so the upsert logic doesn't re-add them.
+      // Only mark IDs that exist in the seed data (seedItemsById is populated
+      // by initializeSeedData() before the repository is used).
+      final deletedSeedIds = keysToDelete
+          .where((id) => seedItemsById.containsKey(id))
+          .toSet();
+      if (deletedSeedIds.isNotEmpty) {
+        await _addDeletedSeedIds(deletedSeedIds);
+      }
     }
 
     await _hiveBox.putAll(desired);
@@ -237,6 +251,9 @@ class PlatformItemRepository implements ItemRepository {
       // Helps reclaim disk space in some environments.
       await _hiveBox.compact();
 
+      // Reset the deleted seed IDs tracking so all seed items can be restored.
+      await _clearDeletedSeedIds();
+
       if (kIsWeb) {
         // Ensure legacy blob is removed too.
         final prefs = await SharedPreferences.getInstance();
@@ -246,6 +263,57 @@ class PlatformItemRepository implements ItemRepository {
       debugPrint('Error deleting all items: $e');
       rethrow;
     }
+  }
+
+  /// Reset the tracking of deleted seed items so they will be re-added
+  /// on the next load (restores all default seed items).
+  Future<void> resetDeletedSeedItems() async {
+    await _clearDeletedSeedIds();
+  }
+
+  /// [visibleForTesting] Override the stored data version to simulate
+  /// migration scenarios in tests.
+  @visibleForTesting
+  Future<void> setDataVersionForTest(int version) async {
+    await _setStoredDataVersion(version);
+  }
+
+  @override
+  Future<String> exportBackup() async {
+    final metadata = <String, dynamic>{
+      'data_version': _metaBox.get('data_version', defaultValue: 1),
+      'deleted_seed_ids': _metaBox.get('deleted_seed_ids', defaultValue: <int>[]),
+    };
+    return BackupService.exportToJson(
+      items: items,
+      categories: categories,
+      metadata: metadata,
+    );
+  }
+
+  @override
+  Future<void> restoreBackup(
+    List<Item> backupItems,
+    List<CategoryRecord> backupCategories,
+    Map<String, dynamic> metadata,
+  ) async {
+    // Clear existing data.
+    await _hiveBox.clear();
+    await _categoriesBox.clear();
+    await _metaBox.clear();
+
+    // Restore items.
+    final itemMap = <int, Item>{for (final item in backupItems) item.id: item};
+    await _hiveBox.putAll(itemMap);
+
+    // Restore categories.
+    final catMap = <String, CategoryRecord>{
+      for (final cat in backupCategories) cat.id: cat
+    };
+    await _categoriesBox.putAll(catMap);
+
+    // Restore metadata.
+    await _metaBox.putAll(metadata);
   }
 
   /// Close resources (call on app shutdown)
@@ -320,5 +388,32 @@ class PlatformItemRepository implements ItemRepository {
     } catch (e) {
       debugPrint('Error storing data version: $e');
     }
+  }
+
+  /// Returns the set of seed item IDs the user has intentionally deleted.
+  Set<int> _getDeletedSeedIds() {
+    try {
+      final raw = _metaBox.get(_deletedSeedIdsKey);
+      if (raw == null) return {};
+      if (raw is List) {
+        return raw.map((e) => e as int).toSet();
+      }
+      return {};
+    } catch (e) {
+      debugPrint('Error reading deleted seed IDs: $e');
+      return {};
+    }
+  }
+
+  /// Marks the given seed item IDs as intentionally deleted.
+  Future<void> _addDeletedSeedIds(Set<int> newIds) async {
+    final current = _getDeletedSeedIds();
+    current.addAll(newIds);
+    await _metaBox.put(_deletedSeedIdsKey, current.toList());
+  }
+
+  /// Clears the tracking of deleted seed item IDs.
+  Future<void> _clearDeletedSeedIds() async {
+    await _metaBox.put(_deletedSeedIdsKey, <int>[]);
   }
 }

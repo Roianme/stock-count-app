@@ -24,6 +24,8 @@ class HomeViewModel extends ChangeNotifier {
   Uint8List? previewImage;
   bool shouldShowExportDialog = false;
 
+  bool _disposed = false;
+
   HomeViewModel({required this.allCategories, required this.repository})
     : visibleCategories = List.from(allCategories);
 
@@ -219,6 +221,8 @@ class HomeViewModel extends ChangeNotifier {
 
     await _saveItems();
 
+    if (_disposed) return;
+
     // Refresh search results if searching
     _refreshSearchState();
 
@@ -228,16 +232,23 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Reload/refresh the view state without resetting data
   void reload() {
+    if (_disposed) return;
     _refreshSearchState();
     notifyListeners();
   }
 
   bool get hasCheckedItems => data.items.any((i) => i.isChecked);
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   // UI Message handling
   void setMessage(String message) {
     showMessage = message;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void clearMessage() {
@@ -293,6 +304,8 @@ class HomeViewModel extends ChangeNotifier {
       name: name,
     );
 
+    if (_disposed) return false;
+
     return success;
   }
 
@@ -318,6 +331,8 @@ class HomeViewModel extends ChangeNotifier {
       location: location,
       name: name,
     );
+
+    if (_disposed) return null;
 
     return filePath;
   }
@@ -356,6 +371,8 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final image = await generatePreviewImage(context);
+
+    if (_disposed) return;
 
     if (context.mounted) {
       Navigator.of(context).pop();

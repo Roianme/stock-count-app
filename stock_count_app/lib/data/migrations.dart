@@ -4,12 +4,13 @@ import '../model/category_model.dart';
 import 'item_data.dart';
 
 class DataMigrations {
-  static const int CURRENT_VERSION = 3;
+  static const int CURRENT_VERSION = 4;
 
   /// Migration history:
   /// v1: Initial seed data
   /// v2: Removed spring roll wrap, puto bumbong, curly fries (dessert), squid ball, fish ball, kikiam
   /// v3: Backfill categoryId and unitOptions
+  /// v4: Remap user-created item IDs to 10000+ range (avoids collision with future seed items)
   static Future<List<Item>> migrateData(
     List<Item> currentItems,
     int fromVersion,
@@ -76,6 +77,29 @@ class DataMigrations {
         '✅ Migration v3 completed. '
         'Backfilled categoryId for $categoryIdBackfilled items. '
         'Backfilled unitOptions for $unitOptionsBackfilled items.',
+      );
+    }
+
+    // v3 → v4 migration: Remap user-created item IDs to 10000+ range.
+    // Seed items retain their original IDs (1-9999). User-created items
+    // get reassigned IDs starting at 10000 to prevent collisions with
+    // future seed items added in code updates.
+    if (fromVersion < 4) {
+      debugPrint('🔄 Migrating data from v3 to v4 (ID remapping)...');
+      int nextUserIndex = 10000;
+      int remappedCount = 0;
+
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        if (!seedItemsById.containsKey(item.id) && item.id < 10000) {
+          items[i] = item.copyWith(id: nextUserIndex++);
+          remappedCount++;
+        }
+      }
+
+      debugPrint(
+        '✅ Migration v4 completed. Remapped $remappedCount user items '
+        'to 10000+ ID range.',
       );
     }
 

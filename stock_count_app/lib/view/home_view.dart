@@ -7,6 +7,7 @@ import '../model/category_model.dart';
 import '../viewmodel/home_view_model.dart';
 import '../data/item_repository.dart';
 import '../data/item_data.dart' as data;
+import '../services/backup_service.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/preview_image_dialog.dart';
 import 'widgets/app_drawer.dart';
@@ -26,7 +27,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final HomeViewModel viewModel;
+  late HomeViewModel viewModel;
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Timer? _searchDebounce;
@@ -90,6 +91,8 @@ class _HomePageState extends State<HomePage> {
             onLocationChanged: viewModel.setLocation,
             onManageItems: () => _navigateTo(context, ManageItemsView(repository: widget.repository)),
             onManageCategories: () => _navigateTo(context, ManageCategoriesView(repository: widget.repository)),
+            onBackup: _backupData,
+            onRestore: _restoreData,
           ),
           body: SafeArea(
             child: LayoutBuilder(
@@ -594,6 +597,107 @@ class _HomePageState extends State<HomePage> {
       },
       showItemNameInColumn: true,
     );
+  }
+
+  Future<void> _backupData() async {
+    try {
+      final json = await widget.repository.exportBackup();
+      BackupService.downloadBackup(json);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Backup downloaded! Save this file to restore later.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Backup failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _restoreData() async {
+    // Confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Restore Data?'),
+        content: const Text(
+          'This will replace ALL your current items, categories, and settings '
+          'with the data from the backup file. This cannot be undone.\n\n'
+          'Make sure you have a recent backup before proceeding.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final backup = await BackupService.pickAndParseBackup();
+      if (backup == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No valid backup file selected.')),
+          );
+        }
+        return;
+      }
+
+      await widget.repository.restoreBackup(
+        backup.items,
+        backup.categories,
+        backup.metadata,
+      );
+
+      // Reload the global state and refresh UI.
+      data.items
+        ..clear()
+        ..addAll(backup.items);
+      data.categories
+        ..clear()
+        ..addAll(backup.categories);
+
+      // Reset view model and force full rebuild.
+      viewModel.dispose();
+      viewModel = HomeViewModel(
+        allCategories: data.categories,
+        repository: widget.repository,
+      );
+      viewModel.addListener(_handleViewModelChanges);
+
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data restored! ${backup.items.length} items, ${backup.categories.length} categories.',
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Restore failed: $e')),
+        );
+      }
+    }
   }
 
   void _showExportDialog() {
