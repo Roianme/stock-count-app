@@ -433,14 +433,6 @@ class ReportWidget extends StatelessWidget {
     if (isUnchecked) {
       statusMarker = '';
       markerColor = Colors.grey;
-    } else if (selectedUnit != null) {
-      if (selectedUnit.isUrgent) {
-        statusMarker = 'URGENT';
-        markerColor = Colors.redAccent;
-      } else {
-        statusMarker = selectedUnit.label;
-        markerColor = Colors.green;
-      }
     } else if (item.status == ItemStatus.urgent) {
       statusMarker = 'URGENT';
       markerColor = Colors.redAccent;
@@ -448,6 +440,14 @@ class ReportWidget extends StatelessWidget {
       statusMarker = item.quantity.toString();
       markerColor =
           item.quantity == 0 ? Colors.redAccent : Colors.blueAccent;
+    } else if (item.status == ItemStatus.dropdown && selectedUnit != null) {
+      if (selectedUnit.isUrgent) {
+        statusMarker = 'URGENT';
+        markerColor = Colors.redAccent;
+      } else {
+        statusMarker = selectedUnit.label;
+        markerColor = Colors.green;
+      }
     }
 
     return Container(
@@ -541,14 +541,6 @@ class ReportWidget extends StatelessWidget {
               if (isUnchecked) {
                 statusMarker = '';
                 markerColor = Colors.grey;
-              } else if (selectedUnit != null) {
-                if (selectedUnit.isUrgent) {
-                  statusMarker = 'URGENT';
-                  markerColor = Colors.redAccent;
-                } else {
-                  statusMarker = selectedUnit.label;
-                  markerColor = Colors.green;
-                }
               } else if (item.status == ItemStatus.urgent) {
                 statusMarker = 'URGENT';
                 markerColor = Colors.redAccent;
@@ -557,9 +549,19 @@ class ReportWidget extends StatelessWidget {
                 markerColor =
                     item.quantity == 0 ? Colors.redAccent : Colors.blueAccent;
               } else if (item.status == ItemStatus.dropdown) {
-                final unit = item.unit;
-                statusMarker = (unit != null && unit.isNotEmpty) ? unit : '-';
-                markerColor = Colors.green;
+                if (selectedUnit != null) {
+                  if (selectedUnit.isUrgent) {
+                    statusMarker = 'URGENT';
+                    markerColor = Colors.redAccent;
+                  } else {
+                    statusMarker = selectedUnit.label;
+                    markerColor = Colors.green;
+                  }
+                } else {
+                  final unit = item.unit;
+                  statusMarker = (unit != null && unit.isNotEmpty) ? unit : '-';
+                  markerColor = Colors.green;
+                }
               }
 
               return Padding(
@@ -708,7 +710,7 @@ class ReportWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(5),
               ),
               child: const Text(
-                '‼ URGENT',
+                'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ URGENT',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
