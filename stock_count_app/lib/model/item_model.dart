@@ -176,7 +176,7 @@ class Item {
       category: category ?? this.category,
       status: status ?? this.status,
       isChecked: isChecked ?? this.isChecked,
-      quantity: quantity,
+      quantity: quantity ?? this.quantity,
       modes: modes ?? this.modes,
       unit: unit ?? this.unit,
       unitOptions: unitOptions ?? this.unitOptions,

@@ -1,38 +1,128 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:stock_count_app/model/item_model.dart';
+import 'package:stock_count_app/view/widgets/item_card_widget.dart';
 
-// The default template test was commented out in this project.
-// Keep a minimal passing test so `flutter test` succeeds.
-void main() {
-  test('smoke test', () {});
+Item makeItem({
+  required ItemStatus status,
+  Set<ItemStatus> enabled = const {ItemStatus.quantity, ItemStatus.dropdown},
+  List<ItemUnitOptionRecord> opts = const [
+    ItemUnitOptionRecord(label: 'opt-a'),
+    ItemUnitOptionRecord(label: 'opt-b'),
+  ],
+  String? unit,
+  int? qty,
+}) {
+  return Item(
+    id: 999, name: 'Test', category: Category.misc,
+    status: status, unitOptions: opts,
+    unit: unit, quantity: qty, enabledStatuses: enabled,
+  );
 }
 
-// import 'package:flutter/material.dart';
-// import 'package:flutter_test/flutter_test.dart';
+Future<void> pumpCard(WidgetTester t, {required Item item}) async {
+  await t.pumpWidget(MaterialApp(home: Scaffold(body: ItemCardWidget(
+    item: item, statusControlWidth: 120, hideIcon: true,
+    isListView: true, showItemNameInColumn: true,
+    onCheckChanged: () {}, onQuantityChanged: (_) {},
+    onStatusChanged: (_) {}, onUnitChanged: (_) {},
+  ))));
+  await t.pumpAndSettle();
+}
 
-// import 'package:stock_count_app/main.dart';
+void main() {
+  group('Item.copyWith', () {
+    test('preserves qty when only status changed', () {
+      final item = makeItem(status: ItemStatus.quantity, qty: 42);
+      final u = item.copyWith(status: ItemStatus.urgent);
+      expect(u.quantity, equals(42));
+    });
+    test('preserves unit when only status changed', () {
+      final item = makeItem(status: ItemStatus.dropdown, unit: 'opt-a');
+      final u = item.copyWith(status: ItemStatus.quantity);
+      expect(u.unit, equals('opt-a'));
+    });
+  });
 
-// void main() {
-//   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-//     // Build our app and trigger a frame.
-//     await tester.pumpWidget(const MyApp());
+  group('three-dot menu', () {
+    testWidgets('shows options not Dropdown word', (t) async {
+      await pumpCard(t, item: makeItem(status: ItemStatus.quantity));
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      expect(find.text('Dropdown'), findsNothing);
+      expect(find.text('opt-a'), findsOneWidget);
+      expect(find.text('opt-b'), findsOneWidget);
+    });
 
-//     // Verify that our counter starts at 0.
-//     expect(find.text('0'), findsOneWidget);
-//     expect(find.text('1'), findsNothing);
+    testWidgets('hides selected option from menu', (t) async {
+      await pumpCard(t, item: makeItem(
+        status: ItemStatus.dropdown, unit: 'opt-a',
+      ));
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      expect(find.text('Quantity'), findsOneWidget);
+      expect(find.text('opt-b'), findsOneWidget);
+    });
 
-//     // Tap the '+' icon and trigger a frame.
-//     await tester.tap(find.byIcon(Icons.add));
-//     await tester.pump();
+    testWidgets('divider between status and options', (t) async {
+      await pumpCard(t, item: makeItem(
+        status: ItemStatus.quantity,
+        enabled: const {ItemStatus.quantity, ItemStatus.dropdown, ItemStatus.urgent},
+      ));
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      expect(find.byType(Divider), findsOneWidget);
+    });
 
-//     // Verify that our counter has incremented.
-//     expect(find.text('0'), findsNothing);
-//     expect(find.text('1'), findsOneWidget);
-//   });
-// }
+    testWidgets('no menu when single status no options', (t) async {
+      await pumpCard(t, item: makeItem(
+        status: ItemStatus.quantity,
+        enabled: const {ItemStatus.quantity},
+        opts: const [],
+      ));
+      expect(find.byIcon(Icons.more_vert), findsNothing);
+    });
+  });
+
+  group('callbacks', () {
+    testWidgets('dropdown option fires both callbacks', (t) async {
+      ItemStatus? sc;
+      ItemUnitOptionRecord? uc;
+      await t.pumpWidget(MaterialApp(home: Scaffold(body: ItemCardWidget(
+        item: makeItem(status: ItemStatus.quantity),
+        statusControlWidth: 120, hideIcon: true,
+        isListView: true, showItemNameInColumn: true,
+        onCheckChanged: () {}, onQuantityChanged: (_) {},
+        onStatusChanged: (s) => sc = s,
+        onUnitChanged: (u) => uc = u,
+      ))));
+      await t.pumpAndSettle();
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      await t.tap(find.text('opt-a'));
+      await t.pumpAndSettle();
+      expect(sc, equals(ItemStatus.dropdown));
+      expect(uc?.label, equals('opt-a'));
+    });
+
+    testWidgets('Quantity from menu in dropdown mode', (t) async {
+      ItemStatus? sc;
+      await t.pumpWidget(MaterialApp(home: Scaffold(body: ItemCardWidget(
+        item: makeItem(
+          status: ItemStatus.dropdown, unit: 'opt-a',
+        ),
+        statusControlWidth: 120, hideIcon: true,
+        isListView: true, showItemNameInColumn: true,
+        onCheckChanged: () {}, onQuantityChanged: (_) {},
+        onStatusChanged: (s) => sc = s,
+        onUnitChanged: (_) {},
+      ))));
+      await t.pumpAndSettle();
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Quantity'));
+      await t.pumpAndSettle();
+      expect(sc, equals(ItemStatus.quantity));
+    });
+  });
+}
