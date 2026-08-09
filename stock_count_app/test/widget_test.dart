@@ -175,5 +175,19 @@ void main() {
       expect(find.byType(PopupMenuButton<ItemUnitOptionRecord>), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
     });
+
+    testWidgets('all options shown in qty mode even with unit set', (t) async {
+      // Bug: after selecting dropdown option and switching to qty,
+      // the previously-selected option was hidden from menu because
+      // selectedUnitOption still matched the leftover unit field.
+      await pumpCard(t, item: makeItem(
+        status: ItemStatus.quantity, qty: 5, unit: 'opt-a',
+      ));
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      // All options must be visible since no dropdown option is active
+      expect(find.text('opt-a'), findsOneWidget);
+      expect(find.text('opt-b'), findsOneWidget);
+    });
   });
 }

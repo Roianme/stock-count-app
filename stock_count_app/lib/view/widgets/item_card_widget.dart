@@ -348,9 +348,11 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
 
     // Dropdown unit-option entries: one per unselected option.
     if (enabled.contains(ItemStatus.dropdown) && unitOptions.isNotEmpty) {
-      final unselectedOptions = unitOptions.where(
-        (o) => o.label != selectedOption?.label,
-      ).toList();
+      final unselectedOptions = activeStatus == ItemStatus.dropdown
+          ? unitOptions.where(
+              (o) => o.label != selectedOption?.label,
+            ).toList()
+          : unitOptions.toList();
       if (unselectedOptions.isNotEmpty) {
         if (menuEntries.isNotEmpty) {
           menuEntries.add(const PopupMenuDivider());
