@@ -85,3 +85,5 @@ Applies to all build / deploy / backup / versioning work. Procedures live in DEP
 
 ### Git hygiene
 - Push to origin after every merge. Do not let local main grow far ahead of origin (a 19-commit backlog once accumulated).
+- **NEVER merge to `main`** when implementing a feature or fix. Always work on a feature branch (e.g., `feat/...`, `fix/...`). Commit there, push the branch, and let the user review, sanity-test, and merge when ready. This applies to ALL implementation work — the user is the final gatekeeper for merging.
+

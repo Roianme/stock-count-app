@@ -25,6 +25,16 @@ Execution steps: `stock_count_phase_two_execution_steps.md`
 | 6 | `b892c16` | Manage Categories screen (add/edit/delete with in-use guard) |
 | 7 | `dc964fd` | Manage Items screen (add/edit/delete, category picker, unit options editor) |
 | 8 | `3967b93` | Navigation wiring — both screens reachable from app drawer |
+## Active Feature Branch (2026-08-10)
+
+**`feat/dropdown-chips-in-menu`** (commit `93afd05`)
+
+- **Change**: Three-dot (⋮) status switch menu in `ItemCardWidget` now shows individual dropdown unit-option entries instead of the generic "Dropdown" label. Users can switch to dropdown mode AND select a value in one tap instead of two.
+- **File modified**: `lib/view/widgets/item_card_widget.dart` — replaced `PopupMenuButton<ItemStatus>` with `PopupMenuButton<dynamic>`, added `PopupMenuDivider` between status types and dropdown values, dispatching `onStatusChanged` + `onUnitChanged` for dropdown selections.
+- **To test**: Check item cards with dropdown options (e.g., Tak-tak, Nutella) — the three-dot menu should list each option individually with a divider. Selecting one should switch the card to dropdown mode with that option selected.
+- **Status**: Awaiting user sanity test. Do NOT merge to main.
+
+
 | 9 | (deferred) | Seed list trim — deferred, noted in PR |
 | 10 | (verified) | Full rollout checklist passed code review |
 | **11** | `9991f8e` | **Status Controls: three checkboxes (Quantity/Dropdown/Urgent) + single-active-control card with popup menu** |
