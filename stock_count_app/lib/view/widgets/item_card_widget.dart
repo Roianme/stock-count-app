@@ -145,7 +145,16 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      (data.categories.cast<CategoryRecord?>().firstWhere((c) => c?.id == widget.item.categoryId, orElse: () => null)?.name) ?? widget.item.category.displayName,
+                                      (data.categories
+                                              .cast<CategoryRecord?>()
+                                              .firstWhere(
+                                                (c) =>
+                                                    c?.id ==
+                                                    widget.item.categoryId,
+                                                orElse: () => null,
+                                              )
+                                              ?.name) ??
+                                          widget.item.category.displayName,
                                       style: context.theme.subtitle.copyWith(
                                         fontSize: context.responsive.fontSize(
                                           13,
@@ -197,8 +206,16 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                         onTap: widget.onCheckChanged,
                         child: CircleAvatar(
                           radius: avatarRadius,
-                          backgroundColor: Color(data.categories.cast<CategoryRecord?>().firstWhere((c) => c?.id == widget.item.categoryId, orElse: () => null)?.colorValue ?? widget.item.category.color.toARGB32())
-                              .withValues(alpha: 0.12),
+                          backgroundColor: Color(
+                            data.categories
+                                    .cast<CategoryRecord?>()
+                                    .firstWhere(
+                                      (c) => c?.id == widget.item.categoryId,
+                                      orElse: () => null,
+                                    )
+                                    ?.colorValue ??
+                                widget.item.category.color.toARGB32(),
+                          ).withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -218,10 +235,9 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
 
     // Determine the active status type. Default to item.status if it's
     // still in the enabled set, otherwise pick the first enabled status.
-    final activeStatus =
-        enabled.contains(widget.item.status) ? widget.item.status : enabled.first;
-    final numEnabled = enabled.length;
-
+    final activeStatus = enabled.contains(widget.item.status)
+        ? widget.item.status
+        : enabled.first;
     // Build the primary control for the active status
     Widget buildControl() {
       switch (activeStatus) {
@@ -312,15 +328,38 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       }
     }
 
-    // Build the status switch menu (only if 2+ controls are enabled)
-    final menuItems = <PopupMenuItem<ItemStatus>>[];
-    if (numEnabled >= 2) {
-      for (final s in ItemStatus.values) {
-        if (s != activeStatus && enabled.contains(s)) {
-          menuItems.add(
-            PopupMenuItem<ItemStatus>(
-              value: s,
-              child: Text(s.displayName, style: const TextStyle(fontSize: 16)),
+    // Build the status switch menu.
+    // Status types (Quantity / Urgent) appear first, followed by a divider
+    // and then individual dropdown options — so users can select a dropdown
+    // value in one tap instead of two (⋮ → Dropdown → option).
+    final List<PopupMenuEntry<dynamic>> menuEntries = [];
+
+    // Status-type entries: skip Dropdown itself; its options go below.
+    for (final s in ItemStatus.values) {
+      if (s != ItemStatus.dropdown && s != activeStatus && enabled.contains(s)) {
+        menuEntries.add(
+          PopupMenuItem<dynamic>(
+            value: s,
+            child: Text(s.displayName, style: const TextStyle(fontSize: 16)),
+          ),
+        );
+      }
+    }
+
+    // Dropdown unit-option entries: one per unselected option.
+    if (enabled.contains(ItemStatus.dropdown) && unitOptions.isNotEmpty) {
+      final unselectedOptions = unitOptions.where(
+        (o) => o.label != selectedOption?.label,
+      ).toList();
+      if (unselectedOptions.isNotEmpty) {
+        if (menuEntries.isNotEmpty) {
+          menuEntries.add(const PopupMenuDivider());
+        }
+        for (final option in unselectedOptions) {
+          menuEntries.add(
+            PopupMenuItem<dynamic>(
+              value: option,
+              child: Text(option.label, style: const TextStyle(fontSize: 16)),
             ),
           );
         }
@@ -334,15 +373,20 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       child: Row(
         children: [
           Expanded(child: buildControl()),
-          if (menuItems.isNotEmpty)
-            PopupMenuButton<ItemStatus>(
-              icon: const Icon(Icons.arrow_drop_down, size: 22),
+          if (menuEntries.isNotEmpty)
+            PopupMenuButton<dynamic>(
+              icon: const Icon(Icons.more_vert, size: 22),
               tooltip: 'Change status',
               padding: EdgeInsets.zero,
-              onSelected: (newStatus) {
-                widget.onStatusChanged(newStatus);
+              onSelected: (value) {
+                if (value is ItemStatus) {
+                  widget.onStatusChanged(value);
+                } else if (value is ItemUnitOptionRecord) {
+                  widget.onStatusChanged(ItemStatus.dropdown);
+                  widget.onUnitChanged(value);
+                }
               },
-              itemBuilder: (BuildContext context) => menuItems,
+              itemBuilder: (BuildContext context) => menuEntries,
             ),
         ],
       ),
