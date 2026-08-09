@@ -307,7 +307,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
                 fontWeight: FontWeight.w600,
                 color: context.theme.textPrimary,
               ),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
