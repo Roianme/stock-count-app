@@ -299,30 +299,17 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
             );
           }
           final displayLabel = selectedOption?.label ?? 'Select';
-          return PopupMenuButton<ItemUnitOptionRecord>(
-            tooltip: 'Change unit',
-            padding: EdgeInsets.zero,
-            onSelected: (newUnit) {
-              widget.onUnitChanged(newUnit);
-            },
-            itemBuilder: (BuildContext context) => unitOptions.map((option) {
-              return PopupMenuItem<ItemUnitOptionRecord>(
-                value: option,
-                child: Text(option.label, style: const TextStyle(fontSize: 16)),
-              );
-            }).toList(),
-            child: Center(
-              child: Text(
-                displayLabel,
-                style: TextStyle(
-                  fontSize: context.responsive.fontSize(18, 16),
-                  fontWeight: FontWeight.w600,
-                  color: context.theme.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+          return Center(
+            child: Text(
+              displayLabel,
+              style: TextStyle(
+                fontSize: context.responsive.fontSize(18, 16),
+                fontWeight: FontWeight.w600,
+                color: context.theme.textPrimary,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
           );
       }

@@ -149,7 +149,8 @@ void main() {
         initial: makeItem(status: ItemStatus.dropdown, unit: 'opt-a', qty: 42),
       ))));
       await t.pumpAndSettle();
-      expect(find.byType(PopupMenuButton<ItemUnitOptionRecord>), findsOneWidget);
+      expect(find.text('opt-a'), findsOneWidget);
+      // No PopupMenuButton on the card — selection is via three-dot menu only
 
       await t.tap(find.byIcon(Icons.more_vert));
       await t.pumpAndSettle();
@@ -172,7 +173,7 @@ void main() {
       await t.tap(find.text('opt-a'));
       await t.pumpAndSettle();
 
-      expect(find.byType(PopupMenuButton<ItemUnitOptionRecord>), findsOneWidget);
+      expect(find.text('opt-a'), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
     });
 
