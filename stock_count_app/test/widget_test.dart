@@ -30,8 +30,34 @@ Future<void> pumpCard(WidgetTester t, {required Item item}) async {
   await t.pumpAndSettle();
 }
 
+
+class TestHost extends StatefulWidget {
+  final Item initial;
+  const TestHost({super.key, required this.initial});
+  @override
+  State<TestHost> createState() => _TestHostState();
+}
+
+class _TestHostState extends State<TestHost> {
+  late Item current;
+  @override
+  void initState() { super.initState(); current = widget.initial; }
+  @override
+  Widget build(BuildContext context) {
+    return ItemCardWidget(
+      item: current, statusControlWidth: 120, hideIcon: true,
+      isListView: true, showItemNameInColumn: true,
+      onCheckChanged: () {}, onQuantityChanged: (_) {},
+      onStatusChanged: (s) => setState(() => current = current.copyWith(status: s)),
+      onUnitChanged: (u) => setState(() => current = current.copyWith(
+        unit: u.label, status: ItemStatus.dropdown,
+      )),
+    );
+  }
+}
+
 void main() {
-  group('Item.copyWith', () {
+  group('copyWith', () {
     test('preserves qty when only status changed', () {
       final item = makeItem(status: ItemStatus.quantity, qty: 42);
       final u = item.copyWith(status: ItemStatus.urgent);
@@ -44,6 +70,7 @@ void main() {
     });
   });
 
+
   group('three-dot menu', () {
     testWidgets('shows options not Dropdown word', (t) async {
       await pumpCard(t, item: makeItem(status: ItemStatus.quantity));
@@ -53,17 +80,13 @@ void main() {
       expect(find.text('opt-a'), findsOneWidget);
       expect(find.text('opt-b'), findsOneWidget);
     });
-
     testWidgets('hides selected option from menu', (t) async {
-      await pumpCard(t, item: makeItem(
-        status: ItemStatus.dropdown, unit: 'opt-a',
-      ));
+      await pumpCard(t, item: makeItem(status: ItemStatus.dropdown, unit: 'opt-a'));
       await t.tap(find.byIcon(Icons.more_vert));
       await t.pumpAndSettle();
       expect(find.text('Quantity'), findsOneWidget);
       expect(find.text('opt-b'), findsOneWidget);
     });
-
     testWidgets('divider between status and options', (t) async {
       await pumpCard(t, item: makeItem(
         status: ItemStatus.quantity,
@@ -73,12 +96,10 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byType(Divider), findsOneWidget);
     });
-
     testWidgets('no menu when single status no options', (t) async {
       await pumpCard(t, item: makeItem(
         status: ItemStatus.quantity,
-        enabled: const {ItemStatus.quantity},
-        opts: const [],
+        enabled: const {ItemStatus.quantity}, opts: const [],
       ));
       expect(find.byIcon(Icons.more_vert), findsNothing);
     });
@@ -86,8 +107,7 @@ void main() {
 
   group('callbacks', () {
     testWidgets('dropdown option fires both callbacks', (t) async {
-      ItemStatus? sc;
-      ItemUnitOptionRecord? uc;
+      ItemStatus? sc; ItemUnitOptionRecord? uc;
       await t.pumpWidget(MaterialApp(home: Scaffold(body: ItemCardWidget(
         item: makeItem(status: ItemStatus.quantity),
         statusControlWidth: 120, hideIcon: true,
@@ -104,13 +124,10 @@ void main() {
       expect(sc, equals(ItemStatus.dropdown));
       expect(uc?.label, equals('opt-a'));
     });
-
     testWidgets('Quantity from menu in dropdown mode', (t) async {
       ItemStatus? sc;
       await t.pumpWidget(MaterialApp(home: Scaffold(body: ItemCardWidget(
-        item: makeItem(
-          status: ItemStatus.dropdown, unit: 'opt-a',
-        ),
+        item: makeItem(status: ItemStatus.dropdown, unit: 'opt-a'),
         statusControlWidth: 120, hideIcon: true,
         isListView: true, showItemNameInColumn: true,
         onCheckChanged: () {}, onQuantityChanged: (_) {},
@@ -123,6 +140,40 @@ void main() {
       await t.tap(find.text('Quantity'));
       await t.pumpAndSettle();
       expect(sc, equals(ItemStatus.quantity));
+    });
+  });
+
+  group('rebuild after status change', () {
+    testWidgets('qty input after dropdown to qty switch', (t) async {
+      await t.pumpWidget(MaterialApp(home: Scaffold(body: TestHost(
+        initial: makeItem(status: ItemStatus.dropdown, unit: 'opt-a', qty: 42),
+      ))));
+      await t.pumpAndSettle();
+      expect(find.byType(PopupMenuButton<ItemUnitOptionRecord>), findsOneWidget);
+
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Quantity'));
+      await t.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(PopupMenuButton<ItemUnitOptionRecord>), findsNothing);
+    });
+
+    testWidgets('dropdown after selecting option from qty mode', (t) async {
+      await t.pumpWidget(MaterialApp(home: Scaffold(body: TestHost(
+        initial: makeItem(status: ItemStatus.quantity, qty: 5),
+      ))));
+      await t.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+
+      await t.tap(find.byIcon(Icons.more_vert));
+      await t.pumpAndSettle();
+      await t.tap(find.text('opt-a'));
+      await t.pumpAndSettle();
+
+      expect(find.byType(PopupMenuButton<ItemUnitOptionRecord>), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
     });
   });
 }
