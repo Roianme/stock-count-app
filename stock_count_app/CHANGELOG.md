@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 Format: `[version] - date` (semver: `major.minor.patch+build`).
 
-## [1.7.1+0] - 2026-08-08
+## [1.7.1+1] - 2026-08-08
 ### Fixed
 - **Persistence bug**: deleted seed items were silently re-added on app restart
   due to upsert logic not distinguishing user-deleted items from new seed
